@@ -27,7 +27,7 @@ export function LecturerLogin() {
           <Layers size={24} />
         </div>
 
-        <h2 style={{ fontSize: "24px", fontWeight: 700, margin: "0 0 8px 0", color: C.text }}>Lecturer Portal</h2>
+        <h2 style={{ fontFamily: C.display, fontSize: "24px", fontWeight: 700, margin: "0 0 8px 0", color: C.text }}>Lecturer Portal</h2>
         <p style={{ fontSize: "14px", color: C.textSub, margin: "0 0 32px 0" }}>Sign in to manage marks and assessments.</p>
 
         <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Role } from "../types";
+import { lecturerAccount } from "../mock/mockData";
 
 export interface User {
   id: string;
@@ -16,7 +17,7 @@ interface AuthContextType {
 const SESSION_KEY = "carrymark_session";
 
 export const DEMO_ACCOUNTS: Record<Role, { id: string; password: string; name: string }> = {
-  lecturer: { id: "TS003", password: "lecturer123", name: "Dr. Siti Rahimah" },
+  lecturer: { id: lecturerAccount.id, password: "lecturer123", name: lecturerAccount.name },
   admin: { id: "ADM001", password: "admin123", name: "Faculty Administrator" },
 };
 

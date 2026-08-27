@@ -77,7 +77,7 @@ export function AdminSettings() {
       </div>
 
       <section style={cardStyle}>
-        <h2 style={{ fontFamily: C.display, fontSize: "17px", color: C.text, margin: "0 0 22px" }}>Semester Configuration</h2>
+        <h2 style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, color: C.text, margin: "0 0 22px" }}>Semester Configuration</h2>
         <label style={labelStyle}>CURRENT SEMESTER</label>
         <input value={settings.currentSemester} onChange={event => update("currentSemester", event.target.value)} style={{ ...fieldStyle, marginBottom: "16px" }} />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px" }}>
@@ -87,7 +87,7 @@ export function AdminSettings() {
       </section>
 
       <section style={cardStyle}>
-        <h2 style={{ fontFamily: C.display, fontSize: "17px", color: C.text, margin: "0 0 22px" }}>Submission Deadlines</h2>
+        <h2 style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, color: C.text, margin: "0 0 22px" }}>Submission Deadlines</h2>
         <label style={labelStyle}>GLOBAL CARRY MARK DEADLINE</label>
         <input type="date" value={settings.globalDeadline} onChange={event => update("globalDeadline", event.target.value)} style={fieldStyle} />
         <p style={{ color: C.textMuted, fontSize: "11px", margin: "6px 0 14px" }}>Applies to all programmes unless overridden below.</p>
@@ -102,7 +102,7 @@ export function AdminSettings() {
       </section>
 
       <section style={cardStyle}>
-        <h2 style={{ fontFamily: C.display, fontSize: "17px", color: C.text, margin: "0 0 20px" }}>Notification &amp; Reminder Settings</h2>
+        <h2 style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, color: C.text, margin: "0 0 20px" }}>Notification &amp; Reminder Settings</h2>
         <NotificationRow title="Auto-send reminders to lecturers" description="Automatically notify lecturers before the submission deadline." enabled={settings.autoRemind} onToggle={() => update("autoRemind", !settings.autoRemind)} />
         <div style={{ margin: "16px 0" }}>
           <label style={labelStyle}>SEND REMINDER (DAYS BEFORE DEADLINE)</label>

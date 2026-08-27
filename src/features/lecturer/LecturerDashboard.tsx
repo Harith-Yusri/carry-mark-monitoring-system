@@ -1,21 +1,17 @@
 import React, { useState } from "react";
 import { Plus, CheckCircle, ChevronRight, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
+import { ACADEMIC_SESSION, lecturerAccount, lecturerSubjectsData } from "../../mock/mockData";
 
 export type LecturerSubject = { code: string; name: string; progSem: number; students: number; lastSync: string | null; status: string };
 
-export const lecturerSubjects: LecturerSubject[] = [
-  { code: "BCS101", name: "Programming Fundamentals",      progSem: 1, students: 38, lastSync: "24 Jun 14:30", status: "submitted" },
-  { code: "BCS203", name: "Data Structures & Algorithms",  progSem: 3, students: 42, lastSync: "18 Jun 09:40", status: "active" },
-  { code: "BCS315", name: "Database Management Systems",   progSem: 4, students: 35, lastSync: "24 Jun 11:15", status: "submitted" },
-  { code: "BCS420", name: "Software Engineering",          progSem: 4, students: 40, lastSync: null,            status: "draft" },
-];
+export const lecturerSubjects: LecturerSubject[] = lecturerSubjectsData;
 
 export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj: LecturerSubject) => void }) {
   const C = useColors();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [subjects, setSubjects] = useState<LecturerSubject[]>(() => {
-    try { return JSON.parse(localStorage.getItem("carrymark_lecturer_subjects") || "null") ?? lecturerSubjects; }
+    try { return JSON.parse(localStorage.getItem("carrymark_lecturer_subjects_v3") || "null") ?? lecturerSubjects; }
     catch { return lecturerSubjects; }
   });
   const [code, setCode] = useState("");
@@ -31,7 +27,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
     if (subjects.some(subject => subject.code === normalizedCode)) return setFormError("That subject code already exists.");
     const next = [...subjects, { code: normalizedCode, name: name.trim(), progSem: Number(semester), students: 0, lastSync: null, status: "draft" }];
     setSubjects(next);
-    localStorage.setItem("carrymark_lecturer_subjects", JSON.stringify(next));
+    localStorage.setItem("carrymark_lecturer_subjects_v3", JSON.stringify(next));
     setCode(""); setName(""); setSemester("1"); setFormError(""); setShowCreateModal(false);
   };
 
@@ -39,9 +35,9 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
         <div>
-          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, marginBottom: "2px" }}>My Subjects</h1>
+          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 2px" }}>My Subjects</h1>
           <p style={{ fontSize: "12px", color: C.textMuted }}>
-            Dr. Siti Rahimah (TS003) · Semester 2, 2025/2026 · {subjects.length} subjects across {progSems.length} programme semesters
+            {lecturerAccount.name} ({lecturerAccount.id}) · {ACADEMIC_SESSION} · {subjects.length} subject{subjects.length === 1 ? "" : "s"} across {progSems.length} programme semester{progSems.length === 1 ? "" : "s"}
           </p>
         </div>
         <button
@@ -74,6 +70,8 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                       key={subj.code}
                       onClick={() => onSelectSubject(subj)}
                       style={{ textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "8px", padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" }}
+                      onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.transform = "translateY(-2px)"; }}
+                      onMouseLeave={event => { event.currentTarget.style.borderColor = C.border; event.currentTarget.style.transform = "none"; }}
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "8px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
@@ -84,7 +82,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                           {isSubmitted && <CheckCircle size={9} />}{isSubmitted ? "FINALISED" : "IN PROGRESS"}
                         </div>
                       </div>
-                      <div style={{ fontFamily: C.display, fontWeight: 600, fontSize: "14px", color: C.text, marginBottom: "10px" }}>{subj.name}</div>
+                      <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "14px", color: C.text, marginBottom: "10px" }}>{subj.name}</div>
                       <div style={{ display: "flex", gap: "14px", marginBottom: "10px", fontSize: "11px", color: C.textMuted }}>
                         <div><span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.students}</span> students</div>
                         <div>Last Sync: <span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.lastSync ?? "Pending"}</span></div>
@@ -112,7 +110,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
               <div>
                 <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT CODE</label>
-                <input value={code} onChange={event => setCode(event.target.value)} placeholder="e.g. BCS510" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none" }} />
+                <input value={code} onChange={event => setCode(event.target.value)} placeholder="e.g. ITT600" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none" }} />
               </div>
               <div>
                 <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT NAME</label>

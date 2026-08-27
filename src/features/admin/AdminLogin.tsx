@@ -28,7 +28,7 @@ export function AdminLogin() {
           <Shield size={24} />
         </div>
         
-        <h2 style={{ fontSize: "24px", fontWeight: 700, margin: "0 0 8px 0", color: C.text }}>Admin Portal</h2>
+        <h2 style={{ fontFamily: C.display, fontSize: "24px", fontWeight: 700, margin: "0 0 8px 0", color: C.text }}>Admin Portal</h2>
         <p style={{ fontSize: "14px", color: C.textSub, margin: "0 0 32px 0" }}>Sign in to access faculty oversight.</p>
         
         <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

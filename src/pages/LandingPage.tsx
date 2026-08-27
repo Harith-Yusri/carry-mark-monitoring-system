@@ -28,7 +28,10 @@ export function LandingPage() {
         
         {/* Lecturer Portal Card */}
         <div 
+          role="button"
+          tabIndex={0}
           onClick={() => navigate("/lecturer/login")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate("/lecturer/login"); } }}
           style={{ 
             background: C.surface, 
             border: `1px solid ${C.border}`, 
@@ -54,13 +57,16 @@ export function LandingPage() {
           <div style={{ width: "48px", height: "48px", background: C.blue + "20", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px", color: C.blue }}>
             <Layers size={24} />
           </div>
-          <h2 style={{ fontSize: "18px", fontWeight: 600, margin: "0 0 8px 0", color: C.text }}>Lecturer Portal</h2>
+          <h2 style={{ fontFamily: C.display, fontSize: "18px", fontWeight: 700, margin: "0 0 8px 0", color: C.text }}>Lecturer Portal</h2>
           <p style={{ fontSize: "13px", color: C.textSub, margin: 0 }}>Marks Entry & e-Result Export</p>
         </div>
 
         {/* Admin Portal Card */}
         <div 
+          role="button"
+          tabIndex={0}
           onClick={() => navigate("/admin/login")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate("/admin/login"); } }}
           style={{ 
             background: C.surface, 
             border: `1px solid ${C.border}`, 
@@ -86,7 +92,7 @@ export function LandingPage() {
           <div style={{ width: "48px", height: "48px", background: C.maroon + "20", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px", color: C.maroon }}>
             <Shield size={24} />
           </div>
-          <h2 style={{ fontSize: "18px", fontWeight: 600, margin: "0 0 8px 0", color: C.text }}>Admin Portal</h2>
+          <h2 style={{ fontFamily: C.display, fontSize: "18px", fontWeight: 700, margin: "0 0 8px 0", color: C.text }}>Admin Portal</h2>
           <p style={{ fontSize: "13px", color: C.textSub, margin: 0 }}>Compliance Oversight & Reports</p>
         </div>
 

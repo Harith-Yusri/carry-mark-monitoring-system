@@ -12,7 +12,7 @@ export function LecturerDirectory() {
   return (
     <div>
       <div style={{ marginBottom: "20px" }}>
-        <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, marginBottom: "4px" }}>Faculty Lecturer Directory</h1>
+        <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 4px" }}>Faculty Lecturer Directory</h1>
         <p style={{ fontSize: "12px", color: C.textMuted }}>Faculty of Computer & Mathematical Sciences Academic Staff Contact & Submissions Directory</p>
       </div>
 
@@ -41,7 +41,8 @@ export function LecturerDirectory() {
             </div>
 
             <div style={{ fontSize: "11px", color: C.textSub, display: "flex", flexDirection: "column", gap: "4px" }}>
-              <div>Assigned Courses: <span style={{ fontFamily: C.mono, color: C.maroon, fontWeight: 600 }}>{lect.subjects.join(", ")}</span></div>
+              <div>Assigned Courses: <span style={{ fontFamily: C.mono, color: C.maroon, fontWeight: 600 }}>{lect.subjects.join(", ")}</span> · {lect.subjectName}</div>
+              <div>Registered Students: <span style={{ fontFamily: C.mono, color: C.textMuted }}>{lect.studentCount}</span></div>
               <div>Last Activity: <span style={{ fontFamily: C.mono, color: C.textMuted }}>{lect.lastUpdated}</span></div>
             </div>
           </div>

@@ -6,13 +6,6 @@ import { facultyLecturersData } from "../../mock/mockData";
 type StatusFilter = "All" | "Pending" | "Finalised" | "Overdue";
 type ProgrammeFilter = "All Programmes" | "Computer Science" | "Information Technology" | "Information Systems";
 
-const programmeByLecturer: Record<string, Exclude<ProgrammeFilter, "All Programmes">> = {
-  L01: "Information Technology",
-  L02: "Computer Science",
-  L03: "Computer Science",
-  L04: "Information Systems",
-};
-
 export function SubmissionMonitor() {
   const C = useColors();
   const [filter, setFilter] = useState<StatusFilter>("All");
@@ -21,7 +14,7 @@ export function SubmissionMonitor() {
 
   const pendingCount = facultyLecturersData.filter(item => item.submissionStatus !== "Finalised").length;
   const filtered = useMemo(() => facultyLecturersData.filter(item => {
-    const matchesProgramme = programme === "All Programmes" || programmeByLecturer[item.id] === programme;
+    const matchesProgramme = programme === "All Programmes" || item.department === programme;
     if (!matchesProgramme) return false;
     if (filter === "All") return true;
     if (filter === "Pending") return item.submissionStatus !== "Finalised";
@@ -31,7 +24,7 @@ export function SubmissionMonitor() {
   const programmeOptions: ProgrammeFilter[] = ["All Programmes", "Computer Science", "Information Technology", "Information Systems"];
   const programmeCount = (item: ProgrammeFilter) => item === "All Programmes"
     ? facultyLecturersData.length
-    : facultyLecturersData.filter(lecturer => programmeByLecturer[lecturer.id] === item).length;
+    : facultyLecturersData.filter(lecturer => lecturer.department === item).length;
 
   const sendReminder = (id: string) => {
     setSentReminders(previous => new Set([...previous, id]));
@@ -41,7 +34,7 @@ export function SubmissionMonitor() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "20px" }}>
         <div>
-          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, marginBottom: "4px" }}>Submission Monitor</h1>
+          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 4px" }}>Submission Monitor</h1>
           <p style={{ fontSize: "12px", color: C.textMuted }}>Track carry mark submission status per lecturer and send reminders for incomplete work.</p>
         </div>
         <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.amber, background: C.amberLight, border: `1px solid ${C.amber}44`, borderRadius: "6px", padding: "7px 10px" }}>
@@ -97,8 +90,8 @@ export function SubmissionMonitor() {
                 <tr key={lecturer.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                   <td style={{ padding: "13px 12px", fontFamily: C.mono, color: C.textMuted }}>{lecturer.id}</td>
                   <td style={{ padding: "13px 12px", fontWeight: 600, color: C.text }}>{lecturer.name}</td>
-                  <td style={{ padding: "13px 12px", color: C.textSub }}>{programmeByLecturer[lecturer.id]}</td>
-                  <td style={{ padding: "13px 12px", fontFamily: C.mono, color: C.maroon }}>{lecturer.subjects.join(", ")}</td>
+                  <td style={{ padding: "13px 12px", color: C.textSub }}>{lecturer.department}</td>
+                  <td style={{ padding: "13px 12px", color: C.textSub }}><span style={{ fontFamily: C.mono, color: C.maroon }}>{lecturer.subjects.join(", ")}</span><br /><span style={{ fontSize: "10px" }}>{lecturer.subjectName}</span></td>
                   <td style={{ padding: "13px 12px" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontFamily: C.mono, fontSize: "10px", fontWeight: 700, padding: "4px 7px", borderRadius: "4px", background: finalised ? C.greenLight : overdue ? C.redLight : C.amberLight, color: finalised ? C.green : overdue ? C.red : C.amber }}>
                       {finalised ? <CheckCircle size={11} /> : <Clock size={11} />}{lecturer.submissionStatus.toUpperCase()}

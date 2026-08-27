@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { ChevronLeft, Layers, BookOpen, CheckSquare, Download, Users } from "lucide-react";
+import { ChevronLeft, Layers, CheckSquare, Download } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { LecturerDashboard, lecturerSubjects, LecturerSubject } from "./LecturerDashboard";
 import { AssessmentsTab } from "./AssessmentsTab";
 import { MarksEntryTab } from "./MarksEntryTab";
 import { ExportTab } from "./ExportTab";
-import { ClassesTab } from "./ClassesTab";
 import { LecturerTab, LecturerScreen } from "../../types";
+import { useAuth } from "../../context/AuthContext";
 
 export function LecturerWebPortal() {
   const C = useColors();
+  const { user } = useAuth();
   const [screen, setScreen] = useState<LecturerScreen>("dashboard");
   const [selectedSubj, setSelectedSubj] = useState<LecturerSubject | null>(null);
   const [activeTab, setActiveTab] = useState<LecturerTab>("assessments");
@@ -17,7 +18,7 @@ export function LecturerWebPortal() {
   const currentSubj = selectedSubj || lecturerSubjects[0];
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 32px 48px" }}>
+    <div style={{ width: "100%", boxSizing: "border-box", padding: "0 clamp(20px, 3vw, 48px) 48px" }}>
       {screen === "dashboard" ? (
         <LecturerDashboard
           onSelectSubject={(subj) => {
@@ -48,7 +49,7 @@ export function LecturerWebPortal() {
                 <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 700 }}>COURSE CODE: {currentSubj.code}</div>
                 <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, margin: "2px 0 4px" }}>{currentSubj.name}</h1>
                 <div style={{ fontSize: "12px", color: C.textMuted }}>
-                  Semester {currentSubj.progSem} · {currentSubj.students} Registered Students · Lecturer: Dr. Siti Rahimah
+                  Semester {currentSubj.progSem} · {currentSubj.students} Registered Students · Lecturer: {user?.name}
                 </div>
               </div>
             </div>
@@ -60,7 +61,6 @@ export function LecturerWebPortal() {
               { key: "assessments", label: "Assessment Structure", icon: <Layers size={14} /> },
               { key: "marks",       label: "Marks Entry & Eligibility", icon: <CheckSquare size={14} /> },
               { key: "export",      label: "Export Carry Marks", icon: <Download size={14} /> },
-              { key: "classes",     label: "Class Sections", icon: <Users size={14} /> },
             ].map(t => (
               <button
                 key={t.key}
@@ -88,8 +88,7 @@ export function LecturerWebPortal() {
           {/* Tab Content */}
           {activeTab === "assessments" && <AssessmentsTab subjectCode={currentSubj.code} />}
           {activeTab === "marks" && <MarksEntryTab subjectCode={currentSubj.code} />}
-          {activeTab === "export" && <ExportTab subjectCode={currentSubj.code} />}
-          {activeTab === "classes" && <ClassesTab subjectCode={currentSubj.code} />}
+          {activeTab === "export" && <ExportTab subjectCode={currentSubj.code} subjectName={currentSubj.name} />}
         </div>
       )}
     </div>
