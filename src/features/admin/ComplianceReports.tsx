@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { CheckCircle, Download } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { downloadText } from "../../utils/download";
-import { facultyLecturersData, programmeNames } from "../../mock/mockData";
+import { useAdminRecords } from "../../hooks/useAdminRecords";
 import { LecturerInfo, ProgrammeCode } from "../../types";
 
 type ReportKey = "overall" | ProgrammeCode | "pending" | "marks";
@@ -10,18 +10,20 @@ interface ReportDefinition { key: ReportKey; title: string; description: string;
 
 export function ComplianceReports() {
   const C = useColors();
+  const { records } = useAdminRecords();
+  const programmeNames: Record<ProgrammeCode, string> = { CS: "Computer Science", IT: "Information Technology", IS: "Information Systems" };
   const [downloaded, setDownloaded] = useState<ReportKey | null>(null);
-  const pending = facultyLecturersData.filter(item => item.submissionStatus !== "Finalised");
-  const studentTotal = facultyLecturersData.reduce((sum, item) => sum + item.studentCount, 0);
-  const programmeRecords = (code: ProgrammeCode) => facultyLecturersData.filter(item => item.programmeCode === code);
+  const pending = records.filter(item => item.submissionStatus !== "Finalised");
+  const studentTotal = records.reduce((sum, item) => sum + item.studentCount, 0);
+  const programmeRecords = (code: ProgrammeCode) => records.filter(item => item.programmeCode === code);
 
   const reports: ReportDefinition[] = [
-    { key: "overall", title: "Overall Compliance Report", description: "Full submission status for all lecturers across all programmes.", meta: `All · ${facultyLecturersData.length} lecturers`, filename: "Compliance_AllProg_Sem2_2526.csv", records: facultyLecturersData },
+    { key: "overall", title: "Overall Compliance Report", description: "Full submission status for all lecturers across all programmes.", meta: `All · ${records.length} lecturers`, filename: "Compliance_AllProg_Sem2_2526.csv", records },
     { key: "CS", title: "CS Programme Report", description: `Submission status for ${programmeNames.CS} programme lecturers only.`, meta: `CS · ${programmeRecords("CS").length} lecturers`, filename: "Compliance_CS_Sem2_2526.csv", records: programmeRecords("CS") },
     { key: "IT", title: "IT Programme Report", description: `Submission status for ${programmeNames.IT} programme lecturers only.`, meta: `IT · ${programmeRecords("IT").length} lecturers`, filename: "Compliance_IT_Sem2_2526.csv", records: programmeRecords("IT") },
     { key: "IS", title: "IS Programme Report", description: `Submission status for ${programmeNames.IS} programme lecturers only.`, meta: `IS · ${programmeRecords("IS").length} lecturers`, filename: "Compliance_IS_Sem2_2526.csv", records: programmeRecords("IS") },
     { key: "pending", title: "Pending Submissions List", description: "List of all lecturers who have not yet submitted marks, for follow-up.", meta: `${pending.length} pending lecturers`, filename: "PendingList_Sem2_2526.csv", records: pending },
-    { key: "marks", title: "Full Carry Mark Summary", description: "Complete faculty carry mark enrolment and submission summary across all subjects.", meta: `${studentTotal} students total`, filename: "FullMarkSummary_Sem2_2526.csv", records: facultyLecturersData },
+    { key: "marks", title: "Full Carry Mark Summary", description: "Complete faculty carry mark enrolment and submission summary across all subjects.", meta: `${studentTotal} students total`, filename: "FullMarkSummary_Sem2_2526.csv", records },
   ];
 
   const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;

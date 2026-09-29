@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { Search, Mail, Phone, MapPin, CheckCircle, Clock } from "lucide-react";
+import { Search } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { facultyLecturersData } from "../../mock/mockData";
+import { useAdminRecords } from "../../hooks/useAdminRecords";
 
 export function LecturerDirectory() {
   const C = useColors();
+  const { records, loading, error } = useAdminRecords();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filtered = facultyLecturersData.filter(l => l.name.toLowerCase().includes(searchTerm.toLowerCase()) || l.id.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = records.filter(l => l.name.toLowerCase().includes(searchTerm.toLowerCase()) || l.id.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div>
@@ -25,6 +26,8 @@ export function LecturerDirectory() {
           style={{ width: "100%", padding: "10px 14px 10px 38px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "8px", color: C.text, fontSize: "13px", outline: "none" }}
         />
       </div>
+      {loading && <p style={{ color: C.textMuted }}>Loading lecturers…</p>}
+      {error && <p style={{ color: C.red }}>{error}</p>}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
         {filtered.map(lect => (

@@ -6,12 +6,12 @@ interface DarkModeContextType {
 }
 
 const DarkModeContext = createContext<DarkModeContextType>({
-  dark: true,
+  dark: false,
   toggle: () => {},
 });
 
 export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [dark, setDark] = useState<boolean>(true);
+  const [dark, setDark] = useState<boolean>(false);
   const toggle = () => setDark((d) => !d);
 
   return (
@@ -33,9 +33,9 @@ export function useColors() {
         elevated: "#1A1F2E",
         border: "rgba(255,255,255,0.07)",
         borderMid: "rgba(255,255,255,0.12)",
-        maroon: "#C0294F",
-        maroonHover: "#D4305A",
-        maroonLight: "rgba(192,41,79,0.18)",
+        maroon: "#702082",
+        maroonHover: "#702082",
+        maroonLight: "rgba(112,32,130,0.18)",
         amber: "#D4A72C",
         amberLight: "rgba(212,167,44,0.15)",
         green: "#22C55E",
@@ -57,9 +57,9 @@ export function useColors() {
         elevated: "#E8EBF2",
         border: "rgba(0,0,0,0.08)",
         borderMid: "rgba(0,0,0,0.14)",
-        maroon: "#B02246",
-        maroonHover: "#C42B52",
-        maroonLight: "rgba(176,34,70,0.09)",
+        maroon: "#702082",
+        maroonHover: "#702082",
+        maroonLight: "rgba(112,32,130,0.09)",
         amber: "#B45309",
         amberLight: "rgba(180,83,9,0.08)",
         green: "#16A34A",

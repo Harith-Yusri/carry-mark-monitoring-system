@@ -2,10 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { DarkModeProvider } from "../context/DarkModeContext";
 import { AuthProvider } from "../context/AuthContext";
-import { LandingPage } from "../pages/LandingPage";
 import { PortalLayout } from "../layouts/PortalLayout";
-import { LecturerLogin } from "../features/lecturer/LecturerLogin";
-import { AdminLogin } from "../features/admin/AdminLogin";
+import { WebLogin } from "../features/auth/WebLogin";
 import { LecturerWebPortal } from "../features/lecturer/LecturerWebPortal";
 import { AdminWebPortal } from "../features/admin/AdminWebPortal";
 import { ProtectedRoute } from "../components/ProtectedRoute";
@@ -15,9 +13,10 @@ function MainApp() {
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/lecturer/login" element={<LecturerLogin />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/" element={<WebLogin />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/lecturer/login" element={<Navigate to="/" replace />} />
+        <Route path="/admin/login" element={<Navigate to="/" replace />} />
 
         {/* Protected Lecturer Routes */}
         <Route 

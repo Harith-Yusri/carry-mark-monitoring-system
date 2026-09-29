@@ -1,16 +1,15 @@
 
 # UiTM Carry Mark Monitoring System
 
-Working lecturer and faculty administrator portals backed by hardcoded browser data.
+Lecturer and faculty administrator portals backed by Supabase/PostgreSQL. The companion Android student app is in `StudentCarryMark_2.0` and uses the same database.
 
 ## Running the code
 
 Run `npm install`, then `npm run dev`.
 
-## Demo accounts
+## Supabase setup
 
-- Lecturer: `TS003` / `lecturer123`
-- Administrator: `ADM001` / `admin123`
+Copy `.env.example` to `.env.local`, add the project URL and publishable key, then follow [supabase/README.md](supabase/README.md) to deploy migrations and create the first administrator.
 
-Authentication uses session storage. Subject, mark, lock, and administrator-setting changes are saved in local storage so the hardcoded system remains usable across browser refreshes. There is no student portal in this project.
+Authentication uses Supabase Auth with institutional ID + password. Subjects, assessments, classes, invitation codes, enrolments, marks, carry calculations, eligibility, finalisation, exports, reporting, and settings use the normalized Supabase schema. Runtime academic data is not stored in browser storage or hardcoded source files.
   

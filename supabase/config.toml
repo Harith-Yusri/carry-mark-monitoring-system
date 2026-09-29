@@ -1,0 +1,7 @@
+[functions.send-reminder]
+# The handler validates the user's token with Auth and checks the active admin role.
+verify_jwt = false
+
+[functions.staff-login]
+# Public password sign-in; the handler uses rate-limited lookup and Supabase Auth.
+verify_jwt = false

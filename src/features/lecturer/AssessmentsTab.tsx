@@ -1,45 +1,44 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CheckCircle, Edit3, Plus, Trash2, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-
-interface Assessment {
-  id: string;
-  name: string;
-  type: string;
-  maxMarks: number;
-  weightage: number;
-}
-
-const initialAssessments: Assessment[] = [
-  { id: "A1", name: "Quiz 1", type: "Quiz", maxMarks: 10, weightage: 5 },
-  { id: "A2", name: "Assignment 1", type: "Assignment", maxMarks: 20, weightage: 10 },
-  { id: "A3", name: "Test 1", type: "Test", maxMarks: 30, weightage: 15 },
-  { id: "A4", name: "Quiz 2", type: "Quiz", maxMarks: 10, weightage: 5 },
-  { id: "A5", name: "Test 2", type: "Test", maxMarks: 30, weightage: 15 },
-];
+import { loadOfferingWeightage, saveOfferingWeightage, AssessmentRecord as Assessment, deleteAssessment, listAssessments, saveAssessment as persistAssessment } from "../../services/carryMarkApi";
 
 const emptyForm = { name: "", type: "Quiz", maxMarks: "", weightage: "" };
 type AssessmentForm = typeof emptyForm;
 
-export function AssessmentsTab({ subjectCode }: { subjectCode: string }) {
+export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string; subjectCode: string }) {
   const C = useColors();
-  const storageKey = `carrymark_assessments_${subjectCode}`;
-  const [items, setItems] = useState<Assessment[]>(() => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "null") ?? initialAssessments; }
-    catch { return initialAssessments; }
-  });
+  const [carryMax, setCarryMax] = useState<number | null>(null);
+  const [weightInput, setWeightInput] = useState("");
+  const [savingWeight, setSavingWeight] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<Assessment[]>([]);
+  const [error, setError] = useState("");
   const [modal, setModal] = useState<"add" | "edit" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AssessmentForm>(emptyForm);
 
-  useEffect(() => localStorage.setItem(storageKey, JSON.stringify(items)), [items, storageKey]);
+  const reload = () => listAssessments(offeringId).then(setItems).catch(reason => setError(reason.message));
+  useEffect(() => {
+    setLoading(true); setError(""); setCarryMax(null); setWeightInput("");
+    Promise.all([listAssessments(offeringId), loadOfferingWeightage(offeringId)])
+      .then(([assessments, settings]) => { setItems(assessments); setCarryMax(settings.carryMax); setWeightInput(settings.carryMax === null ? "" : String(settings.carryMax)); })
+      .catch(reason => setError(reason.message)).finally(() => setLoading(false));
+  }, [offeringId]);
+  const saveTotalWeight = async (event: React.FormEvent) => {
+    event.preventDefault(); if (savingWeight || loading) return;
+    setSavingWeight(true); setError("");
+    try { await saveOfferingWeightage(offeringId, Number(weightInput)); setCarryMax(Number(weightInput)); }
+    catch (reason) { setError((reason as { message?: string }).message ?? "Unable to save total weightage."); }
+    finally { setSavingWeight(false); }
+  };
 
   const totalWeight = useMemo(() => items.reduce((sum, item) => sum + item.weightage, 0), [items]);
   const editingItem = items.find(item => item.id === editingId);
   const weightWithoutEditing = totalWeight - (editingItem?.weightage ?? 0);
   const prospectiveTotal = weightWithoutEditing + (Number(form.weightage) || 0);
-  const remaining = Math.max(0, 100 - weightWithoutEditing);
-  const formValid = form.name.trim().length > 0 && Number(form.maxMarks) > 0 && Number(form.weightage) > 0 && prospectiveTotal <= 100;
+  const remaining = Math.max(0, (carryMax ?? 0) - weightWithoutEditing);
+  const formValid = form.name.trim().length > 0 && Number(form.maxMarks) > 0 && Number(form.weightage) > 0 && carryMax !== null && prospectiveTotal <= carryMax;
 
   const openAdd = () => { setForm(emptyForm); setEditingId(null); setModal("add"); };
   const openEdit = (item: Assessment) => {
@@ -49,18 +48,20 @@ export function AssessmentsTab({ subjectCode }: { subjectCode: string }) {
   };
   const closeModal = () => { setModal(null); setEditingId(null); setForm(emptyForm); };
 
-  const saveAssessment = () => {
+  const saveAssessment = async () => {
     if (!formValid) return;
     const values = { name: form.name.trim(), type: form.type, maxMarks: Number(form.maxMarks), weightage: Number(form.weightage) };
-    if (modal === "edit" && editingId) setItems(previous => previous.map(item => item.id === editingId ? { ...item, ...values } : item));
-    else setItems(previous => [...previous, { id: `A${Date.now()}`, ...values }]);
-    closeModal();
+    setError("");
+    try { await persistAssessment(offeringId, values, editingId ?? undefined); await reload(); closeModal(); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to save assessment."); }
   };
 
-  const removeAssessment = (item: Assessment) => {
+  const removeAssessment = async (item: Assessment) => {
     const confirmed = window.confirm(`Remove “${item.name}”?\n\nThis assessment component and its configuration will be deleted. This action cannot be undone.`);
-    if (confirmed) setItems(previous => previous.filter(candidate => candidate.id !== item.id));
+    if (confirmed) try { await deleteAssessment(item.id); await reload(); } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to remove assessment."); }
   };
+
+  const weightSaveDisabled = loading || savingWeight || !weightInput || Number(weightInput) === carryMax;
 
   const inputStyle: React.CSSProperties = { width: "100%", height: "43px", boxSizing: "border-box", padding: "0 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontSize: "13px", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", marginBottom: "7px", color: C.textMuted, fontFamily: C.mono, fontSize: "10px", letterSpacing: ".06em" };
@@ -70,13 +71,22 @@ export function AssessmentsTab({ subjectCode }: { subjectCode: string }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "20px", marginBottom: "20px" }}>
         <div>
           <h2 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "20px", color: C.text, margin: "0 0 4px" }}>Continuous Assessment Components</h2>
-          <p style={{ fontSize: "12px", color: C.textMuted, margin: 0 }}>Total weightage must equal 100%.</p>
+          <p style={{ fontSize: "12px", color: C.textMuted, margin: 0 }}>Set the total carry-mark weightage for this subject, then allocate it across assessments.</p>
         </div>
-        <button onClick={openAdd} style={{ flexShrink: 0, padding: "9px 14px", background: C.maroon, color: "#fff", border: "none", borderRadius: "7px", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}><Plus size={15} /> Add Assessment</button>
+        <button disabled={loading || carryMax === null || savingWeight} onClick={openAdd} style={{ flexShrink: 0, padding: "9px 14px", background: C.maroon, color: "#fff", border: "none", borderRadius: "7px", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}><Plus size={15} /> Add Assessment</button>
       </div>
 
-      <div style={{ height: "6px", background: C.elevated, borderRadius: "4px", overflow: "hidden" }}><div style={{ width: `${Math.min(totalWeight, 100)}%`, height: "100%", background: totalWeight === 100 ? C.green : totalWeight > 100 ? C.red : C.maroon, transition: "width .2s" }} /></div>
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "8px 0 20px", color: C.textMuted, fontFamily: C.mono, fontSize: "10px" }}><span>Total weightage allocated</span><strong style={{ color: totalWeight === 100 ? C.green : totalWeight > 100 ? C.red : C.textSub }}>{totalWeight}% / 100%</strong></div>
+      <form onSubmit={saveTotalWeight} style={{ marginBottom: "20px" }}>
+        <label htmlFor="subject-carry-max" style={labelStyle}>TOTAL CARRY-MARK WEIGHTAGE (%)</label>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <input id="subject-carry-max" type="number" min="0.01" max="100" step="0.01" required value={weightInput} disabled={loading || savingWeight} onChange={event => setWeightInput(event.target.value)} placeholder="e.g. 60" style={{ ...inputStyle, width: "120px", height: "36px", padding: "0 10px", borderRadius: "6px", fontFamily: C.mono, fontSize: "12px", opacity: loading || savingWeight ? .6 : 1 }} />
+          <button type="submit" disabled={weightSaveDisabled} style={{ height: "36px", boxSizing: "border-box", padding: "0 14px", border: `1px solid ${weightSaveDisabled ? C.borderMid : C.maroon}`, borderRadius: "6px", background: weightSaveDisabled ? C.elevated : C.maroon, color: weightSaveDisabled ? C.textMuted : "#fff", fontFamily: C.sans, fontSize: "12px", fontWeight: 700, lineHeight: 1, cursor: savingWeight ? "wait" : weightSaveDisabled ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap" }}>{savingWeight ? "Saving…" : "Save Weightage"}</button>
+        </div>
+      </form>
+      {!loading && carryMax === null && <p style={{ color: C.textMuted, fontSize: "12px" }}>Enter and save the subject’s total weightage before adding assessments.</p>}
+      {!modal && error && <p role="alert" style={{ color: C.red }}>{error}</p>}
+      <div style={{ height: "6px", background: C.elevated, borderRadius: "4px", overflow: "hidden" }}><div style={{ width: `${carryMax ? Math.min(totalWeight / carryMax * 100, 100) : 0}%`, height: "100%", background: totalWeight === carryMax ? C.green : totalWeight > (carryMax ?? 0) ? C.red : C.maroon, transition: "width .2s" }} /></div>
+      <div style={{ display: "flex", justifyContent: "space-between", margin: "8px 0 20px", color: C.textMuted, fontFamily: C.mono, fontSize: "10px" }}><span>Total weightage allocated</span><strong style={{ color: totalWeight === carryMax ? C.green : totalWeight > (carryMax ?? 0) ? C.red : C.textSub }}>{totalWeight}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
 
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", minWidth: "680px", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" }}>
@@ -91,9 +101,10 @@ export function AssessmentsTab({ subjectCode }: { subjectCode: string }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "22px" }}><div><h3 style={{ margin: "0 0 5px", color: C.text, fontFamily: C.display, fontSize: "21px", fontWeight: 700 }}>{modal === "add" ? "Add Assessment Component" : "Edit Assessment"}</h3><div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}>{subjectCode}</div></div><button aria-label="Close" onClick={closeModal} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", padding: "2px" }}><X size={21} /></button></div>
           <div style={{ marginBottom: "16px" }}><label style={labelStyle}>COMPONENT NAME</label><input autoFocus value={form.name} onChange={event => setForm(previous => ({ ...previous, name: event.target.value }))} placeholder="e.g. Quiz 3" style={inputStyle} /></div>
           <div style={{ marginBottom: "16px" }}><label style={labelStyle}>COMPONENT TYPE</label><select value={form.type} onChange={event => setForm(previous => ({ ...previous, type: event.target.value }))} style={inputStyle}><option>Quiz</option><option>Assignment</option><option>Test</option><option>Project</option><option>Presentation</option><option>Lab</option></select></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}><div><label style={labelStyle}>MAX SCORE</label><input type="number" min="1" value={form.maxMarks} onChange={event => setForm(previous => ({ ...previous, maxMarks: event.target.value }))} placeholder="e.g. 20" style={inputStyle} /></div><div><label style={labelStyle}>WEIGHTAGE (%) — {remaining}% LEFT</label><input type="number" min="1" max={remaining} value={form.weightage} onChange={event => setForm(previous => ({ ...previous, weightage: event.target.value }))} placeholder={`Max ${remaining}`} style={inputStyle} /></div></div>
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px", marginBottom: "20px", borderRadius: "7px", background: C.elevated, color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}><span>Total after save</span><strong style={{ color: prospectiveTotal > 100 ? C.red : prospectiveTotal === 100 ? C.green : C.amber }}>{prospectiveTotal}% / 100%</strong></div>
-          {prospectiveTotal > 100 && <div style={{ color: C.red, fontSize: "11px", margin: "-10px 0 14px" }}>Weightage cannot exceed the remaining {remaining}%.</div>}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}><div><label style={labelStyle}>MAX SCORE</label><input type="number" min="1" value={form.maxMarks} onChange={event => setForm(previous => ({ ...previous, maxMarks: event.target.value }))} placeholder="e.g. 20" style={inputStyle} /></div><div><label style={labelStyle}>WEIGHTAGE (%) — {remaining}% LEFT</label><input type="number" min="0.01" step="0.01" max={remaining} value={form.weightage} onChange={event => setForm(previous => ({ ...previous, weightage: event.target.value }))} placeholder={`Max ${remaining}`} style={inputStyle} /></div></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px", marginBottom: "20px", borderRadius: "7px", background: C.elevated, color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}><span>Total after save</span><strong style={{ color: prospectiveTotal > (carryMax ?? 0) ? C.red : prospectiveTotal === carryMax ? C.green : C.amber }}>{prospectiveTotal}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
+          {error && <div style={{ color: C.red, fontSize: "11px", margin: "-10px 0 14px" }}>{error}</div>}
+          {prospectiveTotal > (carryMax ?? 0) && <div style={{ color: C.red, fontSize: "11px", margin: "-10px 0 14px" }}>Weightage cannot exceed the remaining {remaining}%.</div>}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}><button onClick={closeModal} style={{ height: "44px", borderRadius: "7px", background: C.elevated, border: `1px solid ${C.borderMid}`, color: C.textSub, cursor: "pointer", fontSize: "13px" }}>Cancel</button><button disabled={!formValid} onClick={saveAssessment} style={{ height: "44px", borderRadius: "7px", border: "none", background: formValid ? C.maroon : C.elevated, color: formValid ? "#fff" : C.textMuted, cursor: formValid ? "pointer" : "not-allowed", fontSize: "13px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", transition: "all .15s" }}>{modal === "add" ? <Plus size={15} /> : <CheckCircle size={15} />}{modal === "add" ? "Add Assessment" : "Save Changes"}</button></div>
         </div>
       </div>}

@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CheckCircle, Save } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
+import { useAuth } from "../../context/AuthContext";
+import { loadSystemSettings, saveSystemSettings, SystemSettingsRecord } from "../../services/carryMarkApi";
 
 interface SettingsState {
+  termId: string;
   currentSemester: string;
   semesterStart: string;
   semesterEnd: string;
@@ -15,6 +18,7 @@ interface SettingsState {
 }
 
 const defaults: SettingsState = {
+  termId: "",
   currentSemester: "2 / 2025-2026",
   semesterStart: "2026-01-15",
   semesterEnd: "2026-06-30",
@@ -26,19 +30,12 @@ const defaults: SettingsState = {
   alertAdministrator: true,
 };
 
-function loadSettings(): SettingsState {
-  try {
-    const stored = JSON.parse(localStorage.getItem("carrymark_admin_settings") || "null");
-    return stored?.currentSemester ? { ...defaults, ...stored, programmeDeadlines: { ...defaults.programmeDeadlines, ...stored.programmeDeadlines } } : defaults;
-  } catch {
-    return defaults;
-  }
-}
-
 export function AdminSettings() {
   const C = useColors();
-  const [settings, setSettings] = useState<SettingsState>(loadSettings);
+  const { user } = useAuth();
+  const [settings, setSettings] = useState<SettingsState>(defaults);
   const [saved, setSaved] = useState(false);
+  useEffect(() => { loadSystemSettings().then(setSettings).catch(console.error); }, []);
 
   const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", minHeight: "42px", padding: "9px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontFamily: C.sans, fontSize: "13px", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", marginBottom: "7px", color: C.textMuted, fontFamily: C.mono, fontSize: "10px", letterSpacing: "0.06em" };
@@ -47,8 +44,8 @@ export function AdminSettings() {
   const update = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => setSettings(previous => ({ ...previous, [key]: value }));
   const updateDeadline = (programme: keyof SettingsState["programmeDeadlines"], value: string) => setSettings(previous => ({ ...previous, programmeDeadlines: { ...previous.programmeDeadlines, [programme]: value } }));
 
-  const save = () => {
-    localStorage.setItem("carrymark_admin_settings", JSON.stringify(settings));
+  const save = async () => {
+    await saveSystemSettings(settings as SystemSettingsRecord, user?.authId);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2500);
   };

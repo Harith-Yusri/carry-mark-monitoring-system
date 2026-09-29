@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, Layers, CheckSquare, Download } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { LecturerDashboard, lecturerSubjects, LecturerSubject } from "./LecturerDashboard";
+import { LecturerDashboard, LecturerSubject } from "./LecturerDashboard";
 import { AssessmentsTab } from "./AssessmentsTab";
 import { MarksEntryTab } from "./MarksEntryTab";
 import { ExportTab } from "./ExportTab";
@@ -15,7 +15,7 @@ export function LecturerWebPortal() {
   const [selectedSubj, setSelectedSubj] = useState<LecturerSubject | null>(null);
   const [activeTab, setActiveTab] = useState<LecturerTab>("assessments");
 
-  const currentSubj = selectedSubj || lecturerSubjects[0];
+  const currentSubj = selectedSubj;
 
   return (
     <div style={{ width: "100%", boxSizing: "border-box", padding: "0 clamp(20px, 3vw, 48px) 48px" }}>
@@ -27,7 +27,7 @@ export function LecturerWebPortal() {
             setActiveTab("assessments");
           }}
         />
-      ) : (
+      ) : currentSubj ? (
         <div>
           {/* Top Back Navigation Bar */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
@@ -86,11 +86,11 @@ export function LecturerWebPortal() {
           </div>
 
           {/* Tab Content */}
-          {activeTab === "assessments" && <AssessmentsTab subjectCode={currentSubj.code} />}
-          {activeTab === "marks" && <MarksEntryTab subjectCode={currentSubj.code} />}
-          {activeTab === "export" && <ExportTab subjectCode={currentSubj.code} subjectName={currentSubj.name} />}
+          {activeTab === "assessments" && <AssessmentsTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
+          {activeTab === "marks" && <MarksEntryTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
+          {activeTab === "export" && <ExportTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} />}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

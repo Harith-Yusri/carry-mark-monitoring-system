@@ -7,12 +7,13 @@ import { ComplianceReports } from "./ComplianceReports";
 import { AdminSettings } from "./AdminSettings";
 import { SubmissionMonitor } from "./SubmissionMonitor";
 import { AdminTab } from "../../types";
-import { facultyLecturersData } from "../../mock/mockData";
+import { useAdminRecords } from "../../hooks/useAdminRecords";
 
 export function AdminWebPortal() {
   const C = useColors();
+  const { records } = useAdminRecords();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
-  const pendingSubmissions = facultyLecturersData.filter(item => item.submissionStatus !== "Finalised").length;
+  const pendingSubmissions = records.filter(item => item.submissionStatus !== "Finalised").length;
 
   return (
     <div style={{ width: "100%", boxSizing: "border-box", padding: "0 clamp(20px, 3vw, 48px) 48px", display: "flex", gap: "clamp(20px, 2.5vw, 36px)" }}>

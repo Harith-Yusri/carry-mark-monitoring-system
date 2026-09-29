@@ -1,34 +1,61 @@
-import React, { useState } from "react";
-import { Plus, CheckCircle, ChevronRight, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { BookOpen, Plus, CheckCircle, ChevronRight, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { ACADEMIC_SESSION, lecturerAccount, lecturerSubjectsData } from "../../mock/mockData";
+import { useAuth } from "../../context/AuthContext";
+import { createLecturerSubject, loadSubjectCreationData, SubjectCatalogueEntry, listLecturerSubjects, SubjectSummary } from "../../services/carryMarkApi";
 
-export type LecturerSubject = { code: string; name: string; progSem: number; students: number; lastSync: string | null; status: string };
-
-export const lecturerSubjects: LecturerSubject[] = lecturerSubjectsData;
+export type LecturerSubject = SubjectSummary;
 
 export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj: LecturerSubject) => void }) {
   const C = useColors();
+  const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [subjects, setSubjects] = useState<LecturerSubject[]>(() => {
-    try { return JSON.parse(localStorage.getItem("carrymark_lecturer_subjects_v3") || "null") ?? lecturerSubjects; }
-    catch { return lecturerSubjects; }
-  });
+  const [subjects, setSubjects] = useState<LecturerSubject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [semester, setSemester] = useState("1");
   const [formError, setFormError] = useState("");
+  const [catalogue, setCatalogue] = useState<SubjectCatalogueEntry[]>([]);
+  const [creationTerm, setCreationTerm] = useState("");
+  const [catalogueLoading, setCatalogueLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const saveInFlight = useRef(false);
+  const existingSubject = catalogue.find(subject => subject.code === code.trim().toUpperCase());
+  const validForm = /^[A-Z0-9][A-Z0-9_-]{0,29}$/.test(code.trim().toUpperCase()) &&
+    (existingSubject ? existingSubject.is_active : name.trim().length > 0 && name.trim().length <= 200) &&
+    Boolean(creationTerm) && !catalogueLoading && !saving;
+
 
   const progSems = [...new Set(subjects.map(s => s.progSem))].sort((a, b) => a - b);
 
-  const createSubject = () => {
-    const normalizedCode = code.trim().toUpperCase();
-    if (!normalizedCode || !name.trim()) return setFormError("Subject code and name are required.");
-    if (subjects.some(subject => subject.code === normalizedCode)) return setFormError("That subject code already exists.");
-    const next = [...subjects, { code: normalizedCode, name: name.trim(), progSem: Number(semester), students: 0, lastSync: null, status: "draft" }];
-    setSubjects(next);
-    localStorage.setItem("carrymark_lecturer_subjects_v3", JSON.stringify(next));
-    setCode(""); setName(""); setSemester("1"); setFormError(""); setShowCreateModal(false);
+  useEffect(() => { listLecturerSubjects().then(setSubjects).catch(error => setLoadError(error.message)).finally(() => setLoading(false)); }, []);
+
+  const openCreateModal = async () => {
+    setCode(""); setName(""); setSemester("1"); setFormError(""); setCreationTerm(""); setCatalogue([]);
+    setShowCreateModal(true); setCatalogueLoading(true);
+    try {
+      const data = await loadSubjectCreationData();
+      setCatalogue(data.catalogue); setCreationTerm(data.termLabel);
+    } catch (reason) {
+      setFormError(reason instanceof Error ? reason.message : (reason as { message?: string })?.message ?? "Unable to load the subject catalogue. Close this window and try again.");
+    } finally { setCatalogueLoading(false); }
+  };
+
+  const createSubject = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!validForm || saveInFlight.current) return;
+    saveInFlight.current = true; setSaving(true); setFormError("");
+    try {
+      await createLecturerSubject(code, existingSubject?.name ?? name, existingSubject?.programme_semester ?? Number(semester));
+      setShowCreateModal(false); setLoading(true); setLoadError("");
+      try { setSubjects(await listLecturerSubjects()); }
+      catch { setLoadError("Your subject was saved, but the list could not refresh. Please reload the page."); }
+      finally { setLoading(false); }
+    } catch (reason) {
+      setFormError(reason instanceof Error ? reason.message : (reason as { message?: string })?.message ?? "Unable to create subject. Please try again.");
+    } finally { saveInFlight.current = false; setSaving(false); }
   };
 
   return (
@@ -37,16 +64,29 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
         <div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 2px" }}>My Subjects</h1>
           <p style={{ fontSize: "12px", color: C.textMuted }}>
-            {lecturerAccount.name} ({lecturerAccount.id}) · {ACADEMIC_SESSION} · {subjects.length} subject{subjects.length === 1 ? "" : "s"} across {progSems.length} programme semester{progSems.length === 1 ? "" : "s"}
+            {user?.name} ({user?.id}) · {subjects[0]?.termLabel ?? "Current semester"} · {subjects.length} subject{subjects.length === 1 ? "" : "s"} across {progSems.length} programme semester{progSems.length === 1 ? "" : "s"}
           </p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={openCreateModal}
           style={{ background: C.maroon, color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontSize: "13px", fontWeight: 600, fontFamily: C.sans, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
         >
           <Plus size={15} /> Create New Subject
         </button>
       </div>
+
+      {loading && <p role="status" style={{ color: C.textMuted, fontSize: "13px" }}>Loading your subjects…</p>}
+      {loadError && <p role="alert" style={{ color: C.red, fontSize: "13px" }}>Unable to load your subjects. {loadError}</p>}
+      {!loading && !loadError && subjects.length === 0 && (
+        <div role="status" style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px", padding: "48px 24px", textAlign: "center" }}>
+          <BookOpen size={32} aria-hidden="true" style={{ color: C.maroon, marginBottom: "16px" }} />
+          <h2 style={{ fontFamily: C.display, color: C.text, fontSize: "20px", fontWeight: 700, margin: "0 0 10px" }}>No Subjects Added</h2>
+          <p style={{ color: C.textMuted, fontSize: "13px", lineHeight: 1.7, maxWidth: "460px", margin: "0 auto" }}>
+            You have not added any subjects yet. Select “Create New Subject” to set up a subject for your teaching activities.
+          </p>
+          <p style={{ color: C.textSub, fontSize: "12px", lineHeight: 1.7, margin: "12px 0 0" }}>Your subjects will appear here once they have been added.</p>
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
         {progSems.map(ps => {
@@ -67,7 +107,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                   const isSubmitted = subj.status === "submitted";
                   return (
                     <button
-                      key={subj.code}
+                      key={subj.offeringId}
                       onClick={() => onSelectSubject(subj)}
                       style={{ textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "8px", padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" }}
                       onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.transform = "translateY(-2px)"; }}
@@ -85,7 +125,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                       <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "14px", color: C.text, marginBottom: "10px" }}>{subj.name}</div>
                       <div style={{ display: "flex", gap: "14px", marginBottom: "10px", fontSize: "11px", color: C.textMuted }}>
                         <div><span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.students}</span> students</div>
-                        <div>Last Sync: <span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.lastSync ?? "Pending"}</span></div>
+                        <div>Last Sync: <span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.lastSync ? new Date(subj.lastSync).toLocaleString() : "Pending"}</span></div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "4px", color: C.maroon, fontSize: "12px", fontWeight: 600 }}>
                         <span>Manage Subject Hub</span><ChevronRight size={14} />
@@ -101,33 +141,41 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
 
       {/* Modal */}
       {showCreateModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+        <div role="dialog" aria-modal="true" aria-label="Create New Subject" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
           <div style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px", width: "420px", padding: "24px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
               <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "16px", color: C.text }}>Create New Subject</div>
-              <X size={18} color={C.textMuted} style={{ cursor: "pointer" }} onClick={() => setShowCreateModal(false)} />
+              <button type="button" aria-label="Close" disabled={saving || catalogueLoading} onClick={() => setShowCreateModal(false)} style={{ background: "none", border: 0, color: C.textMuted, cursor: "pointer" }}><X size={18} /></button>
             </div>
+            <form onSubmit={createSubject}>
+            <p style={{ color: C.textMuted, fontSize: "12px", lineHeight: 1.6 }}>
+              {catalogueLoading ? "Loading subject catalogue…" : creationTerm ? `Add a subject for ${creationTerm}. Select an existing code or enter a new one.` : "Subject creation is unavailable."}
+            </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
               <div>
                 <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT CODE</label>
-                <input value={code} onChange={event => setCode(event.target.value)} placeholder="e.g. ITT600" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none" }} />
+                <input aria-label="Subject code" list="subject-catalogue" required maxLength={30} disabled={saving || catalogueLoading} value={code} onChange={event => { setCode(event.target.value.toUpperCase()); setFormError(""); }} placeholder="e.g. ITT600" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none" }} />
               </div>
+              <datalist id="subject-catalogue">{catalogue.filter(subject => subject.is_active).map(subject => <option key={subject.code} value={subject.code}>{subject.name}</option>)}</datalist>
+              {existingSubject && <p role="status" style={{ color: existingSubject.is_active ? C.textSub : C.red, fontSize: "12px", lineHeight: 1.6, margin: 0 }}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
               <div>
                 <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT NAME</label>
-                <input value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Cloud Computing & DevOps" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none" }} />
+                <input aria-label="Subject name" required maxLength={200} disabled={Boolean(existingSubject) || saving || catalogueLoading} value={existingSubject?.name ?? name} onChange={event => setName(event.target.value)} placeholder="e.g. Cloud Computing & DevOps" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none" }} />
               </div>
               <div>
                 <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>PROGRAMME SEMESTER</label>
-                <select value={semester} onChange={event => setSemester(event.target.value)} style={{ width: "100%", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text }}>
-                  {[1,2,3,4,5,6].map(value => <option key={value} value={value}>Semester {value}</option>)}
+                <select aria-label="Programme semester" disabled={Boolean(existingSubject) || saving || catalogueLoading} value={existingSubject ? String(existingSubject.programme_semester ?? "") : semester} onChange={event => setSemester(event.target.value)} style={{ width: "100%", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text }}>
+                  {existingSubject && existingSubject.programme_semester === null && <option value="">Not specified</option>}
+                  {[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>Semester {value}</option>)}
                 </select>
               </div>
-              {formError && <div style={{ color: C.red, fontSize: "12px" }}>{formError}</div>}
+              {formError && <div role="alert" style={{ color: C.red, fontSize: "12px" }}>{formError}</div>}
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-              <button onClick={() => setShowCreateModal(false)} style={{ padding: "8px 14px", background: C.elevated, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.text, fontSize: "12px", cursor: "pointer" }}>Cancel</button>
-              <button onClick={createSubject} style={{ padding: "8px 14px", background: C.maroon, border: "none", borderRadius: "6px", color: "#fff", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}>Create Subject</button>
+              <button type="button" disabled={saving || catalogueLoading} onClick={() => setShowCreateModal(false)} style={{ padding: "8px 14px", background: C.elevated, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.text, fontSize: "12px", cursor: "pointer" }}>Cancel</button>
+              <button type="submit" disabled={!validForm} style={{ padding: "8px 14px", background: C.maroon, border: "none", borderRadius: "6px", color: "#fff", fontWeight: 600, fontSize: "12px", cursor: "pointer" , opacity: validForm ? 1 : .55 }}>{saving ? "Saving…" : existingSubject ? "Add Subject" : "Create Subject"}</button>
             </div>
+            </form>
           </div>
         </div>
       )}

@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CarryMark: Run Android App",
+      "type": "shell",
+      "command": "zsh",
+      "args": [
+        "${workspaceFolder}/student-mobile/scripts/run-app.sh"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "CarryMark: Stop Android Emulator",
+      "type": "shell",
+      "command": "zsh",
+      "args": [
+        "${workspaceFolder}/student-mobile/scripts/stop-emulator.sh"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    }
+  ]
+}

@@ -1,34 +1,33 @@
 import React, { useMemo, useState } from "react";
 import { CheckCircle, Clock, Send } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { facultyLecturersData } from "../../mock/mockData";
+import { useReminders } from "../../hooks/useReminders";
+import { useAdminRecords } from "../../hooks/useAdminRecords";
 
 type StatusFilter = "All" | "Pending" | "Finalised" | "Overdue";
 type ProgrammeFilter = "All Programmes" | "Computer Science" | "Information Technology" | "Information Systems";
 
 export function SubmissionMonitor() {
   const C = useColors();
+  const { records, loading, error } = useAdminRecords();
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [programme, setProgramme] = useState<ProgrammeFilter>("All Programmes");
-  const [sentReminders, setSentReminders] = useState<Set<string>>(new Set());
+  const { sendReminder, sentReminders, sendingReminders, reminderError } = useReminders();
 
-  const pendingCount = facultyLecturersData.filter(item => item.submissionStatus !== "Finalised").length;
-  const filtered = useMemo(() => facultyLecturersData.filter(item => {
+  const pendingCount = records.filter(item => item.submissionStatus !== "Finalised").length;
+  const filtered = useMemo(() => records.filter(item => {
     const matchesProgramme = programme === "All Programmes" || item.department === programme;
     if (!matchesProgramme) return false;
     if (filter === "All") return true;
     if (filter === "Pending") return item.submissionStatus !== "Finalised";
     return item.submissionStatus === filter;
-  }), [filter, programme]);
+  }), [filter, programme, records]);
 
   const programmeOptions: ProgrammeFilter[] = ["All Programmes", "Computer Science", "Information Technology", "Information Systems"];
   const programmeCount = (item: ProgrammeFilter) => item === "All Programmes"
-    ? facultyLecturersData.length
-    : facultyLecturersData.filter(lecturer => lecturer.department === item).length;
+    ? records.length
+    : records.filter(lecturer => lecturer.department === item).length;
 
-  const sendReminder = (id: string) => {
-    setSentReminders(previous => new Set([...previous, id]));
-  };
 
   return (
     <div>
@@ -66,6 +65,9 @@ export function SubmissionMonitor() {
           </button>
         ))}
       </div>
+      {loading && <p style={{ color: C.textMuted }}>Loading submissions…</p>}
+      {error && <p style={{ color: C.red }}>{error}</p>}
+      {reminderError && <p role="alert" style={{ color: C.red }}>{reminderError}</p>}
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "10px", overflowX: "auto" }}>
         <table style={{ width: "100%", minWidth: "760px", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" }}>
@@ -100,7 +102,7 @@ export function SubmissionMonitor() {
                   <td style={{ padding: "13px 12px", fontFamily: C.mono }}>{lecturer.completionRate}%</td>
                   <td style={{ padding: "13px 12px", fontFamily: C.mono, fontSize: "10px", color: C.textMuted }}>{lecturer.lastUpdated}</td>
                   <td style={{ padding: "13px 12px" }}>
-                    {!finalised ? <button disabled={sent} onClick={() => sendReminder(lecturer.id)} style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "6px 9px", border: "none", borderRadius: "5px", background: sent ? C.greenLight : C.maroon, color: sent ? C.green : "#fff", fontSize: "10px", fontWeight: 700, cursor: sent ? "default" : "pointer", whiteSpace: "nowrap" }}><Send size={11} />{sent ? "REMINDER SENT" : "SEND REMINDER"}</button> : <span style={{ color: C.textMuted }}>—</span>}
+                    {!finalised ? <button disabled={sent || sendingReminders.has(lecturer.id)} onClick={() => sendReminder(lecturer.id)} style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "6px 9px", border: "none", borderRadius: "5px", background: sent ? C.greenLight : C.maroon, color: sent ? C.green : "#fff", fontSize: "10px", fontWeight: 700, cursor: sent ? "default" : "pointer", whiteSpace: "nowrap" }}><Send size={11} />{sent ? "EMAIL QUEUED" : sendingReminders.has(lecturer.id) ? "SENDING…" : "SEND REMINDER"}</button> : <span style={{ color: C.textMuted }}>—</span>}
                   </td>
                 </tr>
               );
