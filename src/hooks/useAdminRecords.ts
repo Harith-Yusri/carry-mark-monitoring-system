@@ -15,7 +15,7 @@ export function useAdminRecords() {
     setLoading(true); setError("");
     const { data, error } = await requireSupabase().from("profiles").select(`
       id, staff_no, full_name, programmes(code,name),
-      subject_offerings(id,status,deadline_at,updated_at,subjects(code,name),class_sections(id,enrolments(count),submissions(status,updated_at)))
+      subject_offerings(id,status,deadline_at,updated_at,subject_name_override,programme_semester_override,subjects(code,name),class_sections(id,enrolments(count),submissions(status,updated_at)))
     `).eq("role", "lecturer").eq("is_active", true);
     if (error) throw error;
     const result = (data as any[]).map(profile => {
@@ -31,7 +31,7 @@ export function useAdminRecords() {
         programmeCode: (profile.programmes?.code ?? "IT") as ProgrammeCode,
         department: profile.programmes?.name ?? "Unassigned",
         subjects: offerings.map((offering: any) => offering.subjects.code),
-        subjectName: offerings.map((offering: any) => offering.subjects.name).join(", ") || "No assigned subjects",
+        subjectName: offerings.map((offering: any) => offering.subject_name_override ?? offering.subjects.name).join(", ") || "No assigned subjects",
         studentCount: sections.reduce((sum: number, section: any) => sum + Number(relationRows<any>(section.enrolments)[0]?.count ?? 0), 0),
         deadline: deadline ? new Date(deadline).toLocaleDateString() : "Default term deadline",
         submissionStatus: (sections.length && finalised === sections.length ? "Finalised" : overdue ? "Overdue" : "In Progress") as LecturerInfo["submissionStatus"],

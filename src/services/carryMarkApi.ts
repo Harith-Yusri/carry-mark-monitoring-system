@@ -43,13 +43,10 @@ export interface SectionRecord {
   students: MarkStudent[];
 }
 
-const DAYS = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-export const dayName = (value: number | null) => value ? DAYS[value] : "Unscheduled";
-
 export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
   const db = requireSupabase();
   const { data, error } = await db.from("subject_offerings").select(`
-    id, status, updated_at,
+    id, status, updated_at, subject_name_override, programme_semester_override,
     subjects!inner(code, name, programme_semester),
     academic_terms!inner(academic_year, semester_no),
     class_sections(id, enrolments(count))
@@ -58,8 +55,8 @@ export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
   return (data as any[]).map(row => ({
     offeringId: row.id,
     code: row.subjects.code,
-    name: row.subjects.name,
-    progSem: row.subjects.programme_semester ?? 0,
+    name: row.subject_name_override ?? row.subjects.name,
+    progSem: row.programme_semester_override ?? row.subjects.programme_semester ?? 0,
     students: (row.class_sections ?? []).reduce((sum: number, section: any) => sum + Number(section.enrolments?.[0]?.count ?? 0), 0),
     lastSync: row.updated_at,
     status: row.status === "completed" ? "submitted" : row.status,
@@ -137,14 +134,14 @@ export async function finaliseSection(sectionId: string) {
   if (error) throw error;
 }
 
-export async function createSection(offeringId: string, values: { label: string; dayOfWeek: number; startsAt: string; endsAt: string; room: string; capacity: number }) {
+export async function createSection(offeringId: string, values: { label: string; capacity: number }) {
   const code = `JOIN-${crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase()}`;
-  const { error } = await requireSupabase().from("class_sections").insert({ offering_id: offeringId, label: values.label, day_of_week: values.dayOfWeek, starts_at: values.startsAt, ends_at: values.endsAt, room: values.room, capacity: values.capacity, join_code: code });
+  const { error } = await requireSupabase().from("class_sections").insert({ offering_id: offeringId, label: values.label, capacity: values.capacity, join_code: code });
   if (error) throw error;
 }
 
-export async function updateSection(id: string, values: { label: string; dayOfWeek: number; startsAt: string; endsAt: string; room: string; capacity: number }) {
-  const { error } = await requireSupabase().from("class_sections").update({ label: values.label, day_of_week: values.dayOfWeek, starts_at: values.startsAt, ends_at: values.endsAt, room: values.room, capacity: values.capacity }).eq("id", id);
+export async function updateSection(id: string, values: { label: string; capacity: number }) {
+  const { error } = await requireSupabase().from("class_sections").update({ label: values.label, capacity: values.capacity }).eq("id", id);
   if (error) throw error;
 }
 
@@ -219,6 +216,15 @@ export async function createLecturerSubject(code: string, name: string, semester
   });
   if (error) throw error;
   return data;
+}
+
+export async function updateLecturerSubject(offeringId: string, name: string, semester: number) {
+  const { error } = await requireSupabase().rpc("update_lecturer_subject", {
+    target_offering: offeringId,
+    subject_name: name.trim(),
+    programme_semester: semester,
+  });
+  if (error) throw error;
 }
 
 

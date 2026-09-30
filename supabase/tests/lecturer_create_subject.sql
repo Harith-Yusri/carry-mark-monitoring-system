@@ -35,9 +35,22 @@ begin
     perform public.create_lecturer_subject(test_code, 'Duplicate', 1);
     raise exception 'FAIL: duplicate assignment allowed';
   exception when others then
-    if sqlerrm not like 'You have already added%' then raise; end if;
+      if sqlerrm not like 'You have already added%' then raise; end if;
   end;
+  perform public.update_lecturer_subject(first_offering, 'Edited Test Subject', 4);
+  if not exists (
+    select 1 from public.subject_offerings
+    where id = first_offering and subject_name_override = 'Edited Test Subject' and programme_semester_override = 4
+  ) then
+    raise exception 'FAIL: lecturer subject override was not saved';
+  end if;
   perform set_config('request.jwt.claim.sub', lecturer_b::text, true);
+  begin
+    perform public.update_lecturer_subject(first_offering, 'Unauthorised Edit', 5);
+    raise exception 'FAIL: lecturer edited another lecturer offering';
+  exception when others then
+    if sqlerrm not like 'You can only edit subjects%' then raise; end if;
+  end;
   second_offering := public.create_lecturer_subject(test_code, 'Do not overwrite', 9);
   if not exists (select 1 from public.subject_offerings so where id = second_offering and so.subject_id = test_subject_id and lecturer_id = lecturer_b) then
     raise exception 'FAIL: second lecturer did not reuse the catalogue subject';
@@ -85,7 +98,10 @@ begin
   if has_function_privilege('anon', 'public.create_lecturer_subject(text,text,integer)', 'execute') then
     raise exception 'FAIL: anonymous role can call function';
   end if;
+  if has_function_privilege('anon', 'public.update_lecturer_subject(uuid,text,integer)', 'execute') then
+    raise exception 'FAIL: anonymous role can edit a lecturer subject';
+  end if;
 end;
 $$;
 rollback;
-select 'Passed: new subject, normalization, duplicate rejection, catalogue reuse, inactive subject, invalid semester, role checks, closed term, anonymous permission. All fixtures rolled back.' as result;
+select 'Passed: subject creation and owned edit, normalization, duplicate rejection, catalogue reuse, ownership, inactive subject, invalid semester, role checks, closed term, anonymous permission. All fixtures rolled back.' as result;

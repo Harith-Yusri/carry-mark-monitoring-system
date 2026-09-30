@@ -4,7 +4,7 @@ export function pendingSections(offerings) {
       const submissions = Array.isArray(section.submissions) ? section.submissions : [section.submissions];
       return !submissions.some(submission => submission?.status === 'finalised');
     })
-    .map(section => `${offering.subjects.code} — ${offering.subjects.name}, Section ${section.label}`));
+    .map(section => `${offering.subjects.code} — ${offering.subject_name_override ?? offering.subjects.name}, Section ${section.label}`));
 }
 
 export function reminderText(name, sections) {

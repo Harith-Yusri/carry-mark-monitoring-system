@@ -545,8 +545,10 @@ export type Database = {
           deadline_at: string | null
           id: string
           lecturer_id: string
+          programme_semester_override: number | null
           status: Database["public"]["Enums"]["offering_status"]
           subject_id: string
+          subject_name_override: string | null
           term_id: string
           updated_at: string
         }
@@ -556,8 +558,10 @@ export type Database = {
           deadline_at?: string | null
           id?: string
           lecturer_id: string
+          programme_semester_override?: number | null
           status?: Database["public"]["Enums"]["offering_status"]
           subject_id: string
+          subject_name_override?: string | null
           term_id: string
           updated_at?: string
         }
@@ -567,8 +571,10 @@ export type Database = {
           deadline_at?: string | null
           id?: string
           lecturer_id?: string
+          programme_semester_override?: number | null
           status?: Database["public"]["Enums"]["offering_status"]
           subject_id?: string
+          subject_name_override?: string | null
           term_id?: string
           updated_at?: string
         }
@@ -727,6 +733,7 @@ export type Database = {
     Functions: {
       set_offering_carry_max: { Args: { target_offering: string; total_weight: number }; Returns: undefined }
       create_lecturer_subject: { Args: { subject_code: string; subject_name: string; programme_semester: number }; Returns: string }
+      update_lecturer_subject: { Args: { target_offering: string; subject_name: string; programme_semester: number }; Returns: undefined }
       can_access_enrolment: { Args: { target: string }; Returns: boolean }
       can_access_offering: { Args: { target: string }; Returns: boolean }
       can_access_section: { Args: { target: string }; Returns: boolean }
