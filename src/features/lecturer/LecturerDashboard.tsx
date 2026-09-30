@@ -181,7 +181,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
               <button type="button" aria-label="Close" disabled={saving || catalogueLoading} onClick={closeSubjectModal} style={{ background: "none", border: 0, color: C.textMuted, cursor: "pointer" }}><X size={18} /></button>
             </div>
             <form onSubmit={createSubject}>
-            <p style={{ color: C.textMuted, fontSize: "12px", lineHeight: 1.6 }}>
+            <p style={{ color: C.textMuted, fontSize: "12px", lineHeight: 1.6, margin: "0 0 20px" }}>
               {editingSubject ? `Update your ${editingSubject.code} subject details for ${editingSubject.termLabel}. Existing classes, assessments and marks will not be changed.` : catalogueLoading ? "Loading subject catalogue…" : creationTerm ? `Add a subject for ${creationTerm}. Select an existing code or enter a new one.` : "Subject creation is unavailable."}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
