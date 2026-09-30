@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Shield, LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { AdminDashboard } from "./AdminDashboard";
 import { LecturerDirectory } from "./LecturerDirectory";
@@ -16,19 +16,18 @@ export function AdminWebPortal() {
   const pendingSubmissions = records.filter(item => item.submissionStatus !== "Finalised").length;
 
   return (
-    <div style={{ width: "100%", boxSizing: "border-box", padding: "0 clamp(20px, 3vw, 48px) 48px", display: "flex", gap: "clamp(20px, 2.5vw, 36px)" }}>
+    <div className="admin-portal">
       {/* Admin Sidebar Navigation */}
-      <div style={{ width: "clamp(210px, 17vw, 250px)", flexShrink: 0 }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "16px 12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 8px 12px", borderBottom: `1px solid ${C.border}`, marginBottom: "12px" }}>
-            <Shield size={18} color={C.maroon} />
+      <div className="admin-sidebar">
+        <nav aria-label="Faculty administration" style={{ background: C.surface, borderTop: `3px solid ${C.maroon}`, borderBottom: `1px solid ${C.border}`, padding: "14px 10px 12px" }}>
+          <div style={{ padding: "0 8px 12px", borderBottom: `1px solid ${C.border}`, marginBottom: "10px" }}>
             <div>
-              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "13px", color: C.text }}>Faculty Admin</div>
-              <div style={{ fontSize: "9px", fontFamily: C.mono, color: C.textMuted }}>FSKM PORTAL</div>
+              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "14px", color: C.text }}>Faculty Administration</div>
+              <div style={{ marginTop: "3px", fontSize: "9px", fontFamily: C.mono, color: C.textMuted, letterSpacing: ".06em" }}>FSKM · CARRY MARK CONTROL</div>
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div className="admin-nav-list">
             {[
               { key: "overview",   label: "Compliance Overview", icon: <LayoutDashboard size={15} /> },
               { key: "submissions", label: "Submission Monitor", icon: <ClipboardList size={15} />, pending: pendingSubmissions },
@@ -84,7 +83,7 @@ export function AdminWebPortal() {
               </button>
             ))}
           </div>
-        </div>
+        </nav>
       </div>
 
       {/* Main Content Pane */}

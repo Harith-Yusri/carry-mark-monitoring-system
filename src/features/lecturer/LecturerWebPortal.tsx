@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, Layers, CheckSquare, Download } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { LecturerDashboard, LecturerSubject } from "./LecturerDashboard";
 import { AssessmentsTab } from "./AssessmentsTab";
@@ -30,21 +30,21 @@ export function LecturerWebPortal() {
       ) : currentSubj ? (
         <div>
           {/* Top Back Navigation Bar */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+          <div className="subject-hub-top" style={{ alignItems: "center", marginBottom: "16px" }}>
             <button
               onClick={() => setScreen("dashboard")}
               style={{ background: "transparent", border: "none", color: C.maroon, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: C.sans }}
             >
               <ChevronLeft size={16} /> Back to My Subjects
             </button>
-            <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.textMuted }}>
+            <div className="subject-context-label" style={{ fontFamily: C.mono, fontSize: "11px", color: C.textMuted }}>
               SUBJECT HUB · <span style={{ color: C.maroon, fontWeight: 700 }}>{currentSubj.code}</span> ({currentSubj.name})
             </div>
           </div>
 
           {/* Subject Header */}
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "20px", marginBottom: "20px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <section style={{ borderLeft: `3px solid ${C.maroon}`, padding: "8px 0 8px 18px", marginBottom: "22px" }}>
+            <div className="subject-header-row" style={{ alignItems: "center" }}>
               <div>
                 <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 700 }}>COURSE CODE: {currentSubj.code}</div>
                 <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, margin: "2px 0 4px" }}>{currentSubj.name}</h1>
@@ -53,23 +53,24 @@ export function LecturerWebPortal() {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Tabs Navigation */}
-          <div style={{ display: "flex", gap: "8px", borderBottom: `1px solid ${C.border}`, paddingBottom: "10px", marginBottom: "20px" }}>
+          <div className="subject-tabs" style={{ borderColor: C.border }}>
             {[
-              { key: "assessments", label: "Assessment Structure", icon: <Layers size={14} /> },
-              { key: "marks",       label: "Marks Entry & Eligibility", icon: <CheckSquare size={14} /> },
-              { key: "export",      label: "Export Carry Marks", icon: <Download size={14} /> },
+              { key: "assessments", step: "01", label: "Assessment Structure" },
+              { key: "marks", step: "02", label: "Marks Entry & Eligibility" },
+              { key: "export", step: "03", label: "Export Carry Marks" },
             ].map(t => (
               <button
                 key={t.key}
                 onClick={() => setActiveTab(t.key as LecturerTab)}
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  border: `1px solid ${activeTab === t.key ? C.maroon : C.border}`,
-                  background: activeTab === t.key ? C.maroonLight : C.surface,
+                  padding: "9px 12px",
+                  borderRadius: 0,
+                  border: "none",
+                  borderBottom: `2px solid ${activeTab === t.key ? C.maroon : "transparent"}`,
+                  background: "transparent",
                   color: activeTab === t.key ? C.maroon : C.textSub,
                   fontWeight: activeTab === t.key ? 700 : 500,
                   fontSize: "13px",
@@ -77,10 +78,11 @@ export function LecturerWebPortal() {
                   display: "flex",
                   alignItems: "center",
                   gap: "6px",
-                  transition: "all 0.15s"
+                  whiteSpace: "nowrap",
+                  transition: "border-color 0.15s, color 0.15s"
                 }}
               >
-                {t.icon} {t.label}
+                <span style={{ fontFamily: C.mono, fontSize: "9px", color: activeTab === t.key ? C.maroon : C.textMuted }}>{t.step}</span> {t.label}
               </button>
             ))}
           </div>

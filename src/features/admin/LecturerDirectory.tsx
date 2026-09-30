@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Search } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { useAdminRecords } from "../../hooks/useAdminRecords";
 
@@ -7,49 +6,74 @@ export function LecturerDirectory() {
   const C = useColors();
   const { records, loading, error } = useAdminRecords();
   const [searchTerm, setSearchTerm] = useState("");
-
-  const filtered = records.filter(l => l.name.toLowerCase().includes(searchTerm.toLowerCase()) || l.id.toLowerCase().includes(searchTerm.toLowerCase()));
+  const query = searchTerm.trim().toLowerCase();
+  const filtered = records.filter(lecturer =>
+    [lecturer.name, lecturer.id, lecturer.department, lecturer.programmeCode, lecturer.subjects.join(" "), lecturer.subjectName]
+      .some(value => value.toLowerCase().includes(query)),
+  );
 
   return (
     <div>
-      <div style={{ marginBottom: "20px" }}>
-        <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 4px" }}>Faculty Lecturer Directory</h1>
-        <p style={{ fontSize: "12px", color: C.textMuted }}>Faculty of Computer & Mathematical Sciences Academic Staff Contact & Submissions Directory</p>
+      <div className="responsive-action-header" style={{ marginBottom: "20px", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "10px", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>ACADEMIC STAFF</div>
+          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 4px" }}>Lecturer Directory</h1>
+          <p style={{ fontSize: "12px", color: C.textMuted, margin: 0 }}>Teaching allocation, workload and submission activity in one faculty register.</p>
+        </div>
+        <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "10px" }}>{filtered.length} OF {records.length} RECORDS</div>
       </div>
 
-      <div style={{ position: "relative", marginBottom: "16px" }}>
-        <Search size={16} color={C.textMuted} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} />
+      <label style={{ display: "block", maxWidth: "560px", marginBottom: "18px" }}>
+        <span style={{ display: "block", color: C.textSub, fontFamily: C.mono, fontSize: "9px", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>SEARCH STAFF OR TEACHING ALLOCATION</span>
         <input
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          placeholder="Search lecturer by name or staff ID..."
-          style={{ width: "100%", padding: "10px 14px 10px 38px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "8px", color: C.text, fontSize: "13px", outline: "none" }}
+          onChange={event => setSearchTerm(event.target.value)}
+          placeholder="Name, staff ID, programme or subject"
+          style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "4px", color: C.text, fontSize: "12px", outline: "none" }}
         />
-      </div>
+      </label>
+
       {loading && <p style={{ color: C.textMuted }}>Loading lecturers…</p>}
-      {error && <p style={{ color: C.red }}>{error}</p>}
+      {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-        {filtered.map(lect => (
-          <div key={lect.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-              <div>
-                <div style={{ fontFamily: C.mono, fontSize: "10px", color: C.maroon, fontWeight: 700 }}>STAFF ID: {lect.id}</div>
-                <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "15px", color: C.text }}>{lect.name}</div>
-                <div style={{ fontSize: "11px", color: C.textMuted }}>{lect.department}</div>
-              </div>
-              <span style={{ fontSize: "10px", fontFamily: C.mono, padding: "2px 8px", borderRadius: "4px", background: lect.submissionStatus === "Finalised" ? C.greenLight : C.amberLight, color: lect.submissionStatus === "Finalised" ? C.green : C.amber, border: `1px solid ${C.border}` }}>
-                {lect.submissionStatus}
-              </span>
-            </div>
-
-            <div style={{ fontSize: "11px", color: C.textSub, display: "flex", flexDirection: "column", gap: "4px" }}>
-              <div>Assigned Courses: <span style={{ fontFamily: C.mono, color: C.maroon, fontWeight: 600 }}>{lect.subjects.join(", ")}</span> · {lect.subjectName}</div>
-              <div>Registered Students: <span style={{ fontFamily: C.mono, color: C.textMuted }}>{lect.studentCount}</span></div>
-              <div>Last Activity: <span style={{ fontFamily: C.mono, color: C.textMuted }}>{lect.lastUpdated}</span></div>
-            </div>
-          </div>
-        ))}
+      <div className="directory-table">
+        <table style={{ width: "100%", minWidth: "850px", borderCollapse: "collapse", fontSize: "11px" }}>
+          <thead>
+            <tr style={{ borderTop: `2px solid ${C.maroon}`, borderBottom: `1px solid ${C.borderMid}` }}>
+              {["Lecturer", "Programme", "Teaching allocation", "Workload", "Submission", "Last activity"].map(label => (
+                <th key={label} style={{ padding: "10px", textAlign: "left", color: C.textMuted, fontFamily: C.mono, fontSize: "9px", letterSpacing: ".06em", fontWeight: 700 }}>{label.toUpperCase()}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(lecturer => {
+              const statusColor = lecturer.submissionStatus === "Finalised" ? C.green : lecturer.submissionStatus === "Overdue" ? C.red : C.amber;
+              return (
+                <tr key={lecturer.id} style={{ borderBottom: `1px solid ${C.borderMid}` }}>
+                  <td style={{ padding: "14px 10px" }}>
+                    <div style={{ color: C.text, fontWeight: 700, fontSize: "12px" }}>{lecturer.name}</div>
+                    <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "9px", marginTop: "4px" }}>{lecturer.id}</div>
+                  </td>
+                  <td style={{ padding: "14px 10px" }}>
+                    <div style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700 }}>{lecturer.programmeCode}</div>
+                    <div style={{ color: C.textMuted, fontSize: "9px", marginTop: "4px" }}>{lecturer.department}</div>
+                  </td>
+                  <td style={{ padding: "14px 10px", color: C.textSub }}>
+                    <div style={{ color: C.text, fontFamily: C.mono, fontWeight: 600 }}>{lecturer.subjects.join(", ")}</div>
+                    <div style={{ color: C.textMuted, marginTop: "4px" }}>{lecturer.subjectName}</div>
+                  </td>
+                  <td style={{ padding: "14px 10px", color: C.textSub }}><span style={{ color: C.text, fontFamily: C.mono, fontWeight: 700 }}>{lecturer.studentCount}</span> students</td>
+                  <td style={{ padding: "14px 10px" }}>
+                    <div style={{ color: statusColor, fontFamily: C.mono, fontSize: "9px", fontWeight: 700, letterSpacing: ".03em" }}>{lecturer.submissionStatus.toUpperCase()}</div>
+                    <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "9px", marginTop: "4px" }}>{lecturer.completionRate}% complete</div>
+                  </td>
+                  <td style={{ padding: "14px 10px", color: C.textMuted, fontFamily: C.mono, fontSize: "9px" }}>{lecturer.lastUpdated}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {!loading && filtered.length === 0 && <div style={{ padding: "24px 10px", borderBottom: `1px solid ${C.borderMid}`, color: C.textMuted, fontSize: "12px" }}>No lecturer records match this search.</div>}
       </div>
     </div>
   );

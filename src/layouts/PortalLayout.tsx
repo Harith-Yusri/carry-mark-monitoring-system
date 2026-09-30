@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router";
-import { Sun, Moon, BarChart3, LogOut, User as UserIcon, AlertTriangle } from "lucide-react";
+import { Sun, Moon, LogOut, AlertTriangle } from "lucide-react";
 import { useDark, useDarkToggle, useColors } from "../context/DarkModeContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -27,17 +27,15 @@ export function PortalLayout() {
     <div style={{ fontFamily: C.sans, background: C.bg, color: C.text, minHeight: "100vh", transition: "background 0.2s, color 0.2s" }}>
       {/* Top Application Bar */}
       <div style={{ borderBottom: `1px solid ${C.border}`, background: C.surface, position: "sticky", top: 0, zIndex: 40, transition: "background 0.2s" }}>
-        <div style={{ width: "100%", boxSizing: "border-box", padding: "0 clamp(20px, 3vw, 48px)", display: "flex", alignItems: "center", justifyContent: "space-between", height: "72px" }}>
+        <div className="portal-header-inner">
           
           {/* Logo & System Title */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: "40px", height: "40px", flexShrink: 0, background: C.maroon, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <BarChart3 size={21} color="#fff" />
-            </div>
+            <div className="product-mark" style={{ background: C.maroon }} aria-hidden="true">CM</div>
             <div>
-              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "16px", color: C.text, lineHeight: 1.1 }}>UiTM Carry Mark Monitoring System</div>
-              <div style={{ fontSize: "10px", fontFamily: C.mono, color: C.textMuted, letterSpacing: "0.05em", marginTop: "4px" }}>
-                {user?.role === 'admin' ? "FACULTY ADMIN PORTAL" : "LECTURER PORTAL"}
+              <div className="portal-product-title" style={{ fontFamily: C.display, fontWeight: 700, fontSize: "16px", color: C.text, lineHeight: 1.1 }}>UiTM Carry Mark Monitoring</div>
+              <div className="portal-product-subtitle" style={{ fontSize: "10px", fontFamily: C.mono, color: C.textMuted, letterSpacing: "0.06em", marginTop: "4px" }}>
+                {user?.role === 'admin' ? "FACULTY ACADEMIC OPERATIONS" : "LECTURER ASSESSMENT WORKSPACE"}
               </div>
             </div>
           </div>
@@ -45,9 +43,11 @@ export function PortalLayout() {
           {/* User Info & Actions */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {user && (
-              <div style={{ minHeight: "44px", display: "flex", alignItems: "center", gap: "9px", borderRight: `1px solid ${C.border}`, paddingRight: "18px" }}>
-                <UserIcon size={19} color={C.textSub} />
-                <span style={{ fontSize: "14px", fontWeight: 700, color: C.text }}>{user.name}</span>
+              <div className="portal-user-block" style={{ minHeight: "44px", display: "flex", alignItems: "center", borderRight: `1px solid ${C.border}`, paddingRight: "18px" }}>
+                <div className="portal-user-name">
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: C.text }}>{user.name}</div>
+                  <div style={{ marginTop: "3px", fontFamily: C.mono, fontSize: "9px", color: C.textMuted, letterSpacing: ".05em" }}>{user.id} · {user.role.toUpperCase()}</div>
+                </div>
               </div>
             )}
             
@@ -66,7 +66,7 @@ export function PortalLayout() {
               style={{ minHeight: "44px", boxSizing: "border-box", background: "transparent", border: `1px solid ${C.borderMid}`, borderRadius: "8px", padding: "10px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "7px", color: C.red, fontSize: "13px", fontFamily: C.sans, fontWeight: 600, transition: "all 0.15s" }}
             >
               <LogOut size={17} />
-              Logout
+              <span className="portal-logout-label">Logout</span>
             </button>
           </div>
         </div>

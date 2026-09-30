@@ -31,7 +31,7 @@ export function SubmissionMonitor() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "20px" }}>
+      <div className="responsive-action-header" style={{ alignItems: "flex-end", marginBottom: "20px" }}>
         <div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 4px" }}>Submission Monitor</h1>
           <p style={{ fontSize: "12px", color: C.textMuted }}>Track carry mark submission status per lecturer and send reminders for incomplete work.</p>

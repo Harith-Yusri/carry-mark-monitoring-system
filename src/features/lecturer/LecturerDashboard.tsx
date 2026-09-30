@@ -60,7 +60,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+      <div className="responsive-action-header" style={{ alignItems: "center", marginBottom: "20px" }}>
         <div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 2px" }}>My Subjects</h1>
           <p style={{ fontSize: "12px", color: C.textMuted }}>

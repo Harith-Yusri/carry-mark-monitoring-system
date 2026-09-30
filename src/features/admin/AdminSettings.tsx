@@ -90,7 +90,7 @@ export function AdminSettings() {
         <p style={{ color: C.textMuted, fontSize: "11px", margin: "6px 0 14px" }}>Applies to all programmes unless overridden below.</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {([['CS', 'Computer Science'], ['IT', 'Information Technology'], ['IS', 'Information Systems']] as const).map(([code, name]) => (
-            <div key={code} style={{ display: "grid", gridTemplateColumns: "190px minmax(180px, 1fr)", gap: "14px", alignItems: "center", padding: "11px 13px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px" }}>
+            <div className="settings-deadline-row" key={code} style={{ display: "grid", gridTemplateColumns: "190px minmax(180px, 1fr)", gap: "14px", alignItems: "center", padding: "11px 13px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px" }}>
               <div><div style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700, fontSize: "12px" }}>{code}</div><div style={{ color: C.textMuted, fontSize: "11px", marginTop: "3px" }}>{name}</div></div>
               <input type="date" value={settings.programmeDeadlines[code]} onChange={event => updateDeadline(code, event.target.value)} style={fieldStyle} />
             </div>
