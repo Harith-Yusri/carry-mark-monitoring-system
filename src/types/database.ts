@@ -316,27 +316,21 @@ export type Database = {
       }
       notification_settings: {
         Row: {
-          alert_administrators: boolean
           auto_remind: boolean
-          notify_students: boolean
           reminder_days: number
           term_id: string
           updated_at: string
           updated_by: string | null
         }
         Insert: {
-          alert_administrators?: boolean
           auto_remind?: boolean
-          notify_students?: boolean
           reminder_days?: number
           term_id: string
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
-          alert_administrators?: boolean
           auto_remind?: boolean
-          notify_students?: boolean
           reminder_days?: number
           term_id?: string
           updated_at?: string

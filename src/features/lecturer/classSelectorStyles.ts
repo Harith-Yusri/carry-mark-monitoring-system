@@ -33,7 +33,7 @@ export const classSelectorTitleStyle: CSSProperties = {
 };
 
 export const classSelectorMetaStyle: CSSProperties = {
-  fontSize: "12px",
+  fontSize: "13px",
   lineHeight: 1.7,
 };
 
@@ -42,6 +42,6 @@ export const classSelectorActionStyle: CSSProperties = {
   alignItems: "center",
   gap: "5px",
   marginTop: "18px",
-  fontSize: "12px",
+  fontSize: "13px",
   fontWeight: 700,
 };

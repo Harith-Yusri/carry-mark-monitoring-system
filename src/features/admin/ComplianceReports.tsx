@@ -51,22 +51,22 @@ export function ComplianceReports() {
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px", alignItems: "flex-end" }}>
         <div>
-          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "10px", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>OFFICIAL OUTPUTS</div>
+          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "11px", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>OFFICIAL OUTPUTS</div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 4px" }}>Reports &amp; Exports</h1>
-          <p style={{ fontSize: "12px", color: C.textMuted, margin: 0 }}>Select a report by academic scope and download its current CSV record.</p>
+          <p style={{ fontSize: "13px", color: C.textMuted, margin: 0 }}>Select a report by academic scope and download its current CSV record.</p>
         </div>
-        <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "10px" }}>{context?.termLabel.toUpperCase() ?? "CURRENT TERM"}</span>
+        <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}>{context?.termLabel.toUpperCase() ?? "CURRENT TERM"}</span>
       </div>
 
       {loading && <p style={{ color: C.textMuted }}>Loading report data…</p>}
       {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
 
       <div className="report-catalogue">
-        <table style={{ width: "100%", minWidth: "790px", borderCollapse: "collapse", fontSize: "11px" }}>
+        <table style={{ width: "100%", minWidth: "790px", borderCollapse: "collapse", fontSize: "12px" }}>
           <thead>
             <tr style={{ borderTop: `2px solid ${C.maroon}`, borderBottom: `1px solid ${C.borderMid}` }}>
               {["Report", "Scope", "Included records", "Format", ""].map((label, index) => (
-                <th key={`${label}-${index}`} style={{ padding: "10px", textAlign: index === 4 ? "right" : "left", color: C.textMuted, fontFamily: C.mono, fontSize: "9px", letterSpacing: ".06em", fontWeight: 700 }}>{label.toUpperCase()}</th>
+                <th key={`${label}-${index}`} style={{ padding: "10px", textAlign: index === 4 ? "right" : "left", color: C.textMuted, fontFamily: C.mono, fontSize: "11px", letterSpacing: ".06em", fontWeight: 700 }}>{label.toUpperCase()}</th>
               ))}
             </tr>
           </thead>
@@ -76,15 +76,15 @@ export function ComplianceReports() {
               return (
                 <tr key={report.key} style={{ borderBottom: `1px solid ${C.borderMid}` }}>
                   <td style={{ padding: "15px 10px", maxWidth: "330px" }}>
-                    <div style={{ color: C.text, fontWeight: 700, fontSize: "12px" }}>{report.title}</div>
-                    <div style={{ color: C.textMuted, fontSize: "10px", marginTop: "4px", lineHeight: 1.45 }}>{report.description}</div>
+                    <div style={{ color: C.text, fontWeight: 700, fontSize: "13px" }}>{report.title}</div>
+                    <div style={{ color: C.textMuted, fontSize: "11px", marginTop: "4px", lineHeight: 1.45 }}>{report.description}</div>
                   </td>
                   <td style={{ padding: "15px 10px", color: C.maroon, fontFamily: C.mono, fontWeight: 700 }}>{report.scope}</td>
-                  <td style={{ padding: "15px 10px", color: C.textSub, fontFamily: C.mono, fontSize: "10px" }}>{report.meta}</td>
-                  <td style={{ padding: "15px 10px", color: C.textMuted, fontFamily: C.mono, fontSize: "10px" }}>CSV</td>
+                  <td style={{ padding: "15px 10px", color: C.textSub, fontFamily: C.mono, fontSize: "11px" }}>{report.meta}</td>
+                  <td style={{ padding: "15px 10px", color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}>CSV</td>
                   <td style={{ padding: "15px 10px", textAlign: "right" }}>
-                    <button onClick={() => exportReport(report)} style={{ minWidth: "118px", padding: "8px 11px", border: `1px solid ${complete ? C.green : C.maroon}66`, borderRadius: "4px", background: complete ? C.greenLight : "transparent", color: complete ? C.green : C.maroon, cursor: "pointer", fontSize: "10px", fontWeight: 700 }}>
-                      {complete ? <CheckCircle size={13} style={{ marginRight: "6px", verticalAlign: "-2px" }} /> : <Download size={13} style={{ marginRight: "6px", verticalAlign: "-2px" }} />}
+                    <button onClick={() => exportReport(report)} style={{ minWidth: "118px", padding: "8px 11px", border: `1px solid ${complete ? C.green : C.maroon}66`, borderRadius: "4px", background: complete ? C.greenLight : "transparent", color: complete ? C.green : C.maroon, cursor: "pointer", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", whiteSpace: "nowrap" }}>
+                      {complete ? <CheckCircle size={13} /> : <Download size={13} />}
                       {complete ? "Downloaded" : "Download CSV"}
                     </button>
                   </td>

@@ -35,20 +35,25 @@ sends a plain-text email through Resend. The recipient is resolved on the server
 Setup:
 
 1. Apply pending migrations using the migration workflow above. The old `reminder_email` column is retained for compatibility but is no longer used.
-2. Create a Resend API key and configure a verified sender. For testing, Resend's test sender can send only to the email associated with your Resend account; other recipients require a verified domain. See [Resend sending documentation](https://resend.com/docs/api-reference/emails/send-email).
-3. In Supabase **Edge Functions > Secrets**, set `RESEND_API_KEY` and `REMINDER_FROM_EMAIL` (for example, `Faculty Administration <reminders@your-verified-domain>`). Never put these secrets in a `VITE_` variable or commit them.
+2. Create a Resend API key. Store all reminder settings in Supabase **Edge Functions > Secrets**. Never put them in a `VITE_` variable, a local `.env` file, or source control.
+3. Choose one email mode:
+
+   - Development: set `REMINDER_EMAIL_MODE=development`, `REMINDER_FROM_EMAIL=Carry Mark System <onboarding@resend.dev>`, and `REMINDER_TEST_RECIPIENT` to the single address Resend permits for test delivery. The selected lecturer's Supabase Auth email must match that address exactly (case-insensitively); the function refuses every other recipient.
+   - Production: set `REMINDER_EMAIL_MODE=production` and `REMINDER_FROM_EMAIL=Faculty Administration <noreply@your-verified-domain.com>`. Add and verify that custom domain in Resend first. See [Resend domain documentation](https://resend.com/docs/dashboard/domains/introduction). Production rejects `@resend.dev` senders and permits real lecturer Auth emails. `REMINDER_TEST_RECIPIENT` is not used.
+
+   If `REMINDER_EMAIL_MODE` is absent, the function defaults to production. Any unsupported value fails closed.
 4. Deploy with `npx supabase functions deploy send-reminder --project-ref YOUR_PROJECT_REF`. The function config disables the legacy gateway JWT check; the handler validates the bearer token with Supabase Auth and checks the active administrator role itself. Keep these checks in place.
-5. In **Supabase Authentication > Users**, make sure the lecturer’s linked account has a real email address. For Resend test delivery, use the email associated with your Resend account. There is no separate reminder address to maintain.
+5. In **Supabase Authentication > Users**, make sure every lecturer’s linked account has their real email address. The lecturer does not need a Resend account, and their address does not need to match the Resend account owner. There is no separate reminder address to maintain.
 6. Deploy `staff-login` with `npx supabase functions deploy staff-login --project-ref YOUR_PROJECT_REF`. This preserves staff ID login when registered email addresses change. It resolves the email on the server and verifies the password through Supabase Auth.
-7. Sign in as an administrator and click **Send Reminder** for a lecturer with outstanding class submissions. Check the mailbox and Resend delivery logs.
+7. Sign in as an administrator and click **Send Reminder** for a lecturer with an outstanding class in the current term. Check that lecturer’s mailbox and the Resend delivery logs.
 
 The UI shows “Email Queued” only after Resend accepts the email, which does not
 prove inbox delivery. Errors leave the button available for retry. An hourly
 provider idempotency key suppresses duplicate requests for the same lecturer,
 including concurrent requests and page reloads. If the address or outstanding
 classes change after a send during that hour, Resend rejects the changed payload;
-retry in the next hour. Current monitoring and reminders include all assigned
-terms. This implementation adds manual reminders only; it does not schedule the
+retry in the next hour. Current reminders include outstanding classes in the
+current academic term. This implementation adds manual reminders only; it does not schedule the
 existing automatic-reminder setting.
 
 Local checks: `node --test supabase/functions/*/*.test.mjs` and

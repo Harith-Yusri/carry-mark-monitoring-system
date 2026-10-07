@@ -21,12 +21,29 @@ export interface ProgrammeTeachingStatus extends ProgrammeOption {
   completionRate: number;
 }
 
+export interface ClassTeachingAllocation {
+  id: string;
+  offeringId: string;
+  programmeId: string;
+  programmeCode: string;
+  programmeName: string;
+  subjectCode: string;
+  subjectName: string;
+  classLabel: string;
+  studentCount: number;
+  deadline: string;
+  submissionStatus: "Finalised" | "In Progress" | "Overdue";
+  lastUpdated: string;
+  completionRate: number;
+}
+
 export interface LecturerInfo {
   id: string;
   name: string;
   department: string;
   programmeCodes: ProgrammeCode[];
   programmeAssignments: ProgrammeTeachingStatus[];
+  classAllocations: ClassTeachingAllocation[];
   subjects: string[];
   subjectName: string;
   studentCount: number;

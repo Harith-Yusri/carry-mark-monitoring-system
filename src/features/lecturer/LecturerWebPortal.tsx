@@ -37,7 +37,7 @@ export function LecturerWebPortal() {
             >
               <ChevronLeft size={16} /> Back to My Subjects
             </button>
-            <div className="subject-context-label" style={{ fontFamily: C.mono, fontSize: "11px", color: C.textMuted }}>
+            <div className="subject-context-label" style={{ fontFamily: C.mono, fontSize: "12px", color: C.textMuted }}>
               SUBJECT HUB · <span style={{ color: C.maroon, fontWeight: 700 }}>{currentSubj.code}</span> · {currentSubj.programmeCode} ({currentSubj.name})
             </div>
           </div>
@@ -46,9 +46,9 @@ export function LecturerWebPortal() {
           <section style={{ borderLeft: `3px solid ${C.maroon}`, padding: "8px 0 8px 18px", marginBottom: "22px" }}>
             <div className="subject-header-row" style={{ alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 700 }}>COURSE CODE: {currentSubj.code}</div>
+                <div style={{ fontFamily: C.mono, fontSize: "12px", color: C.maroon, fontWeight: 700 }}>COURSE CODE: {currentSubj.code}</div>
                 <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, margin: "2px 0 4px" }}>{currentSubj.name}</h1>
-                <div style={{ fontSize: "12px", color: C.textMuted }}>
+                <div style={{ fontSize: "13px", color: C.textMuted }}>
                   {currentSubj.programmeCode} · Semester {currentSubj.progSem} · {currentSubj.students} Registered Students · Lecturer: {user?.name}
                 </div>
               </div>
@@ -82,7 +82,7 @@ export function LecturerWebPortal() {
                   transition: "border-color 0.15s, color 0.15s"
                 }}
               >
-                <span style={{ fontFamily: C.mono, fontSize: "9px", color: activeTab === t.key ? C.maroon : C.textMuted }}>{t.step}</span> {t.label}
+                <span style={{ fontFamily: C.mono, fontSize: "11px", color: activeTab === t.key ? C.maroon : C.textMuted }}>{t.step}</span> {t.label}
               </button>
             ))}
           </div>

@@ -27,7 +27,7 @@ val SurfaceLight = Color(0xFFFFFFFF)
 val InputLight = Color(0xFFE8EBF2)
 val TextPrimaryLight = Color(0xFF0F1117)
 val TextSecondaryLight = Color(0xFF374151)
-val TextMutedLight = Color(0xFF9CA3AF)
+val TextMutedLight = Color(0xFF6B7280)
 val SuccessLight = Color(0xFF16A34A)
 val WarningLight = Color(0xFFB45309)
 val DangerLight = Color(0xFFDC2626)
@@ -39,7 +39,7 @@ val SurfaceDark = Color(0xFF131829)
 val InputDark = Color(0xFF1A1F2E)
 val TextPrimaryDark = Color(0xFFE8EAF0)
 val TextSecondaryDark = Color(0xFF9CA3AF)
-val TextMutedDark = Color(0xFF6B7280)
+val TextMutedDark = Color(0xFF8B93A7)
 val SuccessDark = Color(0xFF22C55E)
 val WarningDark = Color(0xFFD4A72C)
 val DangerDark = Color(0xFFEF4444)
@@ -146,8 +146,8 @@ val Typography = Typography(
     bodySmall = TextStyle(
         fontFamily = InterFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 17.sp
+        fontSize = 13.sp,
+        lineHeight = 19.sp
     ),
     labelLarge = TextStyle(
         fontFamily = InterFontFamily,
@@ -156,6 +156,12 @@ val Typography = Typography(
         lineHeight = 20.sp
     ),
     labelMedium = TextStyle(
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 13.sp,
+        lineHeight = 18.sp
+    ),
+    labelSmall = TextStyle(
         fontFamily = InterFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
@@ -180,14 +186,14 @@ data class AcademicTypography(
     val academicSmall: TextStyle = TextStyle(
         fontFamily = DmMonoFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp
+        fontSize = 13.sp,
+        lineHeight = 18.sp
     ),
     val academicLabel: TextStyle = TextStyle(
         fontFamily = DmMonoFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
         letterSpacing = 0.6.sp
     )
 )

@@ -18,6 +18,22 @@ textarea {
   font: inherit;
 }
 
+.staff-portal {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.staff-portal table {
+  line-height: 1.45;
+}
+
+.staff-portal input,
+.staff-portal select,
+.staff-portal textarea,
+.staff-portal button {
+  line-height: 1.35;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -273,7 +289,7 @@ textarea:focus-visible,
 
 @media (max-width: 480px) {
   .portal-product-title {
-    font-size: 13px !important;
+    font-size: 14px !important;
     max-width: 160px;
   }
 

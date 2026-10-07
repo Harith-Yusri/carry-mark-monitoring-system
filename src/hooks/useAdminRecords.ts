@@ -45,7 +45,7 @@ export function useAdminRecords() {
         id, lecturer_id, status, term_id, deadline_at, updated_at, subject_name_override,
         subjects!subject_offerings_subject_id_fkey(code,name),
         academic_terms!inner(is_current),
-        class_sections(id,programme_id,programmes!class_sections_programme_id_fkey(id,code,name),enrolments(count),submissions(status,updated_at))
+        class_sections(id,label,programme_id,updated_at,programmes!class_sections_programme_id_fkey(id,code,name),enrolments(count),submissions(status,updated_at))
       `).eq("academic_terms.is_current", true),
     ]);
     if (deadlineError) throw deadlineError;
@@ -78,6 +78,28 @@ export function useAdminRecords() {
           .map(section => [section.programme_id, section.programmes] as const);
       });
       const assignedProgrammes = [...new Map(programmePairs).values()] as any[];
+      const classAllocations = offerings.flatMap(offering => relationRows<any>(offering.class_sections).map(section => {
+        const sectionSubmissions = relationRows<any>(section.submissions);
+        const isFinalised = sectionSubmissions.some((submission: any) => submission.status === "finalised");
+        const sectionDeadline = offering.deadline_at ?? programmeDeadlines.get(section.programme_id) ?? term.default_deadline;
+        const isOverdue = !isFinalised && new Date(sectionDeadline) < new Date();
+        const activityDates = [offering.updated_at, section.updated_at, ...sectionSubmissions.map((submission: any) => submission.updated_at)].filter(Boolean).sort();
+        return {
+          id: section.id,
+          offeringId: offering.id,
+          programmeId: section.programme_id,
+          programmeCode: section.programmes.code,
+          programmeName: section.programmes.name,
+          subjectCode: offering.subjects.code,
+          subjectName: offering.subject_name_override ?? offering.subjects.name,
+          classLabel: section.label,
+          studentCount: Number(relationRows<any>(section.enrolments)[0]?.count ?? 0),
+          deadline: new Date(sectionDeadline).toLocaleDateString(),
+          submissionStatus: (isFinalised ? "Finalised" : isOverdue ? "Overdue" : "In Progress") as LecturerInfo["submissionStatus"],
+          lastUpdated: activityDates.length ? new Date(activityDates.at(-1)).toLocaleString() : "No activity",
+          completionRate: isFinalised ? 100 : 0,
+        };
+      }));
       const programmeAssignments = assignedProgrammes.map(programme => {
         const programmeOfferings = offerings.filter(offering => {
           const offeringSections = relationRows<any>(offering.class_sections);
@@ -111,6 +133,7 @@ export function useAdminRecords() {
         name: profile.full_name,
         programmeCodes: assignedProgrammes.map(programme => programme.code),
         programmeAssignments,
+        classAllocations,
         department: assignedProgrammes.map(programme => programme.name).join(", ") || "No current teaching assignment",
         subjects: offerings.map(offering => offering.subjects.code),
         subjectName: offerings.map(offering => offering.subject_name_override ?? offering.subjects.name).join(", ") || "No assigned subjects",
@@ -124,7 +147,7 @@ export function useAdminRecords() {
     setRecords(result);
     setContext({
       termId: term.id,
-      termLabel: `Semester ${term.semester_no} · ${term.academic_year}`,
+      termLabel: `Session ${term.semester_no} · ${term.academic_year}`,
       semesterNo: term.semester_no,
       academicYear: term.academic_year,
       defaultDeadline: term.default_deadline,

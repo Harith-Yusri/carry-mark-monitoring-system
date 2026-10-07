@@ -93,7 +93,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
       <div className="responsive-action-header" style={{ alignItems: "center", marginBottom: "20px" }}>
         <div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 2px" }}>My Subjects</h1>
-          <p style={{ fontSize: "12px", color: C.textMuted }}>
+          <p style={{ fontSize: "13px", color: C.textMuted }}>
             {user?.name} ({user?.id}) · {subjects[0]?.termLabel ?? creationTerm} · {subjects.length} assignment{subjects.length === 1 ? "" : "s"} across {programmeCount} programme{programmeCount === 1 ? "" : "s"}
           </p>
         </div>
@@ -114,7 +114,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
           <p style={{ color: C.textMuted, fontSize: "13px", lineHeight: 1.7, maxWidth: "460px", margin: "0 auto" }}>
             You have not added any subjects yet. Select “Create New Subject” to set up a subject for your teaching activities.
           </p>
-          <p style={{ color: C.textSub, fontSize: "12px", lineHeight: 1.7, margin: "12px 0 0" }}>Your subjects will appear here once they have been added.</p>
+          <p style={{ color: C.textSub, fontSize: "13px", lineHeight: 1.7, margin: "12px 0 0" }}>Your subjects will appear here once they have been added.</p>
         </div>
       )}
 
@@ -125,10 +125,10 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
             <div key={ps}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
                 <div style={{ width: "28px", height: "28px", background: C.maroonLight, border: `1px solid ${C.maroon}44`, borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontFamily: C.mono, fontSize: "12px", fontWeight: 700, color: C.maroon }}>{ps}</span>
+                  <span style={{ fontFamily: C.mono, fontSize: "13px", fontWeight: 700, color: C.maroon }}>{ps}</span>
                 </div>
                 <span style={{ fontFamily: C.display, fontWeight: 700, fontSize: "14px", color: C.text }}>Programme Semester {ps}</span>
-                <span style={{ fontFamily: C.mono, fontSize: "10px", color: C.textMuted }}>· {psSubs.length} subject{psSubs.length !== 1 ? "s" : ""}</span>
+                <span style={{ fontFamily: C.mono, fontSize: "11px", color: C.textMuted }}>· {psSubs.length} subject{psSubs.length !== 1 ? "s" : ""}</span>
                 <div style={{ flex: 1, height: "1px", background: C.border }} />
               </div>
 
@@ -148,24 +148,24 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "8px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                          <span style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 600 }}>{subj.code}</span>
-                          <span style={{ fontFamily: C.mono, fontSize: "9px", background: C.maroonLight, border: `1px solid ${C.maroon}44`, color: C.maroon, borderRadius: "3px", padding: "1px 5px" }}>{subj.programmeCode || "NO CLASSES"}</span>
-                          <span style={{ fontFamily: C.mono, fontSize: "9px", background: C.elevated, border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: "3px", padding: "1px 5px" }}>SEM {subj.progSem}</span>
+                          <span style={{ fontFamily: C.mono, fontSize: "12px", color: C.maroon, fontWeight: 600 }}>{subj.code}</span>
+                          <span style={{ fontFamily: C.mono, fontSize: "11px", background: C.maroonLight, border: `1px solid ${C.maroon}44`, color: C.maroon, borderRadius: "3px", padding: "1px 5px" }}>{subj.programmeCode || "NO CLASSES"}</span>
+                          <span style={{ fontFamily: C.mono, fontSize: "11px", background: C.elevated, border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: "3px", padding: "1px 5px" }}>SEM {subj.progSem}</span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "10px", fontFamily: C.mono, padding: "2px 7px", borderRadius: "3px", background: isSubmitted ? C.greenLight : C.amberLight, color: isSubmitted ? C.green : C.amber, border: `1px solid ${isSubmitted ? C.green + "44" : C.amber + "44"}` }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontFamily: C.mono, padding: "2px 7px", borderRadius: "3px", background: isSubmitted ? C.greenLight : C.amberLight, color: isSubmitted ? C.green : C.amber, border: `1px solid ${isSubmitted ? C.green + "44" : C.amber + "44"}` }}>
                             {isSubmitted && <CheckCircle size={9} />}{isSubmitted ? "FINALISED" : "IN PROGRESS"}
                           </div>
                           <button aria-label={`Manage ${subj.code}`} onClick={event => { event.stopPropagation(); setMenuOfferingId(menuOfferingId === subj.offeringId ? null : subj.offeringId); }} style={{ padding: "2px", border: "none", background: "transparent", color: C.textMuted, cursor: "pointer" }}><MoreVertical size={17} /></button>
                         </div>
                       </div>
-                      {menuOfferingId === subj.offeringId && <div onClick={event => event.stopPropagation()} style={{ position: "absolute", right: "18px", top: "49px", zIndex: 4, minWidth: "142px", padding: "5px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", boxShadow: "0 10px 30px rgba(0,0,0,.3)" }}><button onClick={() => openEditModal(subj)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.text, textAlign: "left", cursor: "pointer", fontSize: "11px" }}>Edit subject</button></div>}
+                      {menuOfferingId === subj.offeringId && <div onClick={event => event.stopPropagation()} style={{ position: "absolute", right: "18px", top: "49px", zIndex: 4, minWidth: "142px", padding: "5px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", boxShadow: "0 10px 30px rgba(0,0,0,.3)" }}><button onClick={() => openEditModal(subj)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.text, textAlign: "left", cursor: "pointer", fontSize: "12px" }}>Edit subject</button></div>}
                       <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "14px", color: C.text, marginBottom: "10px" }}>{subj.name}</div>
-                      <div style={{ display: "flex", gap: "14px", marginBottom: "10px", fontSize: "11px", color: C.textMuted }}>
+                      <div style={{ display: "flex", gap: "14px", marginBottom: "10px", fontSize: "12px", color: C.textMuted }}>
                         <div><span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.students}</span> students</div>
                         <div>Last Sync: <span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.lastSync ? new Date(subj.lastSync).toLocaleString() : "Pending"}</span></div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px", color: C.maroon, fontSize: "12px", fontWeight: 600 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px", color: C.maroon, fontSize: "13px", fontWeight: 600 }}>
                         <span>Manage Subject Hub</span><ChevronRight size={14} />
                       </div>
                     </div>
@@ -186,31 +186,31 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
               <button type="button" aria-label="Close" disabled={saving || catalogueLoading} onClick={closeSubjectModal} style={{ background: "none", border: 0, color: C.textMuted, cursor: "pointer" }}><X size={18} /></button>
             </div>
             <form onSubmit={createSubject}>
-            <p style={{ color: C.textMuted, fontSize: "12px", lineHeight: 1.6, margin: "0 0 20px" }}>
+            <p style={{ color: C.textMuted, fontSize: "13px", lineHeight: 1.6, margin: "0 0 20px" }}>
               {editingSubject ? `Update your ${editingSubject.code} subject details for ${editingSubject.termLabel}. Existing classes, assessments and marks will not be changed.` : catalogueLoading ? "Loading subject catalogue…" : creationTerm ? `Add a subject for ${creationTerm}. Select an existing code or enter a new one.` : "Subject creation is unavailable."}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
               <div>
-                <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT CODE</label>
+                <label style={{ fontSize: "12px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT CODE</label>
                 <input aria-label="Subject code" list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { const nextCode = event.target.value.toUpperCase(); const match = catalogue.find(subject => subject.code === nextCode.trim()); setCode(nextCode); if (match?.programme_semester) setSemester(String(match.programme_semester)); setFormError(""); }} placeholder="e.g. ITT600" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none", opacity: editingSubject ? .7 : 1 }} />
               </div>
               <datalist id="subject-catalogue">{catalogue.filter(subject => subject.is_active).map(subject => <option key={subject.code} value={subject.code}>{subject.name}</option>)}</datalist>
-              {existingSubject && <p role="status" style={{ color: existingSubject.is_active ? C.textSub : C.red, fontSize: "12px", lineHeight: 1.6, margin: 0 }}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
+              {existingSubject && <p role="status" style={{ color: existingSubject.is_active ? C.textSub : C.red, fontSize: "13px", lineHeight: 1.6, margin: 0 }}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
               <div>
-                <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT NAME</label>
+                <label style={{ fontSize: "12px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT NAME</label>
                 <input aria-label="Subject name" required maxLength={200} disabled={(!editingSubject && Boolean(existingSubject)) || saving || catalogueLoading} value={!editingSubject && existingSubject ? existingSubject.name : name} onChange={event => setName(event.target.value)} placeholder="e.g. Cloud Computing & DevOps" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none" }} />
               </div>
               <div>
-                <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>PROGRAMME SEMESTER</label>
+                <label style={{ fontSize: "12px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>PROGRAMME SEMESTER</label>
                 <select aria-label="Programme semester" disabled={saving || catalogueLoading} value={semester} onChange={event => setSemester(event.target.value)} style={{ width: "100%", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text }}>
                   {[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>Semester {value}</option>)}
                 </select>
               </div>
-              {formError && <div role="alert" style={{ color: C.red, fontSize: "12px" }}>{formError}</div>}
+              {formError && <div role="alert" style={{ color: C.red, fontSize: "13px" }}>{formError}</div>}
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-              <button type="button" disabled={saving || catalogueLoading} onClick={closeSubjectModal} style={{ padding: "8px 14px", background: C.elevated, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.text, fontSize: "12px", cursor: "pointer" }}>Cancel</button>
-              <button type="submit" disabled={!validForm} style={{ padding: "8px 14px", background: C.maroon, border: "none", borderRadius: "6px", color: "#fff", fontWeight: 600, fontSize: "12px", cursor: "pointer" , opacity: validForm ? 1 : .55 }}>{saving ? "Saving…" : editingSubject ? "Save Changes" : existingSubject ? "Add Subject" : "Create Subject"}</button>
+              <button type="button" disabled={saving || catalogueLoading} onClick={closeSubjectModal} style={{ padding: "8px 14px", background: C.elevated, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.text, fontSize: "13px", cursor: "pointer" }}>Cancel</button>
+              <button type="submit" disabled={!validForm} style={{ padding: "8px 14px", background: C.maroon, border: "none", borderRadius: "6px", color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer" , opacity: validForm ? 1 : .55 }}>{saving ? "Saving…" : editingSubject ? "Save Changes" : existingSubject ? "Add Subject" : "Create Subject"}</button>
             </div>
             </form>
           </div>

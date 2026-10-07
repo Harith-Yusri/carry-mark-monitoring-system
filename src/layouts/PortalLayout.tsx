@@ -24,7 +24,7 @@ export function PortalLayout() {
   };
 
   return (
-    <div style={{ fontFamily: C.sans, background: C.bg, color: C.text, minHeight: "100vh", transition: "background 0.2s, color 0.2s" }}>
+    <div className="staff-portal" style={{ fontFamily: C.sans, background: C.bg, color: C.text, minHeight: "100vh", transition: "background 0.2s, color 0.2s" }}>
       {/* Top Application Bar */}
       <div style={{ borderBottom: `1px solid ${C.border}`, background: C.surface, position: "sticky", top: 0, zIndex: 40, transition: "background 0.2s" }}>
         <div className="portal-header-inner">
@@ -34,7 +34,7 @@ export function PortalLayout() {
             <div className="product-mark" style={{ background: C.maroon }} aria-hidden="true">CM</div>
             <div>
               <div className="portal-product-title" style={{ fontFamily: C.display, fontWeight: 700, fontSize: "16px", color: C.text, lineHeight: 1.1 }}>UiTM Carry Mark Monitoring</div>
-              <div className="portal-product-subtitle" style={{ fontSize: "10px", fontFamily: C.mono, color: C.textMuted, letterSpacing: "0.06em", marginTop: "4px" }}>
+              <div className="portal-product-subtitle" style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, letterSpacing: "0.06em", marginTop: "4px" }}>
                 {user?.role === 'admin' ? "FACULTY ACADEMIC OPERATIONS" : "LECTURER ASSESSMENT WORKSPACE"}
               </div>
             </div>
@@ -46,7 +46,7 @@ export function PortalLayout() {
               <div className="portal-user-block" style={{ minHeight: "44px", display: "flex", alignItems: "center", borderRight: `1px solid ${C.border}`, paddingRight: "18px" }}>
                 <div className="portal-user-name">
                   <div style={{ fontSize: "13px", fontWeight: 700, color: C.text }}>{user.name}</div>
-                  <div style={{ marginTop: "3px", fontFamily: C.mono, fontSize: "9px", color: C.textMuted, letterSpacing: ".05em" }}>{user.id} · {user.role.toUpperCase()}</div>
+                  <div style={{ marginTop: "3px", fontFamily: C.mono, fontSize: "11px", color: C.textMuted, letterSpacing: ".05em" }}>{user.id} · {user.role.toUpperCase()}</div>
                 </div>
               </div>
             )}

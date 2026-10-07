@@ -134,15 +134,13 @@ where t.academic_year = '2025/2026' and t.semester_no = 2
 on conflict (term_id, programme_id) do update set deadline_at = excluded.deadline_at;
 
 insert into public.notification_settings
-  (term_id, auto_remind, reminder_days, notify_students, alert_administrators, updated_by)
-select t.id, true, 3, true, true, p.id
+  (term_id, auto_remind, reminder_days, updated_by)
+select t.id, true, 3, p.id
 from public.academic_terms t
 join public.profiles p on p.staff_no = 'TS003'
 where t.academic_year = '2025/2026' and t.semester_no = 2
 on conflict (term_id) do update set
-  auto_remind = excluded.auto_remind, reminder_days = excluded.reminder_days,
-  notify_students = excluded.notify_students,
-  alert_administrators = excluded.alert_administrators;
+  auto_remind = excluded.auto_remind, reminder_days = excluded.reminder_days;
 
 insert into public.audit_logs
   (actor_id, action, entity_type, entity_id, subject_code_snapshot, created_at)

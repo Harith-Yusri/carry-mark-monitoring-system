@@ -10,6 +10,12 @@ const reply = (status: number, body: object) => new Response(JSON.stringify(body
   status, headers: { ...cors, "Content-Type": "application/json" },
 });
 
+function senderAddress(value: string) {
+  return value.match(/<([^<>]+)>\s*$/)?.[1]?.trim() ?? value.trim();
+}
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 Deno.serve(async request => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (request.method !== "POST") return reply(405, { error: "Use POST." });
@@ -44,16 +50,39 @@ Deno.serve(async request => {
     });
     const { data: account, error: accountError } = await authAdmin.auth.admin.getUserById(lecturer.id);
     if (accountError) throw accountError;
-    const recipient = account.user?.email;
+    const recipient = account.user?.email?.trim().toLowerCase();
     if (!recipient) return reply(422, { error: "This lecturer has no registered email in Supabase Authentication." });
-    const { data: offerings, error: offeringError } = await db.from("subject_offerings")
-      .select("id,subject_name_override,programmes(code),subjects(code,name),class_sections(id,label,programmes(code),submissions(status))").eq("lecturer_id", lecturer.id).order("id");
-    if (offeringError) throw offeringError;
-    const sections = pendingSections(offerings ?? []).sort();
-    if (!sections.length) return reply(409, { error: "There are no outstanding class submissions for this lecturer." });
+
+    const rawMode = (Deno.env.get("REMINDER_EMAIL_MODE") ?? "production").trim().toLowerCase();
+    if (rawMode !== "development" && rawMode !== "production") {
+      return reply(503, { error: "REMINDER_EMAIL_MODE must be either development or production." });
+    }
     const apiKey = Deno.env.get("RESEND_API_KEY");
     const from = Deno.env.get("REMINDER_FROM_EMAIL");
     if (!apiKey || !from) return reply(503, { error: "Email delivery is not configured. Set RESEND_API_KEY and REMINDER_FROM_EMAIL in Supabase function secrets." });
+    const fromAddress = senderAddress(from);
+    if (!emailPattern.test(fromAddress)) {
+      return reply(503, { error: "REMINDER_FROM_EMAIL must contain a valid email address." });
+    }
+    if (rawMode === "production" && fromAddress.toLowerCase().endsWith("@resend.dev")) {
+      return reply(503, { error: "In production, REMINDER_FROM_EMAIL must use an address on a domain verified in Resend, such as noreply@yourdomain.com." });
+    }
+    if (rawMode === "development") {
+      const testRecipient = Deno.env.get("REMINDER_TEST_RECIPIENT")?.trim().toLowerCase();
+      if (!testRecipient || !emailPattern.test(testRecipient)) {
+        return reply(503, { error: "Development email delivery requires a valid REMINDER_TEST_RECIPIENT in Supabase function secrets." });
+      }
+      if (recipient !== testRecipient) {
+        return reply(403, { error: "Development email mode can only send to the configured test recipient." });
+      }
+    }
+
+    const { data: offerings, error: offeringError } = await db.from("subject_offerings")
+      .select("id,subject_name_override,academic_terms!inner(is_current),subjects(code,name),class_sections(id,label,programmes!class_sections_programme_id_fkey(code),submissions(status))")
+      .eq("lecturer_id", lecturer.id).eq("academic_terms.is_current", true).order("id");
+    if (offeringError) throw offeringError;
+    const sections = pendingSections(offerings ?? []).sort();
+    if (!sections.length) return reply(409, { error: "There are no outstanding class submissions for this lecturer." });
 
     // An hourly key prevents duplicate sends on retries, reloads, and concurrent clicks.
     const idempotencyKey = `carry-reminder/${lecturer.id}/${Math.floor(Date.now() / 3600000)}`;
@@ -63,10 +92,14 @@ Deno.serve(async request => {
       body: JSON.stringify({ from, to: [recipient], subject: "Reminder: outstanding carry mark submission", text: reminderText(lecturer.full_name, sections) }),
       signal: AbortSignal.timeout(20000),
     });
-    const result = await response.json();
+    const result = await response.json().catch(() => null);
     if (!response.ok || !result.id) {
-      console.error("Reminder provider rejected request", response.status, result.name);
-      return reply(502, { error: "Email provider did not accept the reminder. Check the sender verification and recipient in Resend. If their details just changed, try again next hour." });
+      console.error("Reminder provider rejected request", response.status, result?.name ?? "unknown_error");
+      const providerMessage = String(result?.message ?? "").toLowerCase();
+      const senderProblem = response.status === 403 || providerMessage.includes("domain") || providerMessage.includes("sender");
+      return reply(502, { error: senderProblem
+        ? "Resend rejected the sender. Verify the sending domain in Resend and set REMINDER_FROM_EMAIL to an address on that domain."
+        : "Resend did not accept the reminder. Check the Resend delivery logs and try again." });
     }
     return reply(200, { accepted: true, recipient });
   } catch (error) {

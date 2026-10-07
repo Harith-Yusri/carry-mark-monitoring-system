@@ -23,7 +23,7 @@ export function AdminWebPortal() {
           <div style={{ padding: "0 8px 12px", borderBottom: `1px solid ${C.border}`, marginBottom: "10px" }}>
             <div>
               <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "14px", color: C.text }}>Faculty Administration</div>
-              <div style={{ marginTop: "3px", fontSize: "9px", fontFamily: C.mono, color: C.textMuted, letterSpacing: ".06em" }}>FSKM · CARRY MARK CONTROL</div>
+              <div style={{ marginTop: "3px", fontSize: "11px", fontFamily: C.mono, color: C.textMuted, letterSpacing: ".06em" }}>FSKM · CARRY MARK CONTROL</div>
             </div>
           </div>
 
@@ -46,7 +46,7 @@ export function AdminWebPortal() {
                   background: activeTab === item.key ? C.maroonLight : "transparent",
                   color: activeTab === item.key ? C.maroon : C.textSub,
                   fontWeight: activeTab === item.key ? 700 : 500,
-                  fontSize: "12px",
+                  fontSize: "13px",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -73,7 +73,7 @@ export function AdminWebPortal() {
                       alignItems: "center",
                       justifyContent: "center",
                       fontFamily: C.mono,
-                      fontSize: "10px",
+                      fontSize: "11px",
                       fontWeight: 700,
                     }}
                   >

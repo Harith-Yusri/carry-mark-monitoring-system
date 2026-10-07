@@ -72,7 +72,7 @@ export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
     students: Number(row.student_count),
     lastSync: row.updated_at,
     status: row.offering_status === "completed" ? "submitted" : row.offering_status,
-    termLabel: `Semester ${row.semester_no}, ${row.academic_year}`,
+    termLabel: `Session ${row.semester_no}, ${row.academic_year}`,
     academicYear: row.academic_year,
     semesterNo: row.semester_no,
   }));
@@ -182,7 +182,6 @@ export interface SystemSettingsRecord {
   termId: string; currentSemester: string; semesterStart: string; semesterEnd: string; globalDeadline: string;
   programmes: { id: string; code: string; name: string }[];
   programmeDeadlines: Record<string, string>; autoRemind: boolean; reminderDays: number | null;
-  notifyStudents: boolean; alertAdministrator: boolean;
   notificationConfigured: boolean;
 }
 
@@ -210,8 +209,6 @@ export async function loadSystemSettings(): Promise<SystemSettingsRecord> {
     programmeDeadlines: values,
     autoRemind: notification?.auto_remind ?? false,
     reminderDays: notification?.reminder_days ?? null,
-    notifyStudents: notification?.notify_students ?? false,
-    alertAdministrator: notification?.alert_administrators ?? false,
     notificationConfigured: Boolean(notification),
   };
 }
@@ -219,7 +216,7 @@ export async function loadSystemSettings(): Promise<SystemSettingsRecord> {
 export async function saveSystemSettings(settings: SystemSettingsRecord, updatedBy?: string) {
   const db = requireSupabase();
   const termMatch = settings.currentSemester.match(/^\s*(\d+)\s*\/\s*(.+?)\s*$/);
-  if (!termMatch) throw new Error("Use the semester format ‘2 / 2025/2026’. ");
+  if (!termMatch) throw new Error("Use the session format ‘2 / 2025/2026’. ");
   const [, semesterText, yearText] = termMatch;
   const { error: termError } = await db.from("academic_terms").update({ semester_no: Number(semesterText), academic_year: yearText, starts_on: settings.semesterStart, ends_on: settings.semesterEnd, default_deadline: new Date(`${settings.globalDeadline}T23:59:59+08:00`).toISOString() }).eq("id", settings.termId);
   if (termError) throw termError;
@@ -233,8 +230,6 @@ export async function saveSystemSettings(settings: SystemSettingsRecord, updated
   const notificationValues = {
     term_id: settings.termId,
     auto_remind: settings.autoRemind,
-    notify_students: settings.notifyStudents,
-    alert_administrators: settings.alertAdministrator,
     updated_by: updatedBy,
     ...(settings.reminderDays === null ? {} : { reminder_days: settings.reminderDays }),
   };
@@ -259,7 +254,7 @@ export async function loadSubjectCreationData() {
   if (catalogue.error) throw catalogue.error;
   if (term.error) throw term.error;
   if (!term.data) throw new Error("There is no active current academic term.");
-  return { catalogue: catalogue.data, termLabel: `Semester ${term.data.semester_no}, ${term.data.academic_year}` };
+  return { catalogue: catalogue.data, termLabel: `Session ${term.data.semester_no}, ${term.data.academic_year}` };
 }
 
 export async function loadCurrentTermLabel() {
@@ -267,7 +262,7 @@ export async function loadCurrentTermLabel() {
     .select("academic_year,semester_no").eq("is_current", true).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("There is no current academic term.");
-  return `Semester ${data.semester_no}, ${data.academic_year}`;
+  return `Session ${data.semester_no}, ${data.academic_year}`;
 }
 
 export async function createLecturerSubject(code: string, name: string, semester: number) {

@@ -1389,7 +1389,7 @@ private fun CarryMarkBarChart(subjects: List<SubjectResult>) {
                 y + 5.dp.toPx(),
                 android.graphics.Paint().apply {
                     color = labelColor
-                    textSize = 10.sp.toPx()
+                    textSize = 12.sp.toPx()
                     typeface = android.graphics.Typeface.MONOSPACE
                 }
             )
@@ -1415,7 +1415,7 @@ private fun CarryMarkBarChart(subjects: List<SubjectResult>) {
                 size.height - 5.dp.toPx(),
                 android.graphics.Paint().apply {
                     color = labelColor
-                    textSize = 9.sp.toPx()
+                    textSize = 11.sp.toPx()
                     typeface = android.graphics.Typeface.MONOSPACE
                     textAlign = android.graphics.Paint.Align.CENTER
                 }
@@ -1463,7 +1463,7 @@ private fun PerformanceRadarChart(subjects: List<SubjectResult>) {
                 size.height - 8.dp.toPx(),
                 android.graphics.Paint().apply {
                     color = labelColor
-                    textSize = 9.sp.toPx()
+                    textSize = 11.sp.toPx()
                     typeface = android.graphics.Typeface.MONOSPACE
                     textAlign = android.graphics.Paint.Align.CENTER
                 }
