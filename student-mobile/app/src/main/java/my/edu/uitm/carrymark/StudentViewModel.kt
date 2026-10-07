@@ -10,11 +10,14 @@ import kotlinx.coroutines.launch
 import my.edu.uitm.carrymark.data.StudentRepository
 import my.edu.uitm.carrymark.model.Student
 import my.edu.uitm.carrymark.model.SubjectResult
+import my.edu.uitm.carrymark.model.StudentNotification
 
 data class StudentUiState(
     val loading: Boolean = false,
     val student: Student? = null,
     val subjects: List<SubjectResult> = emptyList(),
+    val notifications: List<StudentNotification> = emptyList(),
+    val notificationsEnabled: Boolean? = null,
     val error: String? = null,
     val actionLoading: Boolean = false
 )
@@ -36,7 +39,9 @@ class StudentViewModel(
                 _state.value = if (payload?.student != null) {
                     StudentUiState(
                         student = payload.student,
-                        subjects = payload.subjects
+                        subjects = payload.subjects,
+                        notifications = payload.notifications,
+                        notificationsEnabled = payload.notificationsEnabled
                     )
                 } else {
                     StudentUiState()
@@ -71,7 +76,9 @@ class StudentViewModel(
                 } else {
                     _state.value = StudentUiState(
                         student = payload.student,
-                        subjects = payload.subjects
+                        subjects = payload.subjects,
+                        notifications = payload.notifications,
+                        notificationsEnabled = payload.notificationsEnabled
                     )
                     onSuccess()
                 }
@@ -98,7 +105,9 @@ class StudentViewModel(
                             it.copy(
                                 loading = false,
                                 student = payload.student,
-                                subjects = payload.subjects
+                                subjects = payload.subjects,
+                                notifications = payload.notifications,
+                                notificationsEnabled = payload.notificationsEnabled
                             )
                         }
                     }
@@ -124,7 +133,9 @@ class StudentViewModel(
                     it.copy(
                         actionLoading = false,
                         student = payload.student,
-                        subjects = payload.subjects
+                        subjects = payload.subjects,
+                        notifications = payload.notifications,
+                        notificationsEnabled = payload.notificationsEnabled
                     )
                 }
                 onSuccess()

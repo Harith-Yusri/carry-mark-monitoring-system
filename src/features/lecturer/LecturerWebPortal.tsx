@@ -38,7 +38,7 @@ export function LecturerWebPortal() {
               <ChevronLeft size={16} /> Back to My Subjects
             </button>
             <div className="subject-context-label" style={{ fontFamily: C.mono, fontSize: "11px", color: C.textMuted }}>
-              SUBJECT HUB · <span style={{ color: C.maroon, fontWeight: 700 }}>{currentSubj.code}</span> ({currentSubj.name})
+              SUBJECT HUB · <span style={{ color: C.maroon, fontWeight: 700 }}>{currentSubj.code}</span> · {currentSubj.programmeCode} ({currentSubj.name})
             </div>
           </div>
 
@@ -49,7 +49,7 @@ export function LecturerWebPortal() {
                 <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 700 }}>COURSE CODE: {currentSubj.code}</div>
                 <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, margin: "2px 0 4px" }}>{currentSubj.name}</h1>
                 <div style={{ fontSize: "12px", color: C.textMuted }}>
-                  Semester {currentSubj.progSem} · {currentSubj.students} Registered Students · Lecturer: {user?.name}
+                  {currentSubj.programmeCode} · Semester {currentSubj.progSem} · {currentSubj.students} Registered Students · Lecturer: {user?.name}
                 </div>
               </div>
             </div>
@@ -89,8 +89,8 @@ export function LecturerWebPortal() {
 
           {/* Tab Content */}
           {activeTab === "assessments" && <AssessmentsTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
-          {activeTab === "marks" && <MarksEntryTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
-          {activeTab === "export" && <ExportTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} />}
+          {activeTab === "marks" && <MarksEntryTab offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
+          {activeTab === "export" && <ExportTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
         </div>
       ) : null}
     </div>

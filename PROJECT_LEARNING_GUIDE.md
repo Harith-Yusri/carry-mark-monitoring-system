@@ -184,7 +184,7 @@ An offering means one catalogue subject taught by one lecturer in one term. An e
 ```text
 auth.users ── profiles (staff identity)
           └── students (via auth_user_id)
-programmes ── subjects / profiles / students
+programmes ── subject_offerings / class_sections / students
 subjects + academic_terms + lecturer profile → subject_offerings
 subject_offerings → class_sections → enrolments ← students
 subject_offerings → assessments
@@ -195,14 +195,14 @@ students + subject_offerings → mark_disputes
 
 | Table | Purpose and principal users |
 |---|---|
-| `programmes` | CS/IT/IS catalogue; joins across profiles, subjects and students |
+| `programmes` | Academic programme catalogue; joins teaching offerings, classes and students and supplies programme options to the portals |
 | `profiles` | Staff number, name, role, active flag; AuthContext, admin reports and permissions |
 | `students` | Matrix number, name, programme, linked Auth user; mobile identity and rosters |
 | `academic_terms` | Year/semester, dates, defaults, eligibility threshold, current-term flag |
 | `programme_deadlines` | Per-programme deadline for a term; settings service |
 | `subjects` | Shared subject catalogue; lecturer creation and subject labels |
 | `subject_offerings` | Lecturer/subject/term assignment and per-offering `carry_max` |
-| `class_sections` | Offering's class groups, schedule, capacity and join code |
+| `class_sections` | Offering's programme-specific class groups, schedule, capacity and join code |
 | `enrolments` | Student-section membership with status |
 | `assessments` | Offering's components, maximum raw score, carry weight and publication flag |
 | `marks` | Score for an enrolment-assessment pair, entered-by identity and version |
@@ -290,7 +290,7 @@ To modify a policy, first write who may select/insert/update/delete whose record
 | Create subject | `createSubject` → `createLecturerSubject` → `create_lecturer_subject` → catalogue/offering → reload list | Active lecturer and active current term resolved on server; existing catalogue details reused |
 | Set total weight | `AssessmentsTab.saveTotalWeight` → `saveOfferingWeightage` → `set_offering_carry_max` → offering | Greater than 0, at most 100, up to 2 decimals, not below allocated weights; finalised classes must be reopened |
 | Add/edit assessment | Tab's `saveAssessment` → service `saveAssessment` → `assessments` → trigger → reload | Existing ID means update; otherwise insert. Trigger limits allocated weight |
-| Create/edit class | `MarksEntryTab.saveSection` → `createSection`/`updateSection` → `class_sections` → reload | Create supplies random `JOIN-...` code; schedule/capacity constraints apply |
+| Create/edit class | `MarksEntryTab.saveSection` → `createSection`/`updateSection` → `class_sections` → reload | Programme is stored by foreign key; create supplies a random `JOIN-...` code; capacity constraints apply |
 | Rotate invitation | `regenerateJoinCode` → `rotateJoinCode` → `rotate_class_join_code` → section | Owner/admin checked in function; latest definition qualifies random bytes with `extensions` |
 | Load grid | `reload` → `loadOfferingData` + `loadOfferingWeightage` | Combines sections, enrolled students, submissions, marks and carry-total view |
 | Edit score | `updateMark` → `upsertMark` → `marks` + validation trigger → local state update | Mark identified by enrolment/assessment; `entered_by` is authenticated staff UUID |

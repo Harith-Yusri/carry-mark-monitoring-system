@@ -5,11 +5,10 @@ import { loadOfferingWeightage, AssessmentRecord, loadOfferingData, SectionRecor
 import { downloadText } from "../../utils/download";
 import { classSelectorActionStyle, classSelectorCardStyle, classSelectorGridStyle, classSelectorIconStyle, classSelectorMetaStyle, classSelectorTitleStyle } from "./classSelectorStyles";
 
-type StudentRecord = SectionRecord["students"][number] & { id: string; quiz1: number | null; assign1: number | null; test1: number | null; quiz2: number | null; test2: number | null };
+type StudentRecord = SectionRecord["students"][number] & { id: string };
 type ExportClassSection = Omit<SectionRecord, "students"> & { students: StudentRecord[] };
-const rawTotal = (student: StudentRecord) => (student.quiz1 ?? 0) + (student.assign1 ?? 0) + (student.test1 ?? 0) + (student.quiz2 ?? 0) + (student.test2 ?? 0);
 
-export function ExportTab({ offeringId, subjectCode, subjectName }: { offeringId: string; subjectCode: string; subjectName: string }) {
+export function ExportTab({ offeringId, subjectCode, subjectName, academicYear, programmeSemester }: { offeringId: string; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
   const C = useColors();
   const [sections, setSections] = useState<ExportClassSection[]>([]);
   const [carryMax, setCarryMax] = useState<number | null>(null);
@@ -20,22 +19,23 @@ export function ExportTab({ offeringId, subjectCode, subjectName }: { offeringId
   useEffect(() => { loadOfferingData(offeringId).then(data => {
     setAssessments(data.assessments);
     void loadOfferingWeightage(offeringId).then(settings => setCarryMax(settings.carryMax));
-    setSections(data.sections.map(section => ({ ...section, students: section.students.map(student => ({ ...student, id: student.enrolmentId, quiz1: student.scores[data.assessments[0]?.id] ?? null, assign1: student.scores[data.assessments[1]?.id] ?? null, test1: student.scores[data.assessments[2]?.id] ?? null, quiz2: student.scores[data.assessments[3]?.id] ?? null, test2: student.scores[data.assessments[4]?.id] ?? null })) })));
+    setSections(data.sections.map(section => ({ ...section, students: section.students.map(student => ({ ...student, id: student.enrolmentId })) })));
   }).catch(console.error); }, [offeringId]);
 
   if (!selected) return <div>
     <div style={{ marginBottom: "20px" }}><h2 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "20px", color: C.text, margin: "0 0 5px" }}>Select a Class to Export</h2><p style={{ fontSize: "12px", color: C.textMuted, margin: 0 }}>Choose a {subjectCode} class to preview its carry marks before exporting.</p></div>
     <div style={classSelectorGridStyle}>{sections.map(section => <button key={section.id} onClick={() => setSelectedId(section.id)} style={{ ...classSelectorCardStyle, background: C.surface, border: `1px solid ${C.borderMid}`, color: C.text }} onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={event => { event.currentTarget.style.borderColor = C.borderMid; event.currentTarget.style.transform = "none"; }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}><div style={{ ...classSelectorIconStyle, background: C.maroonLight, border: `1px solid ${C.maroon}55`, color: C.maroon }}><Users size={21} /></div><span style={{ padding: "5px 8px", borderRadius: "5px", background: section.finalised ? C.greenLight : C.amberLight, color: section.finalised ? C.green : C.amber, fontFamily: C.mono, fontSize: "9px", fontWeight: 700 }}>{section.finalised ? "FINALISED" : "DRAFT"}</span></div>
-      <h3 style={{ ...classSelectorTitleStyle, color: C.text, fontFamily: C.display }}>{section.label}</h3><div style={{ ...classSelectorMetaStyle, color: C.textMuted }}>{section.students.length} students synced · capacity {section.capacity}</div><div style={{ ...classSelectorActionStyle, color: C.maroon }}>Open e-Res Preview <ChevronRight size={14} /></div>
+      <h3 style={{ ...classSelectorTitleStyle, color: C.text, fontFamily: C.display }}>{section.label}</h3><div style={{ ...classSelectorMetaStyle, color: C.textMuted }}>{section.programmeCode} · {section.students.length} students synced · capacity {section.capacity}</div><div style={{ ...classSelectorActionStyle, color: C.maroon }}>Open e-Res Preview <ChevronRight size={14} /></div>
     </button>)}</div>
   </div>;
 
   const classSlug = selected.label.replace(/\s+/g, "");
-  const filename = `${subjectCode}_${classSlug}_CarryMark_Sem2_2526.csv`;
-  const assessmentCount = assessments.length || 5;
+  const termSlug = `Sem${programmeSemester}_${academicYear.replace(/\D/g, "")}`;
+  const filename = `${subjectCode}_${selected.programmeCode}_${classSlug}_CarryMark_${termSlug}.csv`;
+  const assessmentStatus = selected.finalised ? `${assessments.length} components · class finalised` : `${assessments.length} components · draft`;
   const detailRows = [
-    ["Subject Code", subjectCode], ["Subject Name", subjectName], ["Class Section", `${selected.label} (${selected.id})`], ["Semester", "2 / 2025/2026"], ["Students", `${selected.students.length} enrolled (capacity ${selected.capacity})`], ["Assessments Finalised", `${assessmentCount} of ${assessmentCount} (All finalised)`], ["Export Format", "UiTM e-Res v3.2 (.csv)"], ["Output Filename", filename],
+    ["Subject Code", subjectCode], ["Subject Name", subjectName], ["Programme", `${selected.programmeCode} — ${selected.programmeName}`], ["Class Section", selected.label], ["Semester", programmeSemester], ["Academic Session", academicYear], ["Students", `${selected.students.length} enrolled (capacity ${selected.capacity})`], ["Submission Status", assessmentStatus], ["Export Format", "CSV (.csv)"], ["Output Filename", filename],
   ];
   const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   const exportClass = () => {

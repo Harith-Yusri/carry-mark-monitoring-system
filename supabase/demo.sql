@@ -5,7 +5,6 @@ update public.profiles
 set staff_no = 'TS003',
     full_name = 'Dr. Siti Rahimah',
     role = 'lecturer',
-    programme_id = (select id from public.programmes where code = 'IT'),
     is_active = true
 where id = 'be7c9406-4a1c-422c-8fe8-561bee674c42';
 
@@ -18,11 +17,22 @@ from public.subjects s
 join public.academic_terms t on t.academic_year = '2025/2026' and t.semester_no = 2
 join public.profiles p on p.staff_no = 'TS003'
 where s.code in ('ITT593', 'ITT557', 'ITT588', 'ITT569')
-on conflict (subject_id, term_id, lecturer_id) do update set status = excluded.status;
+  and not exists (
+    select 1 from public.subject_offerings existing
+    where existing.subject_id = s.id and existing.term_id = t.id and existing.lecturer_id = p.id
+  );
+
+update public.subject_offerings offering
+set status = case subject.code when 'ITT569' then 'draft'::public.offering_status
+                               when 'ITT593' then 'completed'::public.offering_status
+                               else 'active'::public.offering_status end
+from public.subjects subject, public.profiles lecturer
+where offering.subject_id = subject.id and offering.lecturer_id = lecturer.id
+  and lecturer.staff_no = 'TS003' and subject.code in ('ITT593', 'ITT557', 'ITT588', 'ITT569');
 
 insert into public.class_sections
-  (offering_id, label, day_of_week, starts_at, ends_at, room, capacity, join_code)
-select so.id, v.label, v.day_of_week, v.starts_at, v.ends_at, v.room,
+  (offering_id, programme_id, label, day_of_week, starts_at, ends_at, room, capacity, join_code)
+select so.id, programme.id, v.label, v.day_of_week, v.starts_at, v.ends_at, v.room,
        case s.code
          when 'ITT593' then (array[15,16,11])[v.position]
          when 'ITT557' then (array[10,10,10])[v.position]
@@ -33,6 +43,7 @@ select so.id, v.label, v.day_of_week, v.starts_at, v.ends_at, v.room,
 from public.subject_offerings so
 join public.subjects s on s.id = so.subject_id
 join public.profiles p on p.id = so.lecturer_id and p.staff_no = 'TS003'
+join public.programmes programme on programme.code = 'CS240'
 cross join (values
   (1, 'Class A', 1, '08:00'::time, '10:00'::time, 'Bilik Kuliah 1', '4X9'),
   (2, 'Class B', 2, '10:00'::time, '12:00'::time, 'Bilik Kuliah 3', '7K2'),
@@ -54,7 +65,7 @@ cross join (values
   ('20221123005', 'Amirul Hakeem Bin Aziz'),
   ('20221123006', 'Farah Liyana Bt Ismail')
 ) as v(matrix_no, full_name)
-where p.code = 'IT'
+where p.code = 'CS240'
 on conflict (matrix_no) do update set full_name = excluded.full_name, programme_id = excluded.programme_id;
 
 insert into public.enrolments (section_id, student_id, status)

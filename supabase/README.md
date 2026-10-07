@@ -13,16 +13,16 @@ For local development with Docker, use `npx supabase start` followed by `npx sup
 Create an email/password user in **Authentication > Users**. Copy its UUID and run this in the SQL editor:
 
 ```sql
-insert into public.profiles (id, staff_no, full_name, role, programme_id)
+insert into public.profiles (id, staff_no, full_name, role)
 select
   'AUTH_USER_UUID',
   'ADM001',
   'Faculty Administrator',
-  'admin',
-  null;
+  'admin';
 ```
 
-Create lecturer users the same way, using role `lecturer` and the appropriate programme ID.
+Create lecturer users the same way using role `lecturer`. Programmes are selected
+on their subject teaching assignments, not on lecturer profiles.
 
 
 ## Manual reminder emails
@@ -57,14 +57,13 @@ Local checks: `node --test supabase/functions/*/*.test.mjs` and
 ## Lecturer subject creation
 
 Lecturers use **My Subjects > Create New Subject**. The form suggests catalogue
-codes and fills existing details. A new code creates a catalogue entry in the
-lecturer's active programme. An existing code reuses that catalogue entry without
-changing its name, programme or semester. Both create an offering owned by the
-signed-in lecturer in the active current academic term. The same lecturer cannot
-add the same subject twice for that term; other lecturers receive separate
-offerings with their own classes, assessments and marks.
+codes and fills existing details. A new code creates a shared catalogue entry.
+Each class selects its programme, so one lecturer subject offering can contain
+classes from several programmes during the same term. Other lecturers receive
+separate offerings with their own classes, assessments and marks.
 
-Apply `202609180001_lecturer_create_subject.sql` before using this form. The
+Apply migrations through `202610070002_class_owned_programme_relationship.sql`
+before using this form. The
 `create_lecturer_subject` RPC validates active lecturer access and resolves the
 owner and term on the server. Catalogue and offering uniqueness constraints also
 protect concurrent requests. General table write permissions remain unchanged.
@@ -73,6 +72,8 @@ Verification:
 - `node --test tests/lecturer-subject-creation.test.mjs` checks form behavior.
 - `npx supabase db query --linked --file supabase/tests/lecturer_create_subject.sql`
   runs transactional database checks and rolls back all fixtures.
+- `npx supabase db query --linked --file supabase/tests/class_programmes.sql`
+  verifies class programme relationships and enrolment safeguards.
 
 
 ## Subject carry-mark weightage

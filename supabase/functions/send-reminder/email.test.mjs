@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { pendingSections, reminderText } from './email.mjs';
 
 test('only outstanding sections are included, including missing and reopened submissions', () => {
-  const result = pendingSections([{ subjects: { code: 'CSC100', name: 'Computing' }, class_sections: [
+  const result = pendingSections([{ programmes: { code: 'CS240' }, subjects: { code: 'CSC100', name: 'Computing' }, class_sections: [
     { label: 'A', submissions: [{ status: 'finalised' }] },
-    { label: 'B', submissions: [] },
-    { label: 'C', submissions: { status: 'reopened' } },
+    { label: 'B', programmes: { code: 'CS251' }, submissions: [] },
+    { label: 'C', programmes: { code: 'CS251' }, submissions: { status: 'reopened' } },
     { label: 'D', submissions: { status: 'finalised' } },
     { label: 'E', submissions: null },
   ] }]);
-  assert.deepEqual(result, ['CSC100 — Computing, Section B', 'CSC100 — Computing, Section C', 'CSC100 — Computing, Section E']);
+  assert.deepEqual(result, ['CSC100 (CS251) — Computing, Section B', 'CSC100 (CS251) — Computing, Section C', 'CSC100 (CS240) — Computing, Section E']);
 });
 test('no assignments or fully finalised assignments produce no reminder', () => {
   assert.deepEqual(pendingSections([]), []);
@@ -18,8 +18,8 @@ test('no assignments or fully finalised assignments produce no reminder', () => 
   assert.deepEqual(pendingSections([{ class_sections: [{ submissions: [{ status: 'finalised' }] }] }]), []);
 });
 test('lecturer subject name overrides are used in reminders', () => {
-  assert.deepEqual(pendingSections([{ subject_name_override: 'Advanced Computing', subjects: { code: 'CSC100', name: 'Computing' }, class_sections: [{ label: 'A', submissions: [] }] }]), [
-    'CSC100 — Advanced Computing, Section A',
+  assert.deepEqual(pendingSections([{ subject_name_override: 'Advanced Computing', programmes: { code: 'CS251' }, subjects: { code: 'CSC100', name: 'Computing' }, class_sections: [{ label: 'A', submissions: [] }] }]), [
+    'CSC100 (CS251) — Advanced Computing, Section A',
   ]);
 });
 test('email names the lecturer and outstanding class without including student marks', () => {

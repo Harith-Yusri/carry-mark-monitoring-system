@@ -25,7 +25,7 @@ function setup({ role = 'admin', active = true, email = 'registered@example.com'
         },
         async order() {
           assert.equal(table, 'subject_offerings');
-          return { data: [{ subjects: { code: 'CSC100', name: 'Computing' }, class_sections: [{ label: 'A', submissions: finalised ? [{ status: 'finalised' }] : [] }] }] };
+          return { data: [{ programmes: { code: 'CS240' }, subjects: { code: 'CSC100', name: 'Computing' }, class_sections: [{ label: 'A', programmes: { code: 'CS251' }, submissions: finalised ? [{ status: 'finalised' }] : [] }] }] };
         },
       };
       return query;

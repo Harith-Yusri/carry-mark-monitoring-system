@@ -157,6 +157,7 @@ export type Database = {
           join_code: string | null
           label: string
           offering_id: string
+          programme_id: string
           room: string | null
           starts_at: string | null
           updated_at: string
@@ -170,6 +171,7 @@ export type Database = {
           join_code?: string | null
           label: string
           offering_id: string
+          programme_id: string
           room?: string | null
           starts_at?: string | null
           updated_at?: string
@@ -183,11 +185,19 @@ export type Database = {
           join_code?: string | null
           label?: string
           offering_id?: string
+          programme_id?: string
           room?: string | null
           starts_at?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "class_sections_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programmes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "class_sections_offering_id_fkey"
             columns: ["offering_id"]
@@ -403,7 +413,6 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
-          programme_id: string | null
           role: Database["public"]["Enums"]["app_role"]
           staff_no: string
           updated_at: string
@@ -414,7 +423,6 @@ export type Database = {
           full_name: string
           id: string
           is_active?: boolean
-          programme_id?: string | null
           role: Database["public"]["Enums"]["app_role"]
           staff_no: string
           updated_at?: string
@@ -425,20 +433,11 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
-          programme_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           staff_no?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_programme_id_fkey"
-            columns: ["programme_id"]
-            isOneToOne: false
-            referencedRelation: "programmes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       programme_deadlines: {
         Row: {
@@ -610,7 +609,6 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
-          programme_id: string
           programme_semester: number | null
         }
         Insert: {
@@ -620,7 +618,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
-          programme_id: string
           programme_semester?: number | null
         }
         Update: {
@@ -630,18 +627,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
-          programme_id?: string
           programme_semester?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "subjects_programme_id_fkey"
-            columns: ["programme_id"]
-            isOneToOne: false
-            referencedRelation: "programmes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       submissions: {
         Row: {
@@ -754,6 +742,23 @@ export type Database = {
           semester_no: number
           subject_code: string
           subject_name: string
+        }[]
+      }
+      get_my_lecturer_subjects: {
+        Args: never
+        Returns: {
+          offering_id: string
+          programme_ids: string[]
+          programme_codes: string[]
+          programme_names: string[]
+          subject_code: string
+          subject_name: string
+          programme_semester: number | null
+          student_count: number
+          offering_status: string
+          updated_at: string
+          academic_year: string
+          semester_no: number
         }[]
       }
       is_admin: { Args: never; Returns: boolean }

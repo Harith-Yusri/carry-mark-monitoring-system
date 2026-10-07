@@ -5,7 +5,7 @@ Use **Supabase Dashboard > Authentication > Users** to manage registered email a
 ## Administrators and lecturers
 
 1. Create an Auth user with their real email and a password.
-2. Copy the Auth UUID into the matching `public.profiles.id`, along with their staff number, name, role and programme.
+2. Copy the Auth UUID into the matching `public.profiles.id`, along with their staff number, name and role. Programmes are assigned to teaching offerings.
 3. Users sign in with staff ID and password. The `staff-login` Edge Function resolves the current registered email privately and verifies the password using Supabase Auth.
 
 Changing the email on the existing Auth user preserves their staff ID, assignments and marks. Do not delete and recreate the user. Reminders automatically use that registered email; no separate contact email is required. A pending email change takes effect for reminders only after it becomes the account’s current email.

@@ -19,10 +19,10 @@ declare
 begin
   insert into auth.users (id) values (lecturer_a), (lecturer_b), (admin_id);
   insert into public.programmes (id, code, name) values (programme, test_code, 'Temporary test programme');
-  insert into public.profiles (id, staff_no, full_name, role, programme_id) values
-    (lecturer_a, test_code || 'A', 'Test Lecturer A', 'lecturer', programme),
-    (lecturer_b, test_code || 'B', 'Test Lecturer B', 'lecturer', programme),
-    (admin_id, test_code || 'C', 'Test Admin', 'admin', programme);
+  insert into public.profiles (id, staff_no, full_name, role) values
+    (lecturer_a, test_code || 'A', 'Test Lecturer A', 'lecturer'),
+    (lecturer_b, test_code || 'B', 'Test Lecturer B', 'lecturer'),
+    (admin_id, test_code || 'C', 'Test Admin', 'admin');
   update public.academic_terms set is_current = false where is_current;
   insert into public.academic_terms (id, academic_year, semester_no, starts_on, ends_on, default_deadline, status, is_current)
     values (term, test_code, 1, '2026-01-01', '2026-12-31', '2026-12-01', 'active', true);
@@ -32,7 +32,7 @@ begin
   if (select carry_max from public.subject_offerings where id = first_offering) is not null then raise exception 'New subject must require weightage setup'; end if;
   perform public.set_offering_carry_max(first_offering, 60);
   select so.subject_id into test_subject_id from public.subject_offerings so where id = first_offering;
-  insert into public.class_sections(id, offering_id, label, capacity) values (test_section_id, first_offering, 'Test', 10);
+  insert into public.class_sections(id, offering_id, programme_id, label, capacity) values (test_section_id, first_offering, programme, 'Test', 10);
   insert into public.students(id, matrix_no, full_name, programme_id) values (test_student_id, test_code, 'Test Student', programme);
   insert into public.enrolments(id, section_id, student_id) values (test_enrolment_id, test_section_id, test_student_id);
   insert into public.assessments(id, offering_id, name, assessment_type, max_score, carry_weight, position) values

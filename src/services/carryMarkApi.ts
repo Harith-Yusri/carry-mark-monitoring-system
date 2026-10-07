@@ -1,7 +1,14 @@
 import { requireSupabase } from "../lib/supabase";
+import { ProgrammeOption } from "../types";
 
 export interface SubjectSummary {
   offeringId: string;
+  programmeId: string;
+  programmeIds: string[];
+  programmeCodes: string[];
+  programmeNames: string[];
+  programmeCode: string;
+  programmeName: string;
   code: string;
   name: string;
   progSem: number;
@@ -9,6 +16,8 @@ export interface SubjectSummary {
   lastSync: string | null;
   status: string;
   termLabel: string;
+  academicYear: string;
+  semesterNo: number;
 }
 
 export interface AssessmentRecord {
@@ -32,6 +41,9 @@ export interface MarkStudent {
 
 export interface SectionRecord {
   id: string;
+  programmeId: string;
+  programmeCode: string;
+  programmeName: string;
   label: string;
   dayOfWeek: number | null;
   startsAt: string | null;
@@ -44,23 +56,25 @@ export interface SectionRecord {
 }
 
 export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
-  const db = requireSupabase();
-  const { data, error } = await db.from("subject_offerings").select(`
-    id, status, updated_at, subject_name_override, programme_semester_override,
-    subjects!inner(code, name, programme_semester),
-    academic_terms!inner(academic_year, semester_no),
-    class_sections(id, enrolments(count))
-  `).order("updated_at", { ascending: false });
+  const { data, error } = await requireSupabase().rpc("get_my_lecturer_subjects");
   if (error) throw error;
-  return (data as any[]).map(row => ({
-    offeringId: row.id,
-    code: row.subjects.code,
-    name: row.subject_name_override ?? row.subjects.name,
-    progSem: row.programme_semester_override ?? row.subjects.programme_semester ?? 0,
-    students: (row.class_sections ?? []).reduce((sum: number, section: any) => sum + Number(section.enrolments?.[0]?.count ?? 0), 0),
+  return data.map(row => ({
+    offeringId: row.offering_id,
+    programmeId: row.programme_ids[0] ?? "",
+    programmeIds: row.programme_ids,
+    programmeCodes: row.programme_codes,
+    programmeNames: row.programme_names,
+    programmeCode: row.programme_codes.join(", "),
+    programmeName: row.programme_names.join(", "),
+    code: row.subject_code,
+    name: row.subject_name,
+    progSem: row.programme_semester ?? 0,
+    students: Number(row.student_count),
     lastSync: row.updated_at,
-    status: row.status === "completed" ? "submitted" : row.status,
-    termLabel: `Semester ${row.academic_terms.semester_no}, ${row.academic_terms.academic_year}`,
+    status: row.offering_status === "completed" ? "submitted" : row.offering_status,
+    termLabel: `Semester ${row.semester_no}, ${row.academic_year}`,
+    academicYear: row.academic_year,
+    semesterNo: row.semester_no,
   }));
 }
 
@@ -92,7 +106,7 @@ export async function deleteAssessment(id: string) {
 export async function loadOfferingData(offeringId: string): Promise<{ assessments: AssessmentRecord[]; sections: SectionRecord[] }> {
   const db = requireSupabase();
   const assessments = await listAssessments(offeringId);
-  const { data: sectionRows, error: sectionError } = await db.from("class_sections").select("*").eq("offering_id", offeringId).order("label");
+  const { data: sectionRows, error: sectionError } = await db.from("class_sections").select("*,programmes!inner(code,name)").eq("offering_id", offeringId).order("label");
   if (sectionError) throw sectionError;
   const sectionIds = sectionRows.map(row => row.id);
   if (!sectionIds.length) return { assessments, sections: [] };
@@ -113,7 +127,8 @@ export async function loadOfferingData(offeringId: string): Promise<{ assessment
   marks.forEach(row => { const values = marksByEnrolment.get(row.enrolment_id) ?? {}; values[row.assessment_id] = row.score == null ? null : Number(row.score); marksByEnrolment.set(row.enrolment_id, values); });
   const totalsByEnrolment = new Map(totals.map(row => [row.enrolment_id, row]));
   return { assessments, sections: sectionRows.map(row => ({
-    id: row.id, label: row.label, dayOfWeek: row.day_of_week, startsAt: row.starts_at, endsAt: row.ends_at,
+    id: row.id, programmeId: row.programme_id, programmeCode: (row.programmes as any).code, programmeName: (row.programmes as any).name,
+    label: row.label, dayOfWeek: row.day_of_week, startsAt: row.starts_at, endsAt: row.ends_at,
     room: row.room, capacity: row.capacity, joinCode: row.join_code,
     finalised: submissions.some(value => value.section_id === row.id && value.status === "finalised"),
     students: (enrolments as any[]).filter(value => value.section_id === row.id).map(value => ({
@@ -134,14 +149,21 @@ export async function finaliseSection(sectionId: string) {
   if (error) throw error;
 }
 
-export async function createSection(offeringId: string, values: { label: string; capacity: number }) {
+export async function listProgrammes(): Promise<ProgrammeOption[]> {
+  const { data, error } = await requireSupabase().from("programmes")
+    .select("id,code,name").eq("is_active", true).order("code");
+  if (error) throw error;
+  return data;
+}
+
+export async function createSection(offeringId: string, values: { label: string; capacity: number; programmeId: string }) {
   const code = `JOIN-${crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase()}`;
-  const { error } = await requireSupabase().from("class_sections").insert({ offering_id: offeringId, label: values.label, capacity: values.capacity, join_code: code });
+  const { error } = await requireSupabase().from("class_sections").insert({ offering_id: offeringId, programme_id: values.programmeId, label: values.label, capacity: values.capacity, join_code: code });
   if (error) throw error;
 }
 
-export async function updateSection(id: string, values: { label: string; capacity: number }) {
-  const { error } = await requireSupabase().from("class_sections").update({ label: values.label, capacity: values.capacity }).eq("id", id);
+export async function updateSection(id: string, values: { label: string; capacity: number; programmeId: string }) {
+  const { error } = await requireSupabase().from("class_sections").update({ programme_id: values.programmeId, label: values.label, capacity: values.capacity }).eq("id", id);
   if (error) throw error;
 }
 
@@ -158,35 +180,65 @@ export async function deleteSection(id: string) {
 
 export interface SystemSettingsRecord {
   termId: string; currentSemester: string; semesterStart: string; semesterEnd: string; globalDeadline: string;
-  programmeDeadlines: Record<"CS" | "IT" | "IS", string>; autoRemind: boolean; reminderDays: number;
+  programmes: { id: string; code: string; name: string }[];
+  programmeDeadlines: Record<string, string>; autoRemind: boolean; reminderDays: number | null;
   notifyStudents: boolean; alertAdministrator: boolean;
+  notificationConfigured: boolean;
 }
 
 export async function loadSystemSettings(): Promise<SystemSettingsRecord> {
   const db = requireSupabase();
   const { data: term, error } = await db.from("academic_terms").select("*").eq("is_current", true).single();
   if (error) throw error;
-  const [{ data: deadlines, error: deadlineError }, { data: notification, error: notificationError }] = await Promise.all([
+  const [{ data: programmes, error: programmeError }, { data: deadlines, error: deadlineError }, { data: notification, error: notificationError }] = await Promise.all([
+    db.from("programmes").select("id,code,name").eq("is_active", true).order("code"),
     db.from("programme_deadlines").select("deadline_at,programmes!inner(code)").eq("term_id", term.id),
     db.from("notification_settings").select("*").eq("term_id", term.id).maybeSingle(),
   ]);
+  if (programmeError) throw programmeError;
   if (deadlineError) throw deadlineError;
   if (notificationError) throw notificationError;
-  const values = { CS: term.default_deadline.slice(0, 10), IT: term.default_deadline.slice(0, 10), IS: term.default_deadline.slice(0, 10) };
-  (deadlines as any[]).forEach(row => { const code = row.programmes.code as keyof typeof values; if (code in values) values[code] = row.deadline_at.slice(0, 10); });
-  return { termId: term.id, currentSemester: `${term.semester_no} / ${term.academic_year}`, semesterStart: term.starts_on, semesterEnd: term.ends_on, globalDeadline: term.default_deadline.slice(0, 10), programmeDeadlines: values, autoRemind: notification?.auto_remind ?? true, reminderDays: notification?.reminder_days ?? 3, notifyStudents: notification?.notify_students ?? true, alertAdministrator: notification?.alert_administrators ?? true };
+  const values: Record<string, string> = Object.fromEntries(programmes.map(programme => [programme.code, term.default_deadline.slice(0, 10)]));
+  (deadlines as any[]).forEach(row => { if (row.programmes?.code) values[row.programmes.code] = row.deadline_at.slice(0, 10); });
+  return {
+    termId: term.id,
+    currentSemester: `${term.semester_no} / ${term.academic_year}`,
+    semesterStart: term.starts_on,
+    semesterEnd: term.ends_on,
+    globalDeadline: term.default_deadline.slice(0, 10),
+    programmes,
+    programmeDeadlines: values,
+    autoRemind: notification?.auto_remind ?? false,
+    reminderDays: notification?.reminder_days ?? null,
+    notifyStudents: notification?.notify_students ?? false,
+    alertAdministrator: notification?.alert_administrators ?? false,
+    notificationConfigured: Boolean(notification),
+  };
 }
 
 export async function saveSystemSettings(settings: SystemSettingsRecord, updatedBy?: string) {
   const db = requireSupabase();
-  const [semesterText, yearText] = settings.currentSemester.split("/").map(value => value.trim());
+  const termMatch = settings.currentSemester.match(/^\s*(\d+)\s*\/\s*(.+?)\s*$/);
+  if (!termMatch) throw new Error("Use the semester format ‘2 / 2025/2026’. ");
+  const [, semesterText, yearText] = termMatch;
   const { error: termError } = await db.from("academic_terms").update({ semester_no: Number(semesterText), academic_year: yearText, starts_on: settings.semesterStart, ends_on: settings.semesterEnd, default_deadline: new Date(`${settings.globalDeadline}T23:59:59+08:00`).toISOString() }).eq("id", settings.termId);
   if (termError) throw termError;
-  const { data: programmes, error: programmeError } = await db.from("programmes").select("id,code").in("code", ["CS", "IT", "IS"]);
-  if (programmeError) throw programmeError;
-  const { error: deadlineError } = await db.from("programme_deadlines").upsert(programmes.map(programme => ({ term_id: settings.termId, programme_id: programme.id, deadline_at: new Date(`${settings.programmeDeadlines[programme.code as "CS" | "IT" | "IS"]}T23:59:59+08:00`).toISOString() })));
+  const deadlineRows = settings.programmes
+    .filter(programme => settings.programmeDeadlines[programme.code])
+    .map(programme => ({ term_id: settings.termId, programme_id: programme.id, deadline_at: new Date(`${settings.programmeDeadlines[programme.code]}T23:59:59+08:00`).toISOString() }));
+  const { error: deadlineError } = deadlineRows.length
+    ? await db.from("programme_deadlines").upsert(deadlineRows)
+    : { error: null };
   if (deadlineError) throw deadlineError;
-  const { error: notificationError } = await db.from("notification_settings").upsert({ term_id: settings.termId, auto_remind: settings.autoRemind, reminder_days: settings.reminderDays, notify_students: settings.notifyStudents, alert_administrators: settings.alertAdministrator, updated_by: updatedBy });
+  const notificationValues = {
+    term_id: settings.termId,
+    auto_remind: settings.autoRemind,
+    notify_students: settings.notifyStudents,
+    alert_administrators: settings.alertAdministrator,
+    updated_by: updatedBy,
+    ...(settings.reminderDays === null ? {} : { reminder_days: settings.reminderDays }),
+  };
+  const { error: notificationError } = await db.from("notification_settings").upsert(notificationValues);
   if (notificationError) throw notificationError;
 }
 
@@ -208,6 +260,14 @@ export async function loadSubjectCreationData() {
   if (term.error) throw term.error;
   if (!term.data) throw new Error("There is no active current academic term.");
   return { catalogue: catalogue.data, termLabel: `Semester ${term.data.semester_no}, ${term.data.academic_year}` };
+}
+
+export async function loadCurrentTermLabel() {
+  const { data, error } = await requireSupabase().from("academic_terms")
+    .select("academic_year,semester_no").eq("is_current", true).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("There is no current academic term.");
+  return `Semester ${data.semester_no}, ${data.academic_year}`;
 }
 
 export async function createLecturerSubject(code: string, name: string, semester: number) {

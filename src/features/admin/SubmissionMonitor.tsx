@@ -5,28 +5,39 @@ import { useReminders } from "../../hooks/useReminders";
 import { useAdminRecords } from "../../hooks/useAdminRecords";
 
 type StatusFilter = "All" | "Pending" | "Finalised" | "Overdue";
-type ProgrammeFilter = "All Programmes" | "Computer Science" | "Information Technology" | "Information Systems";
 
 export function SubmissionMonitor() {
   const C = useColors();
-  const { records, loading, error } = useAdminRecords();
+  const { records, context, loading, error } = useAdminRecords();
   const [filter, setFilter] = useState<StatusFilter>("All");
-  const [programme, setProgramme] = useState<ProgrammeFilter>("All Programmes");
+  const [programmeCode, setProgrammeCode] = useState("");
   const { sendReminder, sentReminders, sendingReminders, reminderError } = useReminders();
 
   const pendingCount = records.filter(item => item.submissionStatus !== "Finalised").length;
-  const filtered = useMemo(() => records.filter(item => {
-    const matchesProgramme = programme === "All Programmes" || item.department === programme;
-    if (!matchesProgramme) return false;
-    if (filter === "All") return true;
-    if (filter === "Pending") return item.submissionStatus !== "Finalised";
-    return item.submissionStatus === filter;
-  }), [filter, programme, records]);
+  const filtered = useMemo(() => records.flatMap(item => {
+    const assignment = programmeCode ? item.programmeAssignments.find(candidate => candidate.code === programmeCode) : null;
+    if (programmeCode && !assignment) return [];
+    const scopedItem = assignment ? {
+      ...item,
+      department: assignment.name,
+      programmeCodes: [assignment.code],
+      subjects: assignment.subjects,
+      subjectName: assignment.subjectName,
+      studentCount: assignment.studentCount,
+      deadline: assignment.deadline,
+      submissionStatus: assignment.submissionStatus,
+      lastUpdated: assignment.lastUpdated,
+      completionRate: assignment.completionRate,
+    } : item;
+    if (filter === "All") return [scopedItem];
+    if (filter === "Pending") return scopedItem.submissionStatus !== "Finalised" ? [scopedItem] : [];
+    return scopedItem.submissionStatus === filter ? [scopedItem] : [];
+  }), [filter, programmeCode, records]);
 
-  const programmeOptions: ProgrammeFilter[] = ["All Programmes", "Computer Science", "Information Technology", "Information Systems"];
-  const programmeCount = (item: ProgrammeFilter) => item === "All Programmes"
+  const programmeOptions = [{ code: "", name: "All Programmes" }, ...(context?.programmes ?? [])];
+  const programmeCount = (code: string) => !code
     ? records.length
-    : records.filter(lecturer => lecturer.department === item).length;
+    : records.filter(lecturer => lecturer.programmeAssignments.some(assignment => assignment.code === code)).length;
 
 
   return (
@@ -43,16 +54,16 @@ export function SubmissionMonitor() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(145px, 1fr))", gap: "6px", padding: "6px", marginBottom: "16px", background: C.elevated, border: `1px solid ${C.border}`, borderRadius: "12px", overflowX: "auto" }}>
         {programmeOptions.map(item => {
-          const active = programme === item;
+          const active = programmeCode === item.code;
           return (
             <button
-              key={item}
-              onClick={() => setProgramme(item)}
+              key={item.code || "all"}
+              onClick={() => setProgrammeCode(item.code)}
               aria-pressed={active}
               style={{ minWidth: "145px", minHeight: "62px", padding: "10px 12px", borderRadius: "9px", border: `1px solid ${active ? C.borderMid : "transparent"}`, background: active ? C.surface : "transparent", color: active ? C.text : C.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: C.sans, fontSize: "13px", fontWeight: active ? 700 : 600, lineHeight: 1.35, transition: "all 0.15s" }}
             >
-              <span>{item}</span>
-              <span style={{ flexShrink: 0, minWidth: "25px", height: "25px", padding: "0 5px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", background: C.amberLight, border: `1px solid ${C.amber}66`, color: C.amber, fontFamily: C.mono, fontSize: "11px", fontWeight: 700 }}>{programmeCount(item)}</span>
+              <span>{item.code ? `${item.code} · ${item.name}` : item.name}</span>
+              <span style={{ flexShrink: 0, minWidth: "25px", height: "25px", padding: "0 5px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", background: C.amberLight, border: `1px solid ${C.amber}66`, color: C.amber, fontFamily: C.mono, fontSize: "11px", fontWeight: 700 }}>{programmeCount(item.code)}</span>
             </button>
           );
         })}

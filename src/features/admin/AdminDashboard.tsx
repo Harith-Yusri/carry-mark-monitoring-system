@@ -1,19 +1,17 @@
 import React from "react";
 import { CheckCircle } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { ProgrammeCode } from "../../types";
 import { useReminders } from "../../hooks/useReminders";
 import { useAdminRecords } from "../../hooks/useAdminRecords";
 
 export function AdminDashboard() {
   const C = useColors();
-  const { records, loading, error } = useAdminRecords();
-  const programmeNames: Record<ProgrammeCode, string> = { CS: "Computer Science", IT: "Information Technology", IS: "Information Systems" };
+  const { records, context, loading, error } = useAdminRecords();
   const { sendReminder, sentReminders, sendingReminders, reminderError } = useReminders();
-  const programmes = (["CS", "IT", "IS"] as ProgrammeCode[]).map(code => {
-    const lecturers = records.filter(item => item.programmeCode === code);
-    const submitted = lecturers.filter(item => item.submissionStatus === "Finalised").length;
-    return { code, name: programmeNames[code], submitted, pending: lecturers.length - submitted };
+  const programmes = (context?.programmes ?? []).map(programme => {
+    const lecturers = records.filter(item => item.programmeCodes.includes(programme.code));
+    const submitted = lecturers.filter(item => item.programmeAssignments.find(assignment => assignment.code === programme.code)?.submissionStatus === "Finalised").length;
+    return { ...programme, submitted, pending: lecturers.length - submitted };
   });
   const pendingLecturers = records
     .filter(item => item.submissionStatus !== "Finalised")
@@ -27,7 +25,7 @@ export function AdminDashboard() {
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px" }}>
         <div>
-          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "10px", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>SEMESTER 2 · 2025/2026</div>
+          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "10px", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>{context?.termLabel.toUpperCase() ?? "CURRENT TERM"}</div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "25px", color: C.text, margin: "0 0 5px" }}>Academic Operations</h1>
           <p style={{ fontSize: "12px", color: C.textMuted, margin: 0 }}>Carry mark readiness, submission exceptions and programme follow-up.</p>
         </div>
@@ -78,7 +76,7 @@ export function AdminDashboard() {
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
                       <span style={{ color: C.text, fontSize: "12px", fontWeight: 700 }}>{lecturer.name}</span>
-                      <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "9px" }}>{lecturer.programmeCode} · {lecturer.id}</span>
+                      <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "9px" }}>{lecturer.programmeCodes.join(", ") || "NO PROGRAMME"} · {lecturer.id}</span>
                     </div>
                     <div style={{ color: C.textMuted, fontSize: "10px", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lecturer.subjects.join(", ")} · {lecturer.subjectName}</div>
                   </div>

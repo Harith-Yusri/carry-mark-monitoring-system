@@ -4,50 +4,33 @@ import { useColors } from "../../context/DarkModeContext";
 import { useAuth } from "../../context/AuthContext";
 import { loadSystemSettings, saveSystemSettings, SystemSettingsRecord } from "../../services/carryMarkApi";
 
-interface SettingsState {
-  termId: string;
-  currentSemester: string;
-  semesterStart: string;
-  semesterEnd: string;
-  globalDeadline: string;
-  programmeDeadlines: Record<"CS" | "IT" | "IS", string>;
-  autoRemind: boolean;
-  reminderDays: number;
-  notifyStudents: boolean;
-  alertAdministrator: boolean;
-}
-
-const defaults: SettingsState = {
-  termId: "",
-  currentSemester: "2 / 2025-2026",
-  semesterStart: "2026-01-15",
-  semesterEnd: "2026-06-30",
-  globalDeadline: "2026-06-20",
-  programmeDeadlines: { CS: "2026-06-20", IT: "2026-06-20", IS: "2026-06-20" },
-  autoRemind: true,
-  reminderDays: 3,
-  notifyStudents: true,
-  alertAdministrator: true,
-};
+type SettingsState = SystemSettingsRecord;
 
 export function AdminSettings() {
   const C = useColors();
   const { user } = useAuth();
-  const [settings, setSettings] = useState<SettingsState>(defaults);
+  const [settings, setSettings] = useState<SettingsState | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  useEffect(() => { loadSystemSettings().then(setSettings).catch(console.error); }, []);
+  useEffect(() => { loadSystemSettings().then(setSettings).catch(reason => setLoadError(reason.message)); }, []);
 
   const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", minHeight: "42px", padding: "9px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontFamily: C.sans, fontSize: "13px", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", marginBottom: "7px", color: C.textMuted, fontFamily: C.mono, fontSize: "10px", letterSpacing: "0.06em" };
   const cardStyle: React.CSSProperties = { background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px", padding: "24px", marginBottom: "20px" };
 
-  const update = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => setSettings(previous => ({ ...previous, [key]: value }));
-  const updateDeadline = (programme: keyof SettingsState["programmeDeadlines"], value: string) => setSettings(previous => ({ ...previous, programmeDeadlines: { ...previous.programmeDeadlines, [programme]: value } }));
+  const update = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => setSettings(previous => previous ? ({ ...previous, [key]: value }) : previous);
+  const updateDeadline = (programme: string, value: string) => setSettings(previous => previous ? ({ ...previous, programmeDeadlines: { ...previous.programmeDeadlines, [programme]: value } }) : previous);
 
   const save = async () => {
-    await saveSystemSettings(settings as SystemSettingsRecord, user?.authId);
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2500);
+    if (!settings) return;
+    setSaving(true);
+    try {
+      await saveSystemSettings(settings, user?.authId);
+      setSettings(await loadSystemSettings());
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2500);
+    } finally { setSaving(false); }
   };
 
   const Toggle = ({ enabled, onToggle, label }: { enabled: boolean; onToggle: () => void; label: string }) => (
@@ -65,6 +48,9 @@ export function AdminSettings() {
       <Toggle enabled={enabled} onToggle={onToggle} label={title} />
     </div>
   );
+
+  if (loadError) return <p role="alert" style={{ color: C.red }}>{loadError}</p>;
+  if (!settings) return <p style={{ color: C.textMuted }}>Loading settings from Supabase…</p>;
 
   return (
     <div>
@@ -89,7 +75,7 @@ export function AdminSettings() {
         <input type="date" value={settings.globalDeadline} onChange={event => update("globalDeadline", event.target.value)} style={fieldStyle} />
         <p style={{ color: C.textMuted, fontSize: "11px", margin: "6px 0 14px" }}>Applies to all programmes unless overridden below.</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {([['CS', 'Computer Science'], ['IT', 'Information Technology'], ['IS', 'Information Systems']] as const).map(([code, name]) => (
+          {settings.programmes.map(({ code, name }) => (
             <div className="settings-deadline-row" key={code} style={{ display: "grid", gridTemplateColumns: "190px minmax(180px, 1fr)", gap: "14px", alignItems: "center", padding: "11px 13px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px" }}>
               <div><div style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700, fontSize: "12px" }}>{code}</div><div style={{ color: C.textMuted, fontSize: "11px", marginTop: "3px" }}>{name}</div></div>
               <input type="date" value={settings.programmeDeadlines[code]} onChange={event => updateDeadline(code, event.target.value)} style={fieldStyle} />
@@ -100,6 +86,7 @@ export function AdminSettings() {
 
       <section style={cardStyle}>
         <h2 style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, color: C.text, margin: "0 0 20px" }}>Notification &amp; Reminder Settings</h2>
+        {!settings.notificationConfigured && <p style={{ padding: "10px 12px", color: C.amber, background: C.amberLight, border: `1px solid ${C.amber}44`, borderRadius: "6px", fontSize: "11px" }}>No notification settings are stored for this term. Choose the required options and save to create them.</p>}
         <NotificationRow title="Auto-send reminders to lecturers" description="Automatically notify lecturers before the submission deadline." enabled={settings.autoRemind} onToggle={() => update("autoRemind", !settings.autoRemind)} />
         <div style={{ margin: "16px 0" }}>
           <label style={labelStyle}>SEND REMINDER (DAYS BEFORE DEADLINE)</label>
@@ -111,8 +98,8 @@ export function AdminSettings() {
         </div>
       </section>
 
-      <button onClick={save} style={{ minWidth: "150px", padding: "11px 18px", background: saved ? C.green : C.maroon, color: "#fff", border: "none", borderRadius: "7px", fontFamily: C.sans, fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
-        {saved ? <CheckCircle size={15} /> : <Save size={15} />}{saved ? "Changes Saved" : "Save Changes"}
+      <button disabled={saving} onClick={save} style={{ minWidth: "150px", padding: "11px 18px", background: saved ? C.green : C.maroon, color: "#fff", border: "none", borderRadius: "7px", fontFamily: C.sans, fontSize: "13px", fontWeight: 700, cursor: saving ? "wait" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
+        {saved ? <CheckCircle size={15} /> : <Save size={15} />}{saved ? "Changes Saved" : saving ? "Saving…" : "Save Changes"}
       </button>
     </div>
   );

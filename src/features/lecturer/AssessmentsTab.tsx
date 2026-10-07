@@ -3,7 +3,7 @@ import { CheckCircle, Edit3, Plus, Trash2, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { loadOfferingWeightage, saveOfferingWeightage, AssessmentRecord as Assessment, deleteAssessment, listAssessments, saveAssessment as persistAssessment } from "../../services/carryMarkApi";
 
-const emptyForm = { name: "", type: "Quiz", maxMarks: "", weightage: "" };
+const emptyForm = { name: "", type: "", maxMarks: "", weightage: "" };
 type AssessmentForm = typeof emptyForm;
 
 export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string; subjectCode: string }) {
@@ -38,7 +38,8 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const weightWithoutEditing = totalWeight - (editingItem?.weightage ?? 0);
   const prospectiveTotal = weightWithoutEditing + (Number(form.weightage) || 0);
   const remaining = Math.max(0, (carryMax ?? 0) - weightWithoutEditing);
-  const formValid = form.name.trim().length > 0 && Number(form.maxMarks) > 0 && Number(form.weightage) > 0 && carryMax !== null && prospectiveTotal <= carryMax;
+  const formValid = form.name.trim().length > 0 && form.type.trim().length > 0 && Number(form.maxMarks) > 0 && Number(form.weightage) > 0 && carryMax !== null && prospectiveTotal <= carryMax;
+  const knownTypes = [...new Set(items.map(item => item.type.trim()).filter(Boolean))].sort();
 
   const openAdd = () => { setForm(emptyForm); setEditingId(null); setModal("add"); };
   const openEdit = (item: Assessment) => {
@@ -50,7 +51,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
 
   const saveAssessment = async () => {
     if (!formValid) return;
-    const values = { name: form.name.trim(), type: form.type, maxMarks: Number(form.maxMarks), weightage: Number(form.weightage) };
+    const values = { name: form.name.trim(), type: form.type.trim(), maxMarks: Number(form.maxMarks), weightage: Number(form.weightage) };
     setError("");
     try { await persistAssessment(offeringId, values, editingId ?? undefined); await reload(); closeModal(); }
     catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to save assessment."); }
@@ -100,7 +101,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
         <div style={{ width: "100%", maxWidth: "500px", boxSizing: "border-box", padding: "28px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "11px", boxShadow: "0 24px 70px rgba(0,0,0,.4)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "22px" }}><div><h3 style={{ margin: "0 0 5px", color: C.text, fontFamily: C.display, fontSize: "21px", fontWeight: 700 }}>{modal === "add" ? "Add Assessment Component" : "Edit Assessment"}</h3><div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}>{subjectCode}</div></div><button aria-label="Close" onClick={closeModal} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", padding: "2px" }}><X size={21} /></button></div>
           <div style={{ marginBottom: "16px" }}><label style={labelStyle}>COMPONENT NAME</label><input autoFocus value={form.name} onChange={event => setForm(previous => ({ ...previous, name: event.target.value }))} placeholder="e.g. Quiz 3" style={inputStyle} /></div>
-          <div style={{ marginBottom: "16px" }}><label style={labelStyle}>COMPONENT TYPE</label><select value={form.type} onChange={event => setForm(previous => ({ ...previous, type: event.target.value }))} style={inputStyle}><option>Quiz</option><option>Assignment</option><option>Test</option><option>Project</option><option>Presentation</option><option>Lab</option></select></div>
+          <div style={{ marginBottom: "16px" }}><label style={labelStyle}>COMPONENT TYPE</label><input list="assessment-types" value={form.type} onChange={event => setForm(previous => ({ ...previous, type: event.target.value }))} placeholder="Enter a component type" style={inputStyle} /><datalist id="assessment-types">{knownTypes.map(type => <option key={type} value={type} />)}</datalist></div>
           <div className="form-two-column" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}><div><label style={labelStyle}>MAX SCORE</label><input type="number" min="1" value={form.maxMarks} onChange={event => setForm(previous => ({ ...previous, maxMarks: event.target.value }))} placeholder="e.g. 20" style={inputStyle} /></div><div><label style={labelStyle}>WEIGHTAGE (%) — {remaining}% LEFT</label><input type="number" min="0.01" step="0.01" max={remaining} value={form.weightage} onChange={event => setForm(previous => ({ ...previous, weightage: event.target.value }))} placeholder={`Max ${remaining}`} style={inputStyle} /></div></div>
           <div style={{ display: "flex", justifyContent: "space-between", padding: "12px", marginBottom: "20px", borderRadius: "7px", background: C.elevated, color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}><span>Total after save</span><strong style={{ color: prospectiveTotal > (carryMax ?? 0) ? C.red : prospectiveTotal === carryMax ? C.green : C.amber }}>{prospectiveTotal}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
           {error && <div style={{ color: C.red, fontSize: "11px", margin: "-10px 0 14px" }}>{error}</div>}

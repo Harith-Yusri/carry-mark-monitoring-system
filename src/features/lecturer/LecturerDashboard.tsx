@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BookOpen, Plus, CheckCircle, ChevronRight, MoreVertical, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { useAuth } from "../../context/AuthContext";
-import { createLecturerSubject, loadSubjectCreationData, SubjectCatalogueEntry, listLecturerSubjects, SubjectSummary, updateLecturerSubject } from "../../services/carryMarkApi";
+import { createLecturerSubject, loadCurrentTermLabel, loadSubjectCreationData, SubjectCatalogueEntry, listLecturerSubjects, SubjectSummary, updateLecturerSubject } from "../../services/carryMarkApi";
 
 export type LecturerSubject = SubjectSummary;
 
@@ -29,12 +29,18 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
     ? name.trim().length > 0 && name.trim().length <= 200 && Number(semester) >= 1 && Number(semester) <= 12 && !saving
     : /^[A-Z0-9][A-Z0-9_-]{0,29}$/.test(code.trim().toUpperCase()) &&
       (existingSubject ? existingSubject.is_active : name.trim().length > 0 && name.trim().length <= 200) &&
-      Boolean(creationTerm) && !catalogueLoading && !saving;
+      Number(semester) >= 1 && Number(semester) <= 12 && Boolean(creationTerm) && !catalogueLoading && !saving;
 
 
   const progSems = [...new Set(subjects.map(s => s.progSem))].sort((a, b) => a - b);
+  const programmeCount = new Set(subjects.flatMap(subject => subject.programmeIds)).size;
 
-  useEffect(() => { listLecturerSubjects().then(setSubjects).catch(error => setLoadError(error.message)).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    Promise.all([listLecturerSubjects(), loadCurrentTermLabel()])
+      .then(([items, termLabel]) => { setSubjects(items); setCreationTerm(termLabel); })
+      .catch(error => setLoadError(error.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const openCreateModal = async () => {
     setEditingSubject(null);
@@ -48,7 +54,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
     } finally { setCatalogueLoading(false); }
   };
 
-  const openEditModal = (subject: LecturerSubject) => {
+  const openEditModal = async (subject: LecturerSubject) => {
     setMenuOfferingId(null); setEditingSubject(subject); setCode(subject.code); setName(subject.name);
     setSemester(String(subject.progSem)); setFormError(""); setCatalogue([]); setCreationTerm(subject.termLabel);
     setCatalogueLoading(false); setShowCreateModal(true);
@@ -68,13 +74,11 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
         const savedName = name.trim();
         const savedSemester = Number(semester);
         await updateLecturerSubject(editingSubject.offeringId, savedName, savedSemester);
-        setSubjects(previous => previous.map(subject => subject.offeringId === editingSubject.offeringId
-          ? { ...subject, name: savedName, progSem: savedSemester, lastSync: new Date().toISOString() }
-          : subject));
+        setSubjects(await listLecturerSubjects());
         setShowCreateModal(false); setEditingSubject(null);
         return;
       }
-      await createLecturerSubject(code, existingSubject?.name ?? name, existingSubject?.programme_semester ?? Number(semester));
+      await createLecturerSubject(code, existingSubject?.name ?? name, Number(semester));
       setShowCreateModal(false); setLoading(true); setLoadError("");
       try { setSubjects(await listLecturerSubjects()); }
       catch { setLoadError("Your subject was saved, but the list could not refresh. Please reload the page."); }
@@ -90,7 +94,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
         <div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 2px" }}>My Subjects</h1>
           <p style={{ fontSize: "12px", color: C.textMuted }}>
-            {user?.name} ({user?.id}) · {subjects[0]?.termLabel ?? "Current semester"} · {subjects.length} subject{subjects.length === 1 ? "" : "s"} across {progSems.length} programme semester{progSems.length === 1 ? "" : "s"}
+            {user?.name} ({user?.id}) · {subjects[0]?.termLabel ?? creationTerm} · {subjects.length} assignment{subjects.length === 1 ? "" : "s"} across {programmeCount} programme{programmeCount === 1 ? "" : "s"}
           </p>
         </div>
         <button
@@ -145,6 +149,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "8px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
                           <span style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 600 }}>{subj.code}</span>
+                          <span style={{ fontFamily: C.mono, fontSize: "9px", background: C.maroonLight, border: `1px solid ${C.maroon}44`, color: C.maroon, borderRadius: "3px", padding: "1px 5px" }}>{subj.programmeCode || "NO CLASSES"}</span>
                           <span style={{ fontFamily: C.mono, fontSize: "9px", background: C.elevated, border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: "3px", padding: "1px 5px" }}>SEM {subj.progSem}</span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -187,7 +192,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
               <div>
                 <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT CODE</label>
-                <input aria-label="Subject code" list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { setCode(event.target.value.toUpperCase()); setFormError(""); }} placeholder="e.g. ITT600" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none", opacity: editingSubject ? .7 : 1 }} />
+                <input aria-label="Subject code" list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { const nextCode = event.target.value.toUpperCase(); const match = catalogue.find(subject => subject.code === nextCode.trim()); setCode(nextCode); if (match?.programme_semester) setSemester(String(match.programme_semester)); setFormError(""); }} placeholder="e.g. ITT600" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "13px", outline: "none", opacity: editingSubject ? .7 : 1 }} />
               </div>
               <datalist id="subject-catalogue">{catalogue.filter(subject => subject.is_active).map(subject => <option key={subject.code} value={subject.code}>{subject.name}</option>)}</datalist>
               {existingSubject && <p role="status" style={{ color: existingSubject.is_active ? C.textSub : C.red, fontSize: "12px", lineHeight: 1.6, margin: 0 }}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
@@ -197,8 +202,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
               </div>
               <div>
                 <label style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>PROGRAMME SEMESTER</label>
-                <select aria-label="Programme semester" disabled={(!editingSubject && Boolean(existingSubject)) || saving || catalogueLoading} value={!editingSubject && existingSubject ? String(existingSubject.programme_semester ?? "") : semester} onChange={event => setSemester(event.target.value)} style={{ width: "100%", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text }}>
-                  {!editingSubject && existingSubject && existingSubject.programme_semester === null && <option value="">Not specified</option>}
+                <select aria-label="Programme semester" disabled={saving || catalogueLoading} value={semester} onChange={event => setSemester(event.target.value)} style={{ width: "100%", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text }}>
                   {[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>Semester {value}</option>)}
                 </select>
               </div>

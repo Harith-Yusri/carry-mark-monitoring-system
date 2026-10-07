@@ -3,27 +3,39 @@ import { CheckCircle, Download } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { downloadText } from "../../utils/download";
 import { useAdminRecords } from "../../hooks/useAdminRecords";
-import { LecturerInfo, ProgrammeCode } from "../../types";
+import { LecturerInfo } from "../../types";
 
-type ReportKey = "overall" | ProgrammeCode | "pending" | "marks";
+type ReportKey = string;
 interface ReportDefinition { key: ReportKey; title: string; description: string; scope: string; meta: string; filename: string; records: LecturerInfo[]; }
 
 export function ComplianceReports() {
   const C = useColors();
-  const { records } = useAdminRecords();
-  const programmeNames: Record<ProgrammeCode, string> = { CS: "Computer Science", IT: "Information Technology", IS: "Information Systems" };
+  const { records, context, loading, error } = useAdminRecords();
   const [downloaded, setDownloaded] = useState<ReportKey | null>(null);
   const pending = records.filter(item => item.submissionStatus !== "Finalised");
   const studentTotal = records.reduce((sum, item) => sum + item.studentCount, 0);
-  const programmeRecords = (code: ProgrammeCode) => records.filter(item => item.programmeCode === code);
+  const programmeRecords = (code: string) => records.flatMap(item => {
+    const assignment = item.programmeAssignments.find(candidate => candidate.code === code);
+    return assignment ? [{
+      ...item,
+      department: assignment.name,
+      programmeCodes: [assignment.code],
+      subjects: assignment.subjects,
+      subjectName: assignment.subjectName,
+      studentCount: assignment.studentCount,
+      deadline: assignment.deadline,
+      submissionStatus: assignment.submissionStatus,
+      lastUpdated: assignment.lastUpdated,
+      completionRate: assignment.completionRate,
+    }] : [];
+  });
+  const termSlug = context ? `Sem${context.semesterNo}_${context.academicYear.replace(/\D/g, "")}` : "CurrentTerm";
 
   const reports: ReportDefinition[] = [
-    { key: "overall", title: "Overall Compliance Report", description: "Full lecturer submission status across the faculty.", scope: "Faculty", meta: `${records.length} lecturers`, filename: "Compliance_AllProg_Sem2_2526.csv", records },
-    { key: "CS", title: "Computer Science Compliance", description: `Submission status for ${programmeNames.CS}.`, scope: "CS", meta: `${programmeRecords("CS").length} lecturers`, filename: "Compliance_CS_Sem2_2526.csv", records: programmeRecords("CS") },
-    { key: "IT", title: "Information Technology Compliance", description: `Submission status for ${programmeNames.IT}.`, scope: "IT", meta: `${programmeRecords("IT").length} lecturers`, filename: "Compliance_IT_Sem2_2526.csv", records: programmeRecords("IT") },
-    { key: "IS", title: "Information Systems Compliance", description: `Submission status for ${programmeNames.IS}.`, scope: "IS", meta: `${programmeRecords("IS").length} lecturers`, filename: "Compliance_IS_Sem2_2526.csv", records: programmeRecords("IS") },
-    { key: "pending", title: "Pending Submissions List", description: "Lecturers requiring submission follow-up.", scope: "Exceptions", meta: `${pending.length} pending`, filename: "PendingList_Sem2_2526.csv", records: pending },
-    { key: "marks", title: "Full Carry Mark Summary", description: "Faculty enrolment and submission summary by subject.", scope: "Faculty", meta: `${studentTotal} students`, filename: "FullMarkSummary_Sem2_2526.csv", records },
+    { key: "overall", title: "Overall Compliance Report", description: "Full lecturer submission status across the faculty.", scope: "Faculty", meta: `${records.length} lecturers`, filename: `Compliance_AllProgrammes_${termSlug}.csv`, records },
+    ...(context?.programmes ?? []).map(programme => ({ key: `programme-${programme.code}`, title: `${programme.name} Compliance`, description: `Submission status for ${programme.name}.`, scope: programme.code, meta: `${programmeRecords(programme.code).length} lecturers`, filename: `Compliance_${programme.code}_${termSlug}.csv`, records: programmeRecords(programme.code) })),
+    { key: "pending", title: "Pending Submissions List", description: "Lecturers requiring submission follow-up.", scope: "Exceptions", meta: `${pending.length} pending`, filename: `PendingList_${termSlug}.csv`, records: pending },
+    { key: "workload", title: "Lecturer Workload Summary", description: "Current-term subject assignments, enrolment totals and submission progress.", scope: "Faculty", meta: `${studentTotal} enrolments`, filename: `LecturerWorkload_${termSlug}.csv`, records },
   ];
 
   const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
@@ -43,8 +55,11 @@ export function ComplianceReports() {
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "24px", color: C.text, margin: "0 0 4px" }}>Reports &amp; Exports</h1>
           <p style={{ fontSize: "12px", color: C.textMuted, margin: 0 }}>Select a report by academic scope and download its current CSV record.</p>
         </div>
-        <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "10px" }}>SEM 2 · 2025/2026</span>
+        <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "10px" }}>{context?.termLabel.toUpperCase() ?? "CURRENT TERM"}</span>
       </div>
+
+      {loading && <p style={{ color: C.textMuted }}>Loading report data…</p>}
+      {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
 
       <div className="report-catalogue">
         <table style={{ width: "100%", minWidth: "790px", borderCollapse: "collapse", fontSize: "11px" }}>

@@ -47,7 +47,7 @@ Deno.serve(async request => {
     const recipient = account.user?.email;
     if (!recipient) return reply(422, { error: "This lecturer has no registered email in Supabase Authentication." });
     const { data: offerings, error: offeringError } = await db.from("subject_offerings")
-      .select("id,subject_name_override,subjects(code,name),class_sections(id,label,submissions(status))").eq("lecturer_id", lecturer.id).order("id");
+      .select("id,subject_name_override,programmes(code),subjects(code,name),class_sections(id,label,programmes(code),submissions(status))").eq("lecturer_id", lecturer.id).order("id");
     if (offeringError) throw offeringError;
     const sections = pendingSections(offerings ?? []).sort();
     if (!sections.length) return reply(409, { error: "There are no outstanding class submissions for this lecturer." });

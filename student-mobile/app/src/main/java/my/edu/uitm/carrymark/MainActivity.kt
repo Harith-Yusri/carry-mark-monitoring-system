@@ -39,11 +39,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import my.edu.uitm.carrymark.model.Assessment
 import my.edu.uitm.carrymark.model.Student
 import my.edu.uitm.carrymark.model.SubjectResult
+import my.edu.uitm.carrymark.model.StudentNotification
 import my.edu.uitm.carrymark.data.SupabaseProvider
 import my.edu.uitm.carrymark.ui.theme.*
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.PI
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,6 +94,7 @@ private fun StudentApp() {
             Screen.Dashboard -> DashboardScreen(
                 student = uiState.student,
                 subjects = uiState.subjects,
+                notifications = uiState.notifications,
                 actionLoading = uiState.actionLoading,
                 actionError = uiState.error,
                 onClearError = studentViewModel::clearError,
@@ -109,7 +108,7 @@ private fun StudentApp() {
             )
             Screen.Settings -> SettingsScreen(
                 student = uiState.student,
-                subjects = uiState.subjects,
+                notificationsEnabled = uiState.notificationsEnabled,
                 isDarkMode = isDarkMode.value,
                 onToggleDarkMode = { isDarkMode.value = !isDarkMode.value },
                 onNavigate = { screen.value = it },
@@ -225,7 +224,7 @@ private fun LoginScreen(
                 onValueChange = { matrix = it; errorMessage = null; onClearError() },
                 placeholder = { 
                     Text(
-                        "2025136501", 
+                        "Enter your Student ID",
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.bodyLarge
                     ) 
@@ -365,6 +364,7 @@ private fun LoginScreen(
 private fun DashboardScreen(
     student: Student?,
     subjects: List<SubjectResult>,
+    notifications: List<StudentNotification>,
     actionLoading: Boolean,
     actionError: String?,
     onClearError: () -> Unit,
@@ -435,15 +435,13 @@ private fun DashboardScreen(
                                     tint = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.size(24.dp)
                                 )
-                                // Notification dot
-                                Surface(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = CircleShape,
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .align(Alignment.TopEnd)
-                                        .offset(x = (-12).dp, y = 12.dp)
-                                ) {}
+                                if (notifications.isNotEmpty()) {
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shape = CircleShape,
+                                        modifier = Modifier.size(8.dp).align(Alignment.TopEnd).offset(x = (-12).dp, y = 12.dp)
+                                    ) {}
+                                }
                             }
                         }
 
@@ -457,7 +455,7 @@ private fun DashboardScreen(
                             shape = RoundedCornerShape(24.dp),
                             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                         ) {
-                            NotificationDropdownContent(subjects)
+                            NotificationDropdownContent(notifications)
                         }
                     }
                 }
@@ -471,6 +469,15 @@ private fun DashboardScreen(
             ) {
                 items(subjects) { subject ->
                     SubjectCard(subject) { onSubject(subject) }
+                }
+                if (subjects.isEmpty()) {
+                    item {
+                        Text(
+                            "You are not enrolled in any classes yet. Use Join Class when your lecturer provides an invitation code.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
@@ -493,9 +500,8 @@ private fun DashboardScreen(
 }
 
 @Composable
-private fun NotificationDropdownContent(subjects: List<SubjectResult>) {
+private fun NotificationDropdownContent(notifications: List<StudentNotification>) {
     val statusColors = LocalCarryMarkExtraColors.current
-    val finalisedSubject = subjects.firstOrNull { it.isFinalised }
     Column(Modifier.padding(20.dp)) {
         Text(
             "NOTIFICATIONS",
@@ -506,8 +512,9 @@ private fun NotificationDropdownContent(subjects: List<SubjectResult>) {
         
         Spacer(Modifier.height(16.dp))
         
-        if (finalisedSubject != null) {
-            Row(verticalAlignment = Alignment.Top) {
+        if (notifications.isNotEmpty()) {
+            notifications.take(5).forEach { notification ->
+              Row(verticalAlignment = Alignment.Top, modifier = Modifier.padding(bottom = 16.dp)) {
                 Icon(
                     Icons.Default.CheckCircle,
                     null,
@@ -517,18 +524,19 @@ private fun NotificationDropdownContent(subjects: List<SubjectResult>) {
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text(
-                        "${finalisedSubject.code} carry marks finalised by ${finalisedSubject.lecturer}",
+                        notification.title,
                         color = Color.White,
                         style = MaterialTheme.typography.bodyLarge,
                         lineHeight = 22.sp
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Your latest result is available",
+                        notification.body,
                         color = Color(0xFF6B7280),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+              }
             }
         } else {
             Text(
@@ -749,7 +757,7 @@ private fun SubjectCard(subject: SubjectResult, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Updated 24 Jun 2026", // Placeholder as per reference
+                    subject.lastUpdated?.take(10)?.let { "Updated $it" } ?: "No marks recorded",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = academicTypography.academicSmall
                 )
@@ -1268,44 +1276,56 @@ private fun ProgressScreen(subjects: List<SubjectResult>, onNavigate: (Screen) -
                         color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.headlineLarge
                     )
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            "%.0f".format(avgMark),
-                            color = MaterialTheme.colorScheme.primary,
-                            style = academicTypography.academicLarge
-                        )
-                        Text(
-                            "avg. carry mark",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    if (recordedMarks.isNotEmpty()) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                "%.0f".format(avgMark),
+                                color = MaterialTheme.colorScheme.primary,
+                                style = academicTypography.academicLarge
+                            )
+                            Text(
+                                "avg. carry mark",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                 }
             }
 
-            item {
-                ChartSection("CARRY MARKS BY SUBJECT") {
-                    CarryMarkBarChart(subjects)
+            if (subjects.isEmpty()) {
+                item {
+                    Text(
+                        "No subject progress is available. Join a class to begin tracking carry marks.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
-            }
-
-            item {
-                ChartSection("PERFORMANCE BY COMPONENT TYPE") {
-                    PerformanceRadarChart(subjects)
+            } else {
+                item {
+                    ChartSection("CARRY MARKS BY SUBJECT") {
+                        CarryMarkBarChart(subjects)
+                    }
                 }
-            }
 
-            item {
-                Text(
-                    "SUBJECT SUMMARY",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelMedium,
-                    letterSpacing = 1.sp
-                )
-            }
+                item {
+                    ChartSection("PERFORMANCE BY COMPONENT TYPE") {
+                        PerformanceRadarChart(subjects)
+                    }
+                }
 
-            items(subjects) { subject ->
-                SummaryItem(subject)
+                item {
+                    Text(
+                        "SUBJECT SUMMARY",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium,
+                        letterSpacing = 1.sp
+                    )
+                }
+
+                items(subjects) { subject ->
+                    SummaryItem(subject)
+                }
             }
             
             // Added some extra space at the bottom to ensure everything is visible above the navigation bar
@@ -1348,6 +1368,7 @@ private fun CarryMarkBarChart(subjects: List<SubjectResult>) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val barColor = MaterialTheme.colorScheme.primary
     androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+        if (subjects.isEmpty()) return@Canvas
         val bottomPadding = 30.dp.toPx()
         val leftPadding = 40.dp.toPx()
         val chartHeight = size.height - bottomPadding
@@ -1355,7 +1376,7 @@ private fun CarryMarkBarChart(subjects: List<SubjectResult>) {
         
         val barWidth = 40.dp.toPx()
         val spacing = (chartWidth - (barWidth * subjects.size)) / (subjects.size + 1)
-        val maxMark = subjects.maxOfOrNull { it.carryMaximum.toFloat() } ?: 50f
+        val maxMark = subjects.maxOf { it.carryMaximum.toFloat() }
         
         // Draw axis labels (Y-axis)
         val axisLabels = listOf(0f, maxMark * 0.3f, maxMark * 0.6f, maxMark)
@@ -1407,70 +1428,47 @@ private fun CarryMarkBarChart(subjects: List<SubjectResult>) {
 private fun PerformanceRadarChart(subjects: List<SubjectResult>) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val brandColor = MaterialTheme.colorScheme.primary
-    val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
-    val categories = listOf("quiz", "assignment", "test", "project", "participation")
     val assessments = subjects.flatMap { it.assessments }
+    val categories = assessments.map { it.assessmentType.trim() }.filter { it.isNotEmpty() }.distinct()
     val dataPoints = categories.map { category ->
-        val percentages = assessments
-            .filter {
-                it.assessmentType.contains(category, ignoreCase = true) ||
-                    it.name.contains(category, ignoreCase = true)
-            }
+        val percentages = assessments.filter { it.assessmentType.equals(category, ignoreCase = true) }
             .mapNotNull { assessment ->
                 assessment.score?.let { (it / assessment.maximum).toFloat().coerceIn(0f, 1f) }
             }
         if (percentages.isEmpty()) 0f else percentages.average().toFloat()
     }
-    
+
+    if (categories.isEmpty()) {
+        Text("No assessed component data yet", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        return
+    }
+
     androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-        val center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
-        val radius = (size.minDimension / 2) - 40.dp.toPx()
-        val sides = 5
-        val angle = 2 * Math.PI / sides
-        val labels = listOf("Quizzes", "Assignments", "Tests", "Projects", "Participation")
-
-        // Draw web
-        for (i in 1..4) {
-            val r = radius * (i / 4f)
-            val path = androidx.compose.ui.graphics.Path()
-            for (j in 0 until sides) {
-                val x = center.x + r * cos(j * angle - PI / 2).toFloat()
-                val y = center.y + r * sin(j * angle - PI / 2).toFloat()
-                if (j == 0) path.moveTo(x, y) else path.lineTo(x, y)
-            }
-            path.close()
-            drawPath(path, color = mutedColor, style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
-        }
-
-        // Draw labels
-        labels.forEachIndexed { i, label ->
-            val x = center.x + (radius + 20.dp.toPx()) * cos(i * angle - PI / 2).toFloat()
-            val y = center.y + (radius + 20.dp.toPx()) * sin(i * angle - PI / 2).toFloat()
-            
+        val bottomPadding = 34.dp.toPx()
+        val chartHeight = size.height - bottomPadding
+        val slotWidth = size.width / categories.size
+        val barWidth = minOf(38.dp.toPx(), slotWidth * .55f)
+        categories.forEachIndexed { index, label ->
+            val barHeight = chartHeight * dataPoints[index]
+            val x = slotWidth * index + (slotWidth - barWidth) / 2
+            drawRoundRect(
+                color = brandColor,
+                topLeft = androidx.compose.ui.geometry.Offset(x, chartHeight - barHeight),
+                size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
+            )
             drawContext.canvas.nativeCanvas.drawText(
-                label,
-                x,
-                y,
+                label.take(12),
+                x + barWidth / 2,
+                size.height - 8.dp.toPx(),
                 android.graphics.Paint().apply {
                     color = labelColor
-                    textSize = 10.sp.toPx()
+                    textSize = 9.sp.toPx()
                     typeface = android.graphics.Typeface.MONOSPACE
                     textAlign = android.graphics.Paint.Align.CENTER
                 }
             )
         }
-
-        // Draw data
-        val dataPath = androidx.compose.ui.graphics.Path()
-        dataPoints.forEachIndexed { i, value ->
-            val r = radius * value
-            val x = center.x + r * cos(i * angle - PI / 2).toFloat()
-            val y = center.y + r * sin(i * angle - PI / 2).toFloat()
-            if (i == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
-        }
-        dataPath.close()
-        drawPath(dataPath, color = brandColor.copy(alpha = 0.4f))
-        drawPath(dataPath, color = brandColor, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
     }
 }
 
@@ -1528,7 +1526,7 @@ private fun SummaryItem(subject: SubjectResult) {
 @Composable
 private fun SettingsScreen(
     student: Student?,
-    subjects: List<SubjectResult>,
+    notificationsEnabled: Boolean?,
     isDarkMode: Boolean,
     onToggleDarkMode: () -> Unit,
     onNavigate: (Screen) -> Unit, 
@@ -1608,9 +1606,9 @@ private fun SettingsScreen(
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
                         SettingsRow("Faculty", student?.faculty.orEmpty())
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
-                        SettingsRow("Semester", student?.semester.orEmpty())
+                        SettingsRow("Semester", student?.semester ?: "Not recorded")
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
-                        SettingsRow("Academic Advisor", student?.academicAdvisor.orEmpty())
+                        SettingsRow("Academic Advisor", student?.academicAdvisor ?: "Not recorded")
                     }
                 }
             }
@@ -1626,18 +1624,12 @@ private fun SettingsScreen(
                 ) {
                     Column(Modifier.padding(20.dp)) {
                         Text(
-                            "Receive a notification when a lecturer finalises carry marks.",
+                            "Notifications are controlled by the current academic-term policy.",
                             color = statusColors.muted,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Spacer(Modifier.height(20.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
-                        subjects.forEachIndexed { index, subject ->
-                            NotificationSubjectRow(subject)
-                            if (index < subjects.size - 1) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
-                            }
-                        }
+                        Spacer(Modifier.height(16.dp))
+                        SettingsRow("Finalisation alerts", when (notificationsEnabled) { true -> "Enabled"; false -> "Disabled"; null -> "Not configured" })
                     }
                 }
             }
@@ -1652,7 +1644,7 @@ private fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(Modifier.padding(20.dp)) {
-                        SettingsRow("App Version", "1.0.0 (Build 42)")
+                        SettingsRow("App Version", "${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})")
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
                         SettingsRow("Language", "English")
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
@@ -1863,64 +1855,13 @@ private fun SettingsRow(label: String, value: String) {
     }
 }
 
-@Composable
-private fun NotificationSubjectRow(subject: SubjectResult) {
-    val isOn = true
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(
-                subject.name,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                subject.code,
-                color = LocalCarryMarkExtraColors.current.muted,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-        
-        Surface(
-            color = if (isOn) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent,
-            shape = MaterialTheme.shapes.small,
-            border = BorderStroke(1.dp, if (isOn) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant),
-            modifier = Modifier.height(32.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    if (isOn) Icons.Default.Notifications else Icons.Default.NotificationsOff,
-                    null,
-                    tint = if (isOn) MaterialTheme.colorScheme.primary else LocalCarryMarkExtraColors.current.muted,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    if (isOn) "ON" else "OFF",
-                    color = if (isOn) MaterialTheme.colorScheme.primary else LocalCarryMarkExtraColors.current.muted,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
-
 @Preview(showBackground = true, apiLevel = 35)
 @Composable
 private fun SettingsPreview() {
     CarryMarkTheme(darkTheme = true) {
         SettingsScreen(
             student = null,
-            subjects = emptyList(),
+            notificationsEnabled = null,
             isDarkMode = true,
             onToggleDarkMode = {},
             onNavigate = {}, 
@@ -1936,6 +1877,7 @@ private fun DashboardPreview() {
         DashboardScreen(
             student = null,
             subjects = emptyList(),
+            notifications = emptyList(),
             actionLoading = false,
             actionError = null,
             onClearError = {},
