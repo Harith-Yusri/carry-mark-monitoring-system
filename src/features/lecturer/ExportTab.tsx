@@ -4,6 +4,7 @@ import { useColors } from "../../context/DarkModeContext";
 import { loadOfferingWeightage, AssessmentRecord, loadOfferingData, SectionRecord } from "../../services/carryMarkApi";
 import { downloadText } from "../../utils/download";
 import { classSelectorActionStyle, classSelectorCardStyle, classSelectorGridStyle, classSelectorIconStyle, classSelectorMetaStyle, classSelectorTitleStyle } from "./classSelectorStyles";
+import { escapeCsv } from "../../utils/csv";
 
 type StudentRecord = SectionRecord["students"][number] & { id: string };
 type ExportClassSection = Omit<SectionRecord, "students"> & { students: StudentRecord[] };
@@ -37,7 +38,6 @@ export function ExportTab({ offeringId, subjectCode, subjectName, academicYear, 
   const detailRows = [
     ["Subject Code", subjectCode], ["Subject Name", subjectName], ["Programme", `${selected.programmeCode} — ${selected.programmeName}`], ["Class Section", selected.label], ["Semester", programmeSemester], ["Academic Session", academicYear], ["Students", `${selected.students.length} enrolled (capacity ${selected.capacity})`], ["Submission Status", assessmentStatus], ["Export Format", "CSV (.csv)"], ["Output Filename", filename],
   ];
-  const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   const exportClass = () => {
     const rows = selected.students.map(student => [student.matrixNo, student.name, ...assessments.map(item => student.scores[item.id]), student.totalCarry].map(escapeCsv).join(","));
     downloadText(filename, [["Student ID", "Name", ...assessments.map(item => `${item.name} /${item.maxMarks}`), `Carry mark /${carryMax ?? "Not set"}`].map(escapeCsv).join(","), ...rows].join("\n"));

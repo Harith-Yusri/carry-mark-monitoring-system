@@ -4,6 +4,7 @@ import { useColors } from "../../context/DarkModeContext";
 import { downloadText } from "../../utils/download";
 import { useAdminRecords } from "../../hooks/useAdminRecords";
 import { LecturerInfo } from "../../types";
+import { escapeCsv } from "../../utils/csv";
 
 type ReportKey = string;
 interface ReportDefinition { key: ReportKey; title: string; description: string; scope: string; meta: string; filename: string; records: LecturerInfo[]; }
@@ -38,7 +39,6 @@ export function ComplianceReports() {
     { key: "workload", title: "Lecturer Workload Summary", description: "Current-term subject assignments, enrolment totals and submission progress.", scope: "Faculty", meta: `${studentTotal} enrolments`, filename: `LecturerWorkload_${termSlug}.csv`, records },
   ];
 
-  const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   const exportReport = (report: ReportDefinition) => {
     const header = ["Staff ID", "Lecturer", "Programme", "Subject Code", "Subject Name", "Students", "Deadline", "Submission Status", "Completion Rate"];
     const rows = report.records.map(item => [item.id, item.name, item.department, item.subjects.join("; "), item.subjectName, item.studentCount, item.deadline, item.submissionStatus, `${item.completionRate}%`].map(escapeCsv).join(","));

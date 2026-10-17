@@ -51,10 +51,13 @@ class StudentRepository {
 
     suspend fun joinClass(code: String) {
         requireActiveSession()
-        client.postgrest.rpc(
+        val joinedSection = client.postgrest.rpc(
             function = "join_class_by_code",
             parameters = buildJsonObject { put("invitation_code", code.trim()) }
-        )
+        ).decodeAs<String?>()
+        if (joinedSection == null) {
+            throw IllegalArgumentException("Invalid or inactive class invitation code")
+        }
         SupabaseProvider.sessionManager.recordActivity()
     }
 

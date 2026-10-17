@@ -58,7 +58,11 @@ export interface SectionRecord {
 export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
   const { data, error } = await requireSupabase().rpc("get_my_lecturer_subjects");
   if (error) throw error;
-  return data.map(row => ({
+  return data.map(mapSubjectSummary);
+}
+
+function mapSubjectSummary(row: any): SubjectSummary {
+  return {
     offeringId: row.offering_id,
     programmeId: row.programme_ids[0] ?? "",
     programmeIds: row.programme_ids,
@@ -75,7 +79,13 @@ export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
     termLabel: `Session ${row.semester_no}, ${row.academic_year}`,
     academicYear: row.academic_year,
     semesterNo: row.semester_no,
-  }));
+  };
+}
+
+export async function listArchivedLecturerSubjects(): Promise<SubjectSummary[]> {
+  const { data, error } = await requireSupabase().rpc("get_my_archived_lecturer_subjects");
+  if (error) throw error;
+  return data.map(mapSubjectSummary);
 }
 
 export async function listAssessments(offeringId: string): Promise<AssessmentRecord[]> {
@@ -119,7 +129,7 @@ export async function loadOfferingData(offeringId: string): Promise<{ assessment
   const enrolmentIds = enrolments.map(row => row.id);
   const [{ data: marks, error: marksError }, { data: totals, error: totalsError }] = enrolmentIds.length ? await Promise.all([
     db.from("marks").select("enrolment_id,assessment_id,score").in("enrolment_id", enrolmentIds),
-    db.from("student_carry_totals").select("enrolment_id,total_carry,eligible").in("enrolment_id", enrolmentIds),
+    db.rpc("get_offering_student_totals", { target_offering: offeringId }),
   ]) : [{ data: [], error: null }, { data: [], error: null }];
   if (marksError) throw marksError;
   if (totalsError) throw totalsError;
@@ -185,6 +195,71 @@ export interface SystemSettingsRecord {
   notificationConfigured: boolean;
 }
 
+export interface AcademicSessionRecord {
+  id: string;
+  academicYear: string;
+  sessionNo: number;
+  startsOn: string;
+  endsOn: string;
+  defaultDeadline: string;
+  status: "draft" | "active" | "closed";
+  isCurrent: boolean;
+  activatedAt: string | null;
+  closedAt: string | null;
+  offeringCount: number;
+  classCount: number;
+  markCount: number;
+  submissionCount: number;
+  finalisedCount: number;
+}
+
+export async function listAcademicSessions(): Promise<AcademicSessionRecord[]> {
+  const { data, error } = await requireSupabase().rpc("get_academic_session_summaries");
+  if (error) throw error;
+  return data.map(row => ({
+    id: row.id, academicYear: row.academic_year, sessionNo: row.session_no,
+    startsOn: row.starts_on, endsOn: row.ends_on, defaultDeadline: row.default_deadline,
+    status: row.status as AcademicSessionRecord["status"], isCurrent: row.is_current,
+    activatedAt: row.activated_at, closedAt: row.closed_at,
+    offeringCount: Number(row.offering_count), classCount: Number(row.class_count), markCount: Number(row.mark_count),
+    submissionCount: Number(row.submission_count), finalisedCount: Number(row.finalised_count),
+  }));
+}
+
+export async function createAcademicSession(values: { academicYear: string; sessionNo: number; startsOn: string; endsOn: string; defaultDeadline: string }) {
+  const { data, error } = await requireSupabase().rpc("create_academic_session", {
+    p_academic_year: values.academicYear,
+    p_session_no: values.sessionNo,
+    p_starts_on: values.startsOn,
+    p_ends_on: values.endsOn,
+    p_default_deadline: new Date(`${values.defaultDeadline}T23:59:59+08:00`).toISOString(),
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function activateAcademicSession(termId: string) {
+  const { error } = await requireSupabase().rpc("activate_academic_session", { target_term: termId });
+  if (error) throw error;
+}
+
+export async function updateAcademicSession(termId: string, values: { academicYear: string; sessionNo: number; startsOn: string; endsOn: string; defaultDeadline: string }) {
+  const { error } = await requireSupabase().rpc("update_academic_session", {
+    target_term: termId,
+    p_academic_year: values.academicYear,
+    p_session_no: values.sessionNo,
+    p_starts_on: values.startsOn,
+    p_ends_on: values.endsOn,
+    p_default_deadline: new Date(`${values.defaultDeadline}T23:59:59+08:00`).toISOString(),
+  });
+  if (error) throw error;
+}
+
+export async function deleteAcademicSession(termId: string) {
+  const { error } = await requireSupabase().rpc("delete_academic_session", { target_term: termId });
+  if (error) throw error;
+}
+
 export async function loadSystemSettings(): Promise<SystemSettingsRecord> {
   const db = requireSupabase();
   const { data: term, error } = await db.from("academic_terms").select("*").eq("is_current", true).single();
@@ -241,14 +316,13 @@ export async function saveSystemSettings(settings: SystemSettingsRecord, updated
 export interface SubjectCatalogueEntry {
   code: string;
   name: string;
-  programme_semester: number | null;
   is_active: boolean;
 }
 
 export async function loadSubjectCreationData() {
   const db = requireSupabase();
   const [catalogue, term] = await Promise.all([
-    db.from("subjects").select("code,name,programme_semester,is_active").order("code"),
+    db.from("subjects").select("code,name,is_active").order("code"),
     db.from("academic_terms").select("academic_year,semester_no").eq("is_current", true).eq("status", "active").maybeSingle(),
   ]);
   if (catalogue.error) throw catalogue.error;
@@ -267,17 +341,18 @@ export async function loadCurrentTermLabel() {
 
 export async function createLecturerSubject(code: string, name: string, semester: number) {
   const { data, error } = await requireSupabase().rpc("create_lecturer_subject", {
-    subject_code: code.trim().toUpperCase(), subject_name: name.trim(), programme_semester: semester,
+    subject_code: code.trim().toUpperCase(), subject_name: name.trim(), offering_semester: semester,
   });
   if (error) throw error;
   return data;
 }
 
-export async function updateLecturerSubject(offeringId: string, name: string, semester: number) {
+export async function updateLecturerSubject(offeringId: string, name: string, semester: number, programmeId: string) {
   const { error } = await requireSupabase().rpc("update_lecturer_subject", {
     target_offering: offeringId,
     subject_name: name.trim(),
-    programme_semester: semester,
+    offering_semester: semester,
+    teaching_programme_id: programmeId,
   });
   if (error) throw error;
 }

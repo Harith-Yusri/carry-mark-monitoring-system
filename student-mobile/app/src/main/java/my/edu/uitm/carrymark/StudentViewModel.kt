@@ -1,5 +1,6 @@
 package my.edu.uitm.carrymark
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -140,10 +141,11 @@ class StudentViewModel(
                 }
                 onSuccess()
             }.onFailure { error ->
+                if (BuildConfig.DEBUG) Log.e("StudentViewModel", "Join class failed", error)
                 _state.value = if (repository.hasSession()) {
-                    _state.value.copy(actionLoading = false, error = friendlyMessage(error))
+                    _state.value.copy(actionLoading = false, error = joinClassMessage(error))
                 } else {
-                    StudentUiState(error = friendlyMessage(error))
+                    StudentUiState(error = joinClassMessage(error))
                 }
             }
         }
@@ -196,8 +198,35 @@ class StudentViewModel(
             message.contains("network", ignoreCase = true) ||
                 message.contains("Unable to resolve host", ignoreCase = true) ->
                 "Unable to connect. Check your internet connection and try again."
-            message.isNotBlank() -> message.substringBefore(" URL:").substringBefore(" Headers:")
+            message.contains("session expired", ignoreCase = true) ||
+                message.contains("not authenticated", ignoreCase = true) ->
+                "Your session has expired. Please sign in again."
             else -> "Something went wrong. Please try again."
+        }
+    }
+
+    private fun joinClassMessage(error: Throwable): String {
+        val message = error.message.orEmpty()
+        return when {
+            message.contains("different programme", ignoreCase = true) ||
+                message.contains("same programme", ignoreCase = true) ||
+                message.contains("student and class must belong", ignoreCase = true) ->
+                "You cannot join this class because it belongs to a different programme."
+            message.contains("already enrolled", ignoreCase = true) ->
+                "You are already enrolled in this subject."
+            message.contains("class is full", ignoreCase = true) ->
+                "This class is full. Please contact your lecturer."
+            message.contains("invitation code", ignoreCase = true) ||
+                message.contains("class code", ignoreCase = true) ->
+                "The class code is invalid or inactive."
+            message.contains("session expired", ignoreCase = true) ||
+                message.contains("not authenticated", ignoreCase = true) ->
+                "Your session has expired. Please sign in again."
+            message.contains("network", ignoreCase = true) ||
+                message.contains("Unable to resolve host", ignoreCase = true) ||
+                message.contains("timeout", ignoreCase = true) ->
+                "Unable to connect. Check your internet connection and try again."
+            else -> "Unable to join this class. Check the class code and try again."
         }
     }
 }

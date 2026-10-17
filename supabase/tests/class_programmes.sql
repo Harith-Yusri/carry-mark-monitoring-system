@@ -28,10 +28,10 @@ begin
   update public.academic_terms set is_current = false where is_current;
   insert into public.academic_terms (id, academic_year, semester_no, starts_on, ends_on, default_deadline, status, is_current)
     values (term_id, test_code, 1, '2026-01-01', '2026-12-31', '2026-12-01', 'active', true);
-  insert into public.subjects (id, code, name, programme_semester)
-    values (subject_id, test_code, 'Class Programme Test', 1);
-  insert into public.subject_offerings (id, subject_id, term_id, lecturer_id)
-    values (offering_id, subject_id, term_id, lecturer_id);
+  insert into public.subjects (id, code, name)
+    values (subject_id, test_code, 'Class Programme Test');
+  insert into public.subject_offerings (id, subject_id, term_id, lecturer_id, programme_id, programme_semester)
+    values (offering_id, subject_id, term_id, lecturer_id, programme_a, 1);
   insert into public.class_sections (id, offering_id, programme_id, label, capacity)
     values (section_id, offering_id, programme_a, 'A', 10);
   insert into public.students (id, matrix_no, full_name, programme_id, auth_user_id) values
@@ -68,7 +68,7 @@ begin
     update public.class_sections set programme_id = programme_b where id = section_id;
     raise exception 'FAIL: class programme changed despite incompatible enrolment';
   exception when others then
-    if sqlerrm not like 'The class programme cannot be changed%' then raise; end if;
+    if sqlerrm not like 'The class programme must match%' then raise; end if;
   end;
 
   begin
@@ -89,4 +89,4 @@ begin
 end;
 $$;
 rollback;
-select 'Passed: admin, lecturer and student access; class programme foreign key; active-programme validation; safe programme edits and enrolment matching. All fixtures rolled back.' as result;
+select 'Passed: admin, lecturer and student access; class/offering programme consistency; safe programme edits and enrolment matching. All fixtures rolled back.' as result;

@@ -10,6 +10,9 @@ declare
   term uuid := gen_random_uuid();
   first_offering uuid;
   second_offering uuid;
+  duplicate_offering uuid;
+  alternate_programme_offering uuid;
+  alternate_semester_offering uuid;
   test_subject_id uuid;
   test_code text := 'TEST' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 12));
 begin
@@ -34,34 +37,44 @@ begin
   if not exists (select 1 from public.subject_offerings where id = first_offering and lecturer_id = lecturer_a and term_id = term and status = 'active') then
     raise exception 'FAIL: incorrect lecturer or term';
   end if;
+  insert into public.class_sections (offering_id, programme_id, label, capacity)
+    values (first_offering, programme, 'Programme A', 10);
   begin
-    perform public.create_lecturer_subject(test_code, 'Duplicate', 1);
+    duplicate_offering := public.create_lecturer_subject(test_code, 'Duplicate', 3);
+    insert into public.class_sections (offering_id, programme_id, label, capacity)
+      values (duplicate_offering, programme, 'Duplicate', 10);
     raise exception 'FAIL: duplicate assignment allowed';
   exception when others then
-      if sqlerrm not like 'You have already added%' then raise; end if;
+      if sqlerrm not like 'This subject already has an offering%' then raise; end if;
   end;
-  insert into public.class_sections (offering_id, programme_id, label, capacity) values
-    (first_offering, programme, 'Programme A', 10),
-    (first_offering, second_programme, 'Programme B', 10);
+  alternate_programme_offering := public.create_lecturer_subject(test_code, 'Reused', 3);
+  insert into public.class_sections (offering_id, programme_id, label, capacity)
+    values (alternate_programme_offering, second_programme, 'Programme B', 10);
+  alternate_semester_offering := public.create_lecturer_subject(test_code, 'Reused', 4);
+  insert into public.class_sections (offering_id, programme_id, label, capacity)
+    values (alternate_semester_offering, programme, 'Semester 4', 10);
+  if alternate_programme_offering is null or alternate_semester_offering is null then
+    raise exception 'FAIL: valid programme or semester variant was rejected';
+  end if;
   if (select count(*) from public.get_my_lecturer_subjects() where offering_id = first_offering) <> 1 then
     raise exception 'FAIL: lecturer subject read model did not return the offering';
   end if;
   if not exists (
     select 1 from public.get_my_lecturer_subjects()
-    where offering_id = first_offering and programme_ids @> array[programme, second_programme]
+    where offering_id = first_offering and programme_ids = array[programme]
   ) then
-    raise exception 'FAIL: lecturer subject read model did not return both class programmes';
+    raise exception 'FAIL: lecturer subject read model did not return its programme';
   end if;
-  perform public.update_lecturer_subject(first_offering, 'Edited Test Subject', 4);
+  perform public.update_lecturer_subject(first_offering, 'Edited Test Subject', 5, programme);
   if not exists (
     select 1 from public.subject_offerings
-    where id = first_offering and subject_name_override = 'Edited Test Subject' and programme_semester_override = 4
+    where id = first_offering and subject_name_override = 'Edited Test Subject' and programme_semester = 5 and programme_id = programme
   ) then
     raise exception 'FAIL: lecturer subject override was not saved';
   end if;
   perform set_config('request.jwt.claim.sub', lecturer_b::text, true);
   begin
-    perform public.update_lecturer_subject(first_offering, 'Unauthorised Edit', 5);
+    perform public.update_lecturer_subject(first_offering, 'Unauthorised Edit', 5, programme);
     raise exception 'FAIL: lecturer edited another lecturer offering';
   exception when others then
     if sqlerrm not like 'You can only edit subjects%' then raise; end if;
@@ -71,7 +84,7 @@ begin
     raise exception 'FAIL: second lecturer did not reuse the catalogue subject';
   end if;
   if (select count(*) from public.subjects where code = test_code) <> 1 or
-     not exists (select 1 from public.subjects where code = test_code and name = 'Test Subject' and programme_semester = 3) then
+     not exists (select 1 from public.subjects where code = test_code and name = 'Test Subject') then
     raise exception 'FAIL: catalogue duplicated or overwritten';
   end if;
   update public.subjects set is_active = false where code = test_code;
@@ -113,7 +126,7 @@ begin
   if has_function_privilege('anon', 'public.create_lecturer_subject(text,text,integer)', 'execute') then
     raise exception 'FAIL: anonymous role can call function';
   end if;
-  if has_function_privilege('anon', 'public.update_lecturer_subject(uuid,text,integer)', 'execute') then
+  if has_function_privilege('anon', 'public.update_lecturer_subject(uuid,text,integer,uuid)', 'execute') then
     raise exception 'FAIL: anonymous role can edit a lecturer subject';
   end if;
   if has_function_privilege('anon', 'public.get_my_lecturer_subjects()', 'execute') then
@@ -122,4 +135,4 @@ begin
 end;
 $$;
 rollback;
-select 'Passed: class-derived multi-programme read model, owned edit, normalization, duplicate rejection, catalogue reuse, ownership, inactive subject, invalid semester, role checks, closed term and anonymous permission. All fixtures rolled back.' as result;
+select 'Passed: programme-specific offering read model, owned edit, normalization, exact duplicate rejection, catalogue reuse, ownership, inactive subject, invalid semester, role checks, closed term and anonymous permission. All fixtures rolled back.' as result;

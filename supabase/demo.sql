@@ -8,14 +8,16 @@ set staff_no = 'TS003',
     is_active = true
 where id = 'be7c9406-4a1c-422c-8fe8-561bee674c42';
 
-insert into public.subject_offerings (subject_id, term_id, lecturer_id, status)
-select s.id, t.id, p.id,
+insert into public.subject_offerings (subject_id, term_id, lecturer_id, programme_id, programme_semester, status)
+select s.id, t.id, p.id, programme.id,
+       case s.code when 'ITT593' then 5 when 'ITT557' then 4 when 'ITT588' then 5 else 6 end,
        case s.code when 'ITT569' then 'draft'::public.offering_status
                    when 'ITT593' then 'completed'::public.offering_status
                    else 'active'::public.offering_status end
 from public.subjects s
 join public.academic_terms t on t.academic_year = '2025/2026' and t.semester_no = 2
 join public.profiles p on p.staff_no = 'TS003'
+join public.programmes programme on programme.code = 'CS240'
 where s.code in ('ITT593', 'ITT557', 'ITT588', 'ITT569')
   and not exists (
     select 1 from public.subject_offerings existing
@@ -25,10 +27,13 @@ where s.code in ('ITT593', 'ITT557', 'ITT588', 'ITT569')
 update public.subject_offerings offering
 set status = case subject.code when 'ITT569' then 'draft'::public.offering_status
                                when 'ITT593' then 'completed'::public.offering_status
-                               else 'active'::public.offering_status end
-from public.subjects subject, public.profiles lecturer
+                               else 'active'::public.offering_status end,
+    programme_id = programme.id,
+    programme_semester = case subject.code when 'ITT593' then 5 when 'ITT557' then 4 when 'ITT588' then 5 else 6 end
+from public.subjects subject, public.profiles lecturer, public.programmes programme
 where offering.subject_id = subject.id and offering.lecturer_id = lecturer.id
-  and lecturer.staff_no = 'TS003' and subject.code in ('ITT593', 'ITT557', 'ITT588', 'ITT569');
+  and lecturer.staff_no = 'TS003' and programme.code = 'CS240'
+  and subject.code in ('ITT593', 'ITT557', 'ITT588', 'ITT569');
 
 insert into public.class_sections
   (offering_id, programme_id, label, day_of_week, starts_at, ends_at, room, capacity, join_code)

@@ -12,6 +12,7 @@ export const supabase = isSupabaseConfigured
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storage: typeof window === "undefined" ? undefined : window.sessionStorage,
       },
     })
   : null;

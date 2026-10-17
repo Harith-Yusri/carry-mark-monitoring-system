@@ -17,7 +17,9 @@ export type Database = {
       academic_terms: {
         Row: {
           academic_year: string
+          activated_at: string | null
           carry_max: number
+          closed_at: string | null
           created_at: string
           default_deadline: string
           eligible_threshold: number
@@ -30,7 +32,9 @@ export type Database = {
         }
         Insert: {
           academic_year: string
+          activated_at?: string | null
           carry_max?: number
+          closed_at?: string | null
           created_at?: string
           default_deadline: string
           eligible_threshold?: number
@@ -43,7 +47,9 @@ export type Database = {
         }
         Update: {
           academic_year?: string
+          activated_at?: string | null
           carry_max?: number
+          closed_at?: string | null
           created_at?: string
           default_deadline?: string
           eligible_threshold?: number
@@ -538,8 +544,10 @@ export type Database = {
           deadline_at: string | null
           id: string
           lecturer_id: string
-          programme_semester_override: number | null
+          programme_id: string | null
+          programme_semester: number | null
           status: Database["public"]["Enums"]["offering_status"]
+          status_before_archive: Database["public"]["Enums"]["offering_status"] | null
           subject_id: string
           subject_name_override: string | null
           term_id: string
@@ -551,8 +559,10 @@ export type Database = {
           deadline_at?: string | null
           id?: string
           lecturer_id: string
-          programme_semester_override?: number | null
+          programme_id?: string | null
+          programme_semester?: number | null
           status?: Database["public"]["Enums"]["offering_status"]
+          status_before_archive?: Database["public"]["Enums"]["offering_status"] | null
           subject_id: string
           subject_name_override?: string | null
           term_id: string
@@ -564,14 +574,23 @@ export type Database = {
           deadline_at?: string | null
           id?: string
           lecturer_id?: string
-          programme_semester_override?: number | null
+          programme_id?: string | null
+          programme_semester?: number | null
           status?: Database["public"]["Enums"]["offering_status"]
+          status_before_archive?: Database["public"]["Enums"]["offering_status"] | null
           subject_id?: string
           subject_name_override?: string | null
           term_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subject_offerings_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programmes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subject_offerings_lecturer_id_fkey"
             columns: ["lecturer_id"]
@@ -603,7 +622,6 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
-          programme_semester: number | null
         }
         Insert: {
           code: string
@@ -612,7 +630,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
-          programme_semester?: number | null
         }
         Update: {
           code?: string
@@ -621,7 +638,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
-          programme_semester?: number | null
         }
         Relationships: []
       }
@@ -713,9 +729,21 @@ export type Database = {
       }
     }
     Functions: {
+      activate_academic_session: { Args: { target_term: string }; Returns: undefined }
+      create_academic_session: { Args: { p_academic_year: string; p_session_no: number; p_starts_on: string; p_ends_on: string; p_default_deadline: string }; Returns: string }
+      delete_academic_session: { Args: { target_term: string }; Returns: undefined }
+      update_academic_session: { Args: { target_term: string; p_academic_year: string; p_session_no: number; p_starts_on: string; p_ends_on: string; p_default_deadline: string }; Returns: undefined }
+      get_academic_session_summaries: {
+        Args: never
+        Returns: { id: string; academic_year: string; session_no: number; starts_on: string; ends_on: string; default_deadline: string; status: string; is_current: boolean; activated_at: string | null; closed_at: string | null; offering_count: number; class_count: number; mark_count: number; submission_count: number; finalised_count: number }[]
+      }
+      get_offering_student_totals: {
+        Args: { target_offering: string }
+        Returns: { enrolment_id: string; total_carry: number; eligible: boolean }[]
+      }
       set_offering_carry_max: { Args: { target_offering: string; total_weight: number }; Returns: undefined }
-      create_lecturer_subject: { Args: { subject_code: string; subject_name: string; programme_semester: number }; Returns: string }
-      update_lecturer_subject: { Args: { target_offering: string; subject_name: string; programme_semester: number }; Returns: undefined }
+      create_lecturer_subject: { Args: { subject_code: string; subject_name: string; offering_semester: number }; Returns: string }
+      update_lecturer_subject: { Args: { target_offering: string; subject_name: string; offering_semester: number; teaching_programme_id: string }; Returns: undefined }
       can_access_enrolment: { Args: { target: string }; Returns: boolean }
       can_access_offering: { Args: { target: string }; Returns: boolean }
       can_access_section: { Args: { target: string }; Returns: boolean }
@@ -739,6 +767,23 @@ export type Database = {
         }[]
       }
       get_my_lecturer_subjects: {
+        Args: never
+        Returns: {
+          offering_id: string
+          programme_ids: string[]
+          programme_codes: string[]
+          programme_names: string[]
+          subject_code: string
+          subject_name: string
+          programme_semester: number | null
+          student_count: number
+          offering_status: string
+          updated_at: string
+          academic_year: string
+          semester_no: number
+        }[]
+      }
+      get_my_archived_lecturer_subjects: {
         Args: never
         Returns: {
           offering_id: string

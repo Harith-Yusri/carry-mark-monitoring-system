@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CheckCircle, Edit3, Plus, Trash2, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
+import { userError } from "../../utils/errors";
 import { loadOfferingWeightage, saveOfferingWeightage, AssessmentRecord as Assessment, deleteAssessment, listAssessments, saveAssessment as persistAssessment } from "../../services/carryMarkApi";
 
 const emptyForm = { name: "", type: "", maxMarks: "", weightage: "" };
@@ -18,18 +19,18 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AssessmentForm>(emptyForm);
 
-  const reload = () => listAssessments(offeringId).then(setItems).catch(reason => setError(reason.message));
+  const reload = () => listAssessments(offeringId).then(setItems).catch(reason => setError(userError(reason, "Unable to load assessments.")));
   useEffect(() => {
     setLoading(true); setError(""); setCarryMax(null); setWeightInput("");
     Promise.all([listAssessments(offeringId), loadOfferingWeightage(offeringId)])
       .then(([assessments, settings]) => { setItems(assessments); setCarryMax(settings.carryMax); setWeightInput(settings.carryMax === null ? "" : String(settings.carryMax)); })
-      .catch(reason => setError(reason.message)).finally(() => setLoading(false));
+      .catch(reason => setError(userError(reason, "Unable to load assessment settings."))).finally(() => setLoading(false));
   }, [offeringId]);
   const saveTotalWeight = async (event: React.FormEvent) => {
     event.preventDefault(); if (savingWeight || loading) return;
     setSavingWeight(true); setError("");
     try { await saveOfferingWeightage(offeringId, Number(weightInput)); setCarryMax(Number(weightInput)); }
-    catch (reason) { setError((reason as { message?: string }).message ?? "Unable to save total weightage."); }
+    catch (reason) { setError(userError(reason, "Unable to save total weightage.")); }
     finally { setSavingWeight(false); }
   };
 
@@ -54,12 +55,12 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
     const values = { name: form.name.trim(), type: form.type.trim(), maxMarks: Number(form.maxMarks), weightage: Number(form.weightage) };
     setError("");
     try { await persistAssessment(offeringId, values, editingId ?? undefined); await reload(); closeModal(); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to save assessment."); }
+    catch (reason) { setError(userError(reason, "Unable to save assessment.")); }
   };
 
   const removeAssessment = async (item: Assessment) => {
     const confirmed = window.confirm(`Remove “${item.name}”?\n\nThis assessment component and its configuration will be deleted. This action cannot be undone.`);
-    if (confirmed) try { await deleteAssessment(item.id); await reload(); } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to remove assessment."); }
+    if (confirmed) try { await deleteAssessment(item.id); await reload(); } catch (reason) { setError(userError(reason, "Unable to remove assessment.")); }
   };
 
   const weightSaveDisabled = loading || savingWeight || !weightInput || Number(weightInput) === carryMax;

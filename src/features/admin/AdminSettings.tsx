@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle, Save } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
+import { userError } from "../../utils/errors";
 import { useAuth } from "../../context/AuthContext";
-import { loadSystemSettings, saveSystemSettings, SystemSettingsRecord } from "../../services/carryMarkApi";
+import { activateAcademicSession, AcademicSessionRecord, createAcademicSession, deleteAcademicSession, listAcademicSessions, loadSystemSettings, saveSystemSettings, SystemSettingsRecord, updateAcademicSession } from "../../services/carryMarkApi";
 
 type SettingsState = SystemSettingsRecord;
 
-export function AdminSettings() {
+export function AdminSettings({ onActiveSessionChanged }: { onActiveSessionChanged?: () => void | Promise<void> }) {
   const C = useColors();
   const { user } = useAuth();
   const [settings, setSettings] = useState<SettingsState | null>(null);
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  useEffect(() => { loadSystemSettings().then(setSettings).catch(reason => setLoadError(reason.message)); }, []);
+  const [sessions, setSessions] = useState<AcademicSessionRecord[]>([]);
+  const [sessionBusy, setSessionBusy] = useState(false);
+  const [sessionError, setSessionError] = useState("");
+  const [sessionForm, setSessionForm] = useState({ academicYear: "", sessionNo: 1, startsOn: "", endsOn: "", defaultDeadline: "" });
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  useEffect(() => {
+    Promise.all([loadSystemSettings(), listAcademicSessions()])
+      .then(([currentSettings, sessionRows]) => { setSettings(currentSettings); setSessions(sessionRows); })
+      .catch(reason => setLoadError(userError(reason, "Unable to load system settings.")));
+  }, []);
 
   const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", minHeight: "42px", padding: "9px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontFamily: C.sans, fontSize: "13px", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", marginBottom: "7px", color: C.textMuted, fontFamily: C.mono, fontSize: "11px", letterSpacing: "0.06em" };
@@ -24,6 +34,8 @@ export function AdminSettings() {
 
   const save = async () => {
     if (!settings) return;
+    const current = sessions.find(session => session.isCurrent);
+    if (current && current.classCount + current.markCount + current.submissionCount > 0 && !window.confirm(`Save changes to the active session? It contains ${current.classCount} classes, ${current.markCount} marks and ${current.submissionCount} submissions (${current.finalisedCount} finalised). Existing records will be preserved.`)) return;
     setSaving(true);
     try {
       await saveSystemSettings(settings, user?.authId);
@@ -31,6 +43,57 @@ export function AdminSettings() {
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2500);
     } finally { setSaving(false); }
+  };
+
+  const reloadSessionData = async () => {
+    const [currentSettings, sessionRows] = await Promise.all([loadSystemSettings(), listAcademicSessions()]);
+    setSettings(currentSettings); setSessions(sessionRows);
+  };
+
+  const sessionImpact = (session: AcademicSessionRecord) => `${session.classCount} classes, ${session.markCount} marks and ${session.submissionCount} submissions (${session.finalisedCount} finalised)`;
+
+  const submitSession = async (event: React.FormEvent) => {
+    event.preventDefault(); setSessionBusy(true); setSessionError("");
+    try {
+      const existing = sessions.find(session => session.id === editingSessionId);
+      if (existing) {
+        if (existing.classCount + existing.markCount + existing.submissionCount > 0 && !window.confirm(`Edit Session ${existing.sessionNo} · ${existing.academicYear}? It contains ${sessionImpact(existing)}. All linked data will be preserved.`)) return;
+        await updateAcademicSession(existing.id, sessionForm);
+      } else await createAcademicSession(sessionForm);
+      if (existing?.isCurrent) { await reloadSessionData(); await onActiveSessionChanged?.(); }
+      else setSessions(await listAcademicSessions());
+      setSessionForm({ academicYear: "", sessionNo: 1, startsOn: "", endsOn: "", defaultDeadline: "" });
+      setEditingSessionId(null);
+    } catch (reason) { setSessionError(userError(reason, "Unable to save the session.")); }
+    finally { setSessionBusy(false); }
+  };
+
+  const editSession = (session: AcademicSessionRecord) => {
+    setEditingSessionId(session.id); setSessionError("");
+    setSessionForm({ academicYear: session.academicYear, sessionNo: session.sessionNo, startsOn: session.startsOn, endsOn: session.endsOn, defaultDeadline: session.defaultDeadline.slice(0, 10) });
+  };
+
+  const activateSession = async (session: AcademicSessionRecord) => {
+    const current = sessions.find(candidate => candidate.isCurrent);
+    const action = session.status === "closed" ? "Reopen" : "Activate";
+    const currentWarning = current ? ` The active session (${sessionImpact(current)}) will be archived.` : "";
+    if (!window.confirm(`${action} Session ${session.sessionNo} · ${session.academicYear}? It contains ${sessionImpact(session)}.${currentWarning} No data will be deleted.`)) return;
+    setSessionBusy(true); setSessionError("");
+    try { await activateAcademicSession(session.id); await reloadSessionData(); await onActiveSessionChanged?.(); }
+    catch (reason) { setSessionError(userError(reason, "Unable to activate the session.")); }
+    finally { setSessionBusy(false); }
+  };
+
+  const deleteSession = async (session: AcademicSessionRecord) => {
+    if (session.isCurrent || session.offeringCount > 0) return;
+    if (!window.confirm(`Permanently delete the empty test session Session ${session.sessionNo} · ${session.academicYear}? This cannot be undone.`)) return;
+    setSessionBusy(true); setSessionError("");
+    try {
+      await deleteAcademicSession(session.id);
+      setSessions(await listAcademicSessions());
+      if (editingSessionId === session.id) { setEditingSessionId(null); setSessionForm({ academicYear: "", sessionNo: 1, startsOn: "", endsOn: "", defaultDeadline: "" }); }
+    } catch (reason) { setSessionError(userError(reason, "Unable to delete the test session.")); }
+    finally { setSessionBusy(false); }
   };
 
   const Toggle = ({ enabled, onToggle, label }: { enabled: boolean; onToggle: () => void; label: string }) => (
@@ -60,13 +123,27 @@ export function AdminSettings() {
       </div>
 
       <section style={cardStyle}>
-        <h2 style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, color: C.text, margin: "0 0 22px" }}>Session Configuration</h2>
-        <label style={labelStyle}>CURRENT SESSION</label>
-        <input value={settings.currentSemester} onChange={event => update("currentSemester", event.target.value)} style={{ ...fieldStyle, marginBottom: "16px" }} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px" }}>
-          <div><label style={labelStyle}>SESSION START</label><input type="date" value={settings.semesterStart} onChange={event => update("semesterStart", event.target.value)} style={fieldStyle} /></div>
-          <div><label style={labelStyle}>SESSION END</label><input type="date" value={settings.semesterEnd} onChange={event => update("semesterEnd", event.target.value)} style={fieldStyle} /></div>
+        <h2 style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, color: C.text, margin: "0 0 6px" }}>Academic Session Lifecycle</h2>
+        <p style={{ color: C.textMuted, fontSize: "12px", margin: "0 0 16px", lineHeight: 1.6 }}>Create a draft session, activate it, or reopen an archived session for testing. Switching preserves all linked data and keeps exactly one session active.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
+          {sessions.map(session => (
+            <div key={session.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "14px", padding: "11px 13px", background: C.elevated, border: `1px solid ${session.isCurrent ? C.green : C.borderMid}`, borderRadius: "7px" }}>
+              <div><strong style={{ color: C.text }}>Session {session.sessionNo} · {session.academicYear}</strong><div style={{ color: C.textMuted, fontSize: "11px", marginTop: "3px" }}>{session.startsOn} – {session.endsOn} · {session.status.toUpperCase()} · {sessionImpact(session)}</div></div>
+              <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap", justifyContent: "flex-end" }}><button type="button" disabled={sessionBusy} onClick={() => editSession(session)} style={{ padding: "7px 9px", border: `1px solid ${C.borderMid}`, borderRadius: "5px", background: "transparent", color: C.textSub, fontSize: "12px", cursor: sessionBusy ? "wait" : "pointer" }}>Edit</button>{!session.isCurrent && <button type="button" disabled={sessionBusy || session.offeringCount > 0} title={session.offeringCount > 0 ? "Sessions containing teaching data must remain archived." : "Delete this empty test session"} onClick={() => deleteSession(session)} style={{ padding: "7px 9px", border: `1px solid ${C.red}55`, borderRadius: "5px", background: "transparent", color: C.red, fontSize: "12px", cursor: sessionBusy || session.offeringCount > 0 ? "not-allowed" : "pointer", opacity: session.offeringCount > 0 ? .5 : 1 }}>Delete</button>}{!session.isCurrent ? <button type="button" disabled={sessionBusy} onClick={() => activateSession(session)} style={{ padding: "7px 10px", border: 0, borderRadius: "5px", background: C.maroon, color: "#fff", fontSize: "12px", fontWeight: 700, cursor: sessionBusy ? "wait" : "pointer" }}>{session.status === "closed" ? "Reopen" : "Activate"}</button> : <span style={{ color: C.green, fontFamily: C.mono, fontSize: "11px", fontWeight: 700 }}>ACTIVE</span>}</div>
+            </div>
+          ))}
         </div>
+        <form onSubmit={submitSession}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px" }}>
+            <div><label style={labelStyle}>ACADEMIC YEAR</label><input required placeholder="2026/2027" value={sessionForm.academicYear} onChange={event => setSessionForm(value => ({ ...value, academicYear: event.target.value }))} style={fieldStyle} /></div>
+            <div><label style={labelStyle}>SESSION NUMBER</label><select value={sessionForm.sessionNo} onChange={event => setSessionForm(value => ({ ...value, sessionNo: Number(event.target.value) }))} style={fieldStyle}>{[1, 2, 3].map(value => <option key={value}>{value}</option>)}</select></div>
+            <div><label style={labelStyle}>START DATE</label><input required type="date" value={sessionForm.startsOn} onChange={event => setSessionForm(value => ({ ...value, startsOn: event.target.value }))} style={fieldStyle} /></div>
+            <div><label style={labelStyle}>END DATE</label><input required type="date" value={sessionForm.endsOn} onChange={event => setSessionForm(value => ({ ...value, endsOn: event.target.value }))} style={fieldStyle} /></div>
+            <div><label style={labelStyle}>DEFAULT DEADLINE</label><input required type="date" value={sessionForm.defaultDeadline} onChange={event => setSessionForm(value => ({ ...value, defaultDeadline: event.target.value }))} style={fieldStyle} /></div>
+          </div>
+          {sessionError && <p role="alert" style={{ color: C.red, fontSize: "12px" }}>{sessionError}</p>}
+          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}><button type="submit" disabled={sessionBusy} style={{ padding: "8px 12px", border: `1px solid ${C.maroon}66`, borderRadius: "5px", background: "transparent", color: C.maroon, fontSize: "12px", fontWeight: 700, cursor: sessionBusy ? "wait" : "pointer" }}>{editingSessionId ? "Save Session Details" : "Create Draft Session"}</button>{editingSessionId && <button type="button" onClick={() => { setEditingSessionId(null); setSessionForm({ academicYear: "", sessionNo: 1, startsOn: "", endsOn: "", defaultDeadline: "" }); }} style={{ padding: "8px 12px", border: `1px solid ${C.borderMid}`, borderRadius: "5px", background: "transparent", color: C.textMuted, cursor: "pointer" }}>Cancel</button>}</div>
+        </form>
       </section>
 
       <section style={cardStyle}>

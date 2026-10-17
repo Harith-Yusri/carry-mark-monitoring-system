@@ -31,7 +31,7 @@ export function PortalLayout() {
           
           {/* Logo & System Title */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div className="product-mark" style={{ background: C.maroon }} aria-hidden="true">CM</div>
+            <img className="product-mark" src="/assets/branding/cmms-logo-mark.png" alt="" aria-hidden="true" />
             <div>
               <div className="portal-product-title" style={{ fontFamily: C.display, fontWeight: 700, fontSize: "16px", color: C.text, lineHeight: 1.1 }}>UiTM Carry Mark Monitoring</div>
               <div className="portal-product-subtitle" style={{ fontSize: "11px", fontFamily: C.mono, color: C.textMuted, letterSpacing: "0.06em", marginTop: "4px" }}>

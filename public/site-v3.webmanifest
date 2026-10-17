@@ -1,0 +1,21 @@
+{
+  "name": "Carry Mark Monitoring System",
+  "short_name": "CMMS",
+  "icons": [
+    {
+      "src": "/cmms-favicon-v3-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/cmms-favicon-v3-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#702082",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

@@ -2,7 +2,7 @@ export type Role = "lecturer" | "admin";
 
 export type LecturerScreen = "dashboard" | "subject-hub";
 export type LecturerTab = "assessments" | "marks" | "export";
-export type AdminTab = "overview" | "submissions" | "directory" | "compliance" | "settings";
+export type AdminTab = "overview" | "submissions" | "directory" | "compliance" | "history" | "settings";
 export type ProgrammeCode = string;
 
 export interface ProgrammeOption {

@@ -20,21 +20,23 @@ function setup({ reject = false, subjects = [] } = {}) {
   const useState = initial => { const i = cursor++; if (!(i in states)) states[i] = initial; return [states[i], value => { states[i] = typeof value === 'function' ? value(states[i]) : value; }]; };
   const useRef = initial => { const i = cursor++; if (!(i in states)) states[i] = { current: initial }; return states[i]; };
   const icon = () => null;
-  const catalogue = [{ code: 'ITT593', name: 'Database Systems', programme_semester: 5, is_active: true }];
+  const catalogue = [{ code: 'ITT593', name: 'Database Systems', is_active: true }];
   const programmes = [{ id: 'programme-1', code: 'CS240', name: 'Bachelor Of Information Technology (Hons.)' }];
-  const create = async (...args) => { calls.push(args); if (reject) throw { message: 'You have already added this subject for the current academic term.' }; return 'offering'; };
+  const create = async (...args) => { calls.push(args); if (reject) throw { message: 'This subject already has an offering for the selected programme and semester in the current academic session.' }; return 'offering'; };
   const update = async (...args) => {
     calls.push(args);
-    const [offeringId, savedName, savedSemester] = args;
+    const [offeringId, savedName, savedSemester, savedProgrammeId] = args;
     serverSubjects = serverSubjects.map(subject => subject.offeringId === offeringId ? {
       ...subject,
       name: savedName,
       progSem: savedSemester,
+      programmeId: savedProgrammeId,
     } : subject);
   };
-  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject',code+'; return LecturerDashboard;')(
-    React,useState,useRef,()=>{},()=>({}),()=>({ user: { name: 'Test', id: 'TS004' } }),icon,icon,icon,icon,icon,icon,
-    async()=>serverSubjects,async()=>({ catalogue, programmes, termLabel: 'Semester 2, 2025/2026' }),create,update,
+  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','Archive','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','listArchivedLecturerSubjects','listProgrammes','loadCurrentTermLabel','loadOfferingData','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject','userError',code+'; return LecturerDashboard;')(
+    React,useState,useRef,()=>{},()=>({}),()=>({ user: { name: 'Test', id: 'TS004' } }),icon,icon,icon,icon,icon,icon,icon,
+    async()=>serverSubjects,async()=>[],async()=>programmes,async()=>'Session 2, 2025/2026',async()=>({ assessments: [], sections: [] }),
+    async()=>({ catalogue, termLabel: 'Session 2, 2025/2026' }),create,update,(reason, fallback)=>reason?.message ?? fallback,
   );
   const render = () => { cursor = 0; return Component({ onSelectSubject() {} }); };
   const field = label => nodes(render()).find(node => node.props?.['aria-label'] === label);
@@ -47,9 +49,10 @@ test('existing code fills registered details and saves an assignment', async () 
   ui.field('Subject code').props.onChange({ target: { value: 'itt593' } });
   assert.equal(ui.field('Subject name').props.value, 'Database Systems');
   assert.equal(ui.field('Subject name').props.disabled, true);
-  assert.equal(ui.field('Programme semester').props.value, '5');
+  ui.field('Programme semester').props.onChange({ target: { value: '5' } });
   assert.match(renderToStaticMarkup(ui.render()), /already registered/);
   await ui.submit();
+  assert.equal(ui.field('Programme'), undefined);
   assert.deepEqual(ui.calls, [['ITT593', 'Database Systems', 5]]);
   assert.equal(nodes(ui.render()).some(node => node.props?.role === 'dialog'), false);
 });
@@ -66,7 +69,7 @@ test('duplicate rejection stays visible in the open form', async () => {
   ui.field('Subject code').props.onChange({ target: { value: 'ITT593' } });
   await ui.submit();
   const html = renderToStaticMarkup(ui.render());
-  assert.match(html, /already added this subject/);
+  assert.match(html, /already has an offering/);
   assert.match(html, /role="dialog"/);
 });
 test('edit subject pre-fills details, saves the owned offering and updates the card', async () => {
@@ -81,7 +84,7 @@ test('edit subject pre-fills details, saves the owned offering and updates the c
   ui.field('Subject name').props.onChange({ target: { value: 'Advanced Database Systems' } });
   ui.field('Programme semester').props.onChange({ target: { value: '6' } });
   await ui.submit();
-  assert.deepEqual(ui.calls, [['offering-1', 'Advanced Database Systems', 6]]);
+  assert.deepEqual(ui.calls, [['offering-1', 'Advanced Database Systems', 6, 'programme-1']]);
   assert.match(renderToStaticMarkup(ui.render()), /Advanced Database Systems/);
   assert.equal(nodes(ui.render()).some(node => node.props?.role === 'dialog'), false);
 });

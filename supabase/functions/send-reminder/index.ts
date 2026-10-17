@@ -7,7 +7,7 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const reply = (status: number, body: object) => new Response(JSON.stringify(body), {
-  status, headers: { ...cors, "Content-Type": "application/json" },
+  status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
 });
 
 function senderAddress(value: string) {
@@ -101,7 +101,7 @@ Deno.serve(async request => {
         ? "Resend rejected the sender. Verify the sending domain in Resend and set REMINDER_FROM_EMAIL to an address on that domain."
         : "Resend did not accept the reminder. Check the Resend delivery logs and try again." });
     }
-    return reply(200, { accepted: true, recipient });
+    return reply(200, { accepted: true });
   } catch (error) {
     console.error("Reminder failed", error instanceof Error ? error.message : "Database or network error");
     return reply(500, { error: "Unable to send the reminder. Please try again. If this continues, check the function configuration." });

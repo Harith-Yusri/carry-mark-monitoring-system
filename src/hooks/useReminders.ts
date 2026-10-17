@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { requireSupabase } from "../lib/supabase";
+import { userError } from "../utils/errors";
 
 export function useReminders() {
   const inFlight = useRef(new Set<string>());
@@ -21,7 +22,7 @@ export function useReminders() {
       if (!data?.accepted) throw new Error(data?.error ?? "Email was not accepted for sending.");
       setSent(previous => new Set([...previous, staffNo]));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Unable to send reminder.");
+      setError(userError(reason, "Unable to send reminder."));
     } finally {
       inFlight.current.delete(staffNo);
       setSending(new Set(inFlight.current));

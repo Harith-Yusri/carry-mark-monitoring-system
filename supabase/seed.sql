@@ -7,12 +7,12 @@ insert into public.academic_terms (
 )
 on conflict (academic_year, semester_no) do nothing;
 
-insert into public.subjects (code, name, programme_semester)
-select data.code, data.name, data.programme_semester
+insert into public.subjects (code, name)
+select data.code, data.name
 from (values
-  ('ITT593', 'Database Systems', 5),
-  ('ITT557', 'Mobile Application Development', 4),
-  ('ITT588', 'Front-End Web Development', 5),
-  ('ITT569', 'Internet of Things', 6)
-) as data(code, name, programme_semester)
+  ('ITT593', 'Database Systems'),
+  ('ITT557', 'Mobile Application Development'),
+  ('ITT588', 'Front-End Web Development'),
+  ('ITT569', 'Internet of Things')
+) as data(code, name)
 on conflict (code) do update set name = excluded.name;

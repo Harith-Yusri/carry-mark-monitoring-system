@@ -1,19 +1,27 @@
-import React, { useState } from "react";
-import { LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Archive, LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { AdminDashboard } from "./AdminDashboard";
 import { LecturerDirectory } from "./LecturerDirectory";
 import { ComplianceReports } from "./ComplianceReports";
 import { AdminSettings } from "./AdminSettings";
 import { SubmissionMonitor } from "./SubmissionMonitor";
+import { SessionHistory } from "./SessionHistory";
 import { AdminTab } from "../../types";
-import { useAdminRecords } from "../../hooks/useAdminRecords";
+import { requiresSubmissionAction, submissionAllocations, useAdminRecords } from "../../hooks/useAdminRecords";
 
 export function AdminWebPortal() {
   const C = useColors();
-  const { records } = useAdminRecords();
+  const { records, context, loading, error, reload } = useAdminRecords();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
-  const pendingSubmissions = records.filter(item => item.submissionStatus !== "Finalised").length;
+  const pendingSubmissions = useMemo(
+    () => submissionAllocations(records).filter(requiresSubmissionAction).length,
+    [records],
+  );
+
+  useEffect(() => {
+    if (activeTab === "submissions") void reload();
+  }, [activeTab]);
 
   return (
     <div className="admin-portal">
@@ -33,6 +41,7 @@ export function AdminWebPortal() {
               { key: "submissions", label: "Submission Monitor", icon: <ClipboardList size={15} />, pending: pendingSubmissions },
               { key: "directory",  label: "Lecturer Directory",  icon: <Users size={15} /> },
               { key: "compliance", label: "Reports & Exports",    icon: <FileText size={15} /> },
+              { key: "history",    label: "Past Sessions",        icon: <Archive size={15} /> },
               { key: "settings",   label: "System Settings",     icon: <Settings size={15} /> },
             ].map(item => (
               <button
@@ -89,10 +98,11 @@ export function AdminWebPortal() {
       {/* Main Content Pane */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {activeTab === "overview" && <AdminDashboard />}
-        {activeTab === "submissions" && <SubmissionMonitor />}
+        {activeTab === "submissions" && <SubmissionMonitor records={records} context={context} loading={loading} error={error} />}
         {activeTab === "directory" && <LecturerDirectory />}
         {activeTab === "compliance" && <ComplianceReports />}
-        {activeTab === "settings" && <AdminSettings />}
+        {activeTab === "history" && <SessionHistory />}
+        {activeTab === "settings" && <AdminSettings onActiveSessionChanged={reload} />}
       </div>
     </div>
   );

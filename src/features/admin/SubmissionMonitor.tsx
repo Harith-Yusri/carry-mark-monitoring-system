@@ -2,30 +2,26 @@ import React, { useMemo, useState } from "react";
 import { CheckCircle, Clock, Send } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { useReminders } from "../../hooks/useReminders";
-import { useAdminRecords } from "../../hooks/useAdminRecords";
+import { AdminAcademicContext, requiresSubmissionAction, submissionAllocations } from "../../hooks/useAdminRecords";
+import { LecturerInfo } from "../../types";
 
 type StatusFilter = "All" | "Pending" | "Finalised" | "Overdue";
 
-export function SubmissionMonitor() {
+export function SubmissionMonitor({ records, context, loading, error }: { records: LecturerInfo[]; context: AdminAcademicContext | null; loading: boolean; error: string }) {
   const C = useColors();
-  const { records, context, loading, error } = useAdminRecords();
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [programmeCode, setProgrammeCode] = useState("");
   const { sendReminder, sentReminders, sendingReminders, reminderError } = useReminders();
 
-  const allocations = useMemo(() => records.flatMap(lecturer => lecturer.classAllocations.map(allocation => ({
-    staffId: lecturer.id,
-    lecturerName: lecturer.name,
-    ...allocation,
-  }))), [records]);
+  const allocations = useMemo(() => submissionAllocations(records), [records]);
   const programmeAllocations = useMemo(
     () => allocations.filter(item => !programmeCode || item.programmeCode === programmeCode),
     [allocations, programmeCode],
   );
-  const pendingCount = programmeAllocations.filter(item => item.submissionStatus !== "Finalised").length;
+  const pendingCount = programmeAllocations.filter(requiresSubmissionAction).length;
   const filtered = useMemo(() => programmeAllocations.filter(item => {
     if (filter === "All") return true;
-    if (filter === "Pending") return item.submissionStatus !== "Finalised";
+    if (filter === "Pending") return requiresSubmissionAction(item);
     return item.submissionStatus === filter;
   }), [filter, programmeAllocations]);
 

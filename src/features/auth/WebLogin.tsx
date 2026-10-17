@@ -35,7 +35,7 @@ export function WebLogin() {
       <section className="login-identity" style={{ background: C.maroon, color: "#fff" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "clamp(44px, 9vh, 96px)" }}>
-            <div style={{ width: "46px", height: "36px", display: "grid", placeItems: "center", border: "1px solid rgba(255,255,255,.65)", fontFamily: C.mono, fontSize: "13px", fontWeight: 700 }}>CM</div>
+            <img src="/cmms-favicon-v3.png" alt="CMMS" style={{ width: "46px", height: "46px", objectFit: "contain", flexShrink: 0 }} />
             <div>
               <div style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, lineHeight: 1.1 }}>UiTM</div>
               <div style={{ marginTop: "3px", fontSize: "11px", letterSpacing: ".08em", opacity: .78 }}>ACADEMIC ASSESSMENT SYSTEM</div>

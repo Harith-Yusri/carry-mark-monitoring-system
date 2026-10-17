@@ -57,7 +57,7 @@ test('recipient comes from the linked Auth account, ignoring any supplied email'
   assert.deepEqual(calls.lookups, ['lecturer-auth-id']);
   assert.deepEqual(calls.emails[0].to, ['lecturer@another-domain.edu']);
   assert.equal(calls.emails[0].from, 'Carry Mark System <noreply@verified-domain.com>');
-  assert.equal((await response.json()).recipient, 'lecturer@another-domain.edu');
+  assert.deepEqual(await response.json(), { accepted: true });
 });
 test('unauthenticated, lecturer and inactive admin callers cannot access Auth emails or send', async () => {
   for (const options of [{}, { role: 'lecturer' }, { active: false }]) {

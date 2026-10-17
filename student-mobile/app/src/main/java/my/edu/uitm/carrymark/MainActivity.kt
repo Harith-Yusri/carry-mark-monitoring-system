@@ -4,10 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,10 +24,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -79,6 +84,11 @@ private fun StudentApp() {
         }
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
             if (uiState.student != null) studentViewModel.refresh()
+        }
+        LaunchedEffect(screen.value) {
+            if (screen.value == Screen.Settings && uiState.student != null) {
+                studentViewModel.refresh()
+            }
         }
         when (val current = screen.value) {
             Screen.Login -> LoginScreen(
@@ -165,36 +175,22 @@ private fun LoginScreen(
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(Modifier.height(8.dp))
-            // Header
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = MaterialTheme.shapes.large,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.School,
-                            null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-                Spacer(Modifier.width(16.dp))
-                Column {
-                    Text(
-                        "UiTM Carry Mark",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        "Student Portal",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+            // Official CMMS branding
+            Image(
+                painter = painterResource(R.drawable.cmms_logo_primary),
+                contentDescription = "UiTM Carry Mark Monitoring System",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 92.dp)
+                    .aspectRatio(3f)
+            )
+            Text(
+                "Student Portal",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
             Spacer(Modifier.height(48.dp))
 
@@ -741,9 +737,9 @@ private fun SubjectCard(subject: SubjectResult, onClick: () -> Unit) {
                         )
                     } else {
                         Text(
-                            "—",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = academicTypography.academicLarge
+                            "Not released yet",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -757,7 +753,7 @@ private fun SubjectCard(subject: SubjectResult, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    subject.lastUpdated?.take(10)?.let { "Updated $it" } ?: "No marks recorded",
+                    subject.lastUpdated?.take(10)?.let { "Released $it" } ?: "Assessment details available",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = academicTypography.academicSmall
                 )
@@ -853,13 +849,13 @@ private fun DetailScreen(subject: SubjectResult, onBack: () -> Unit, onDispute: 
                 )
             }
             items(subject.assessments) { assessment ->
-                AssessmentRow(assessment)
+                AssessmentRow(assessment, subject.isFinalised)
             }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
                     Icon(Icons.Default.CheckCircle, null, tint = statusColors.success, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Graded", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    Text(if (subject.isFinalised) "Released" else "Not released yet", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.width(16.dp))
                     Icon(Icons.Default.Schedule, null, tint = statusColors.warning, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
@@ -911,16 +907,18 @@ private fun CarryMarkMainCard(subject: SubjectResult) {
                 )
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        subject.carryMark?.let { "%.0f".format(it) } ?: "—",
+                        subject.carryMark?.let { "%.0f".format(it) } ?: "Not released yet",
                         color = MaterialTheme.colorScheme.onSurface,
-                        style = academicTypography.academicLarge.copy(fontSize = 48.sp, fontWeight = FontWeight.Bold)
+                        style = if (subject.carryMark != null) academicTypography.academicLarge.copy(fontSize = 48.sp, fontWeight = FontWeight.Bold) else MaterialTheme.typography.titleMedium
                     )
-                    Text(
-                        " / ${subject.carryMaximum.toInt()}",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = academicTypography.academicMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    if (subject.carryMark != null) {
+                        Text(
+                            " / ${subject.carryMaximum.toInt()}",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = academicTypography.academicMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
                 }
                 Text(
                     if (subject.isFinalised) "Finalised carry mark · ${subject.carryMaximum.toInt()}% of final grade" else "Pending finalisation by lecturer",
@@ -948,7 +946,7 @@ private fun CarryMarkMainCard(subject: SubjectResult) {
 }
 
 @Composable
-private fun AssessmentRow(assessment: Assessment) {
+private fun AssessmentRow(assessment: Assessment, isFinalised: Boolean) {
     val academicTypography = LocalAcademicTypography.current
     val statusColors = LocalCarryMarkExtraColors.current
     Row(
@@ -964,11 +962,11 @@ private fun AssessmentRow(assessment: Assessment) {
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "${assessment.score?.toInt() ?: "—"}",
+                if (isFinalised) "${assessment.score?.toInt() ?: "—"}" else "Not released yet",
                 color = MaterialTheme.colorScheme.onSurface,
-                style = academicTypography.academicMedium
+                style = if (isFinalised) academicTypography.academicMedium else MaterialTheme.typography.bodySmall
             )
-            Text(
+            if (isFinalised) Text(
                 "/${assessment.maximum.toInt()}",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = academicTypography.academicSmall
@@ -981,9 +979,9 @@ private fun AssessmentRow(assessment: Assessment) {
             )
             Spacer(Modifier.width(16.dp))
             Icon(
-                if (assessment.score != null) Icons.Default.CheckCircle else Icons.Default.Schedule,
+                if (isFinalised && assessment.score != null) Icons.Default.CheckCircle else Icons.Default.Schedule,
                 null,
-                tint = if (assessment.score != null) statusColors.success else statusColors.warning,
+                tint = if (isFinalised && assessment.score != null) statusColors.success else statusColors.warning,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -1248,8 +1246,11 @@ private fun MainNavigationBar(selectedScreen: Screen, onNavigate: (Screen) -> Un
 @Composable
 private fun ProgressScreen(subjects: List<SubjectResult>, onNavigate: (Screen) -> Unit) {
     val academicTypography = LocalAcademicTypography.current
-    val recordedMarks = subjects.mapNotNull { it.carryMark }
-    val avgMark = if (recordedMarks.isEmpty()) 0.0 else recordedMarks.average()
+    val releasedSubjects = subjects.filter { it.isFinalised }
+    val recordedPercentages = releasedSubjects.mapNotNull { subject ->
+        subject.carryMark?.takeIf { subject.carryMaximum > 0 }?.let { it / subject.carryMaximum * 100.0 }
+    }
+    val avgMark = if (recordedPercentages.isEmpty()) 0.0 else recordedPercentages.average()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -1276,15 +1277,15 @@ private fun ProgressScreen(subjects: List<SubjectResult>, onNavigate: (Screen) -
                         color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.headlineLarge
                     )
-                    if (recordedMarks.isNotEmpty()) {
+                    if (recordedPercentages.isNotEmpty()) {
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                "%.0f".format(avgMark),
+                                "%.0f%%".format(avgMark),
                                 color = MaterialTheme.colorScheme.primary,
                                 style = academicTypography.academicLarge
                             )
                             Text(
-                                "avg. carry mark",
+                                "avg. carry achieved",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -1303,14 +1304,18 @@ private fun ProgressScreen(subjects: List<SubjectResult>, onNavigate: (Screen) -
                 }
             } else {
                 item {
-                    ChartSection("CARRY MARKS BY SUBJECT") {
-                        CarryMarkBarChart(subjects)
+                    ChartSection("CARRY MARK ACHIEVEMENT BY SUBJECT") {
+                        if (releasedSubjects.isEmpty()) {
+                            Text("No carry marks have been released yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        } else CarryMarkBarChart(releasedSubjects)
                     }
                 }
 
                 item {
                     ChartSection("PERFORMANCE BY COMPONENT TYPE") {
-                        PerformanceRadarChart(subjects)
+                        if (releasedSubjects.isEmpty()) {
+                            Text("No component marks have been released yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        } else PerformanceRadarChart(releasedSubjects)
                     }
                 }
 
@@ -1365,61 +1370,71 @@ private fun ChartSection(title: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun CarryMarkBarChart(subjects: List<SubjectResult>) {
+    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val barColor = MaterialTheme.colorScheme.primary
-    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-        if (subjects.isEmpty()) return@Canvas
-        val bottomPadding = 30.dp.toPx()
-        val leftPadding = 40.dp.toPx()
-        val chartHeight = size.height - bottomPadding
-        val chartWidth = size.width - leftPadding
-        
-        val barWidth = 40.dp.toPx()
-        val spacing = (chartWidth - (barWidth * subjects.size)) / (subjects.size + 1)
-        val maxMark = subjects.maxOf { it.carryMaximum.toFloat() }
-        
-        // Draw axis labels (Y-axis)
-        val axisLabels = listOf(0f, maxMark * 0.3f, maxMark * 0.6f, maxMark)
-        axisLabels.forEach { label ->
-            val y = chartHeight - (label / maxMark * chartHeight)
-            
-            drawContext.canvas.nativeCanvas.drawText(
-                label.toInt().toString(),
-                5.dp.toPx(),
-                y + 5.dp.toPx(),
-                android.graphics.Paint().apply {
-                    color = labelColor
-                    textSize = 12.sp.toPx()
-                    typeface = android.graphics.Typeface.MONOSPACE
-                }
-            )
-        }
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            "Carry mark achieved (%) · scale 0–100",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(Modifier.height(8.dp))
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            if (subjects.isEmpty()) return@Canvas
+            val topPadding = 18.dp.toPx()
+            val bottomPadding = 28.dp.toPx()
+            val leftPadding = 34.dp.toPx()
+            val plotHeight = size.height - topPadding - bottomPadding
+            val plotWidth = size.width - leftPadding
+            val barWidth = minOf(34.dp.toPx(), plotWidth / (subjects.size * 1.8f))
+            val spacing = (plotWidth - barWidth * subjects.size).coerceAtLeast(0f) / (subjects.size + 1)
+            val labelPaint = android.graphics.Paint().apply {
+                color = labelColor; textSize = 10.sp.toPx(); typeface = android.graphics.Typeface.MONOSPACE
+            }
+            val valuePaint = android.graphics.Paint().apply {
+                color = textColor; textSize = 10.sp.toPx(); typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER
+            }
 
-        subjects.forEachIndexed { index, subject ->
-            val mark = subject.carryMark?.toFloat() ?: 0f
-            val barHeight = (mark / maxMark) * chartHeight
-            val x = leftPadding + spacing + index * (barWidth + spacing)
-            
-            // Draw Bar
-            drawRoundRect(
-                color = barColor,
-                topLeft = androidx.compose.ui.geometry.Offset(x, chartHeight - barHeight),
-                size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
-            )
+            listOf(0, 25, 50, 75, 100).forEach { tick ->
+                val y = topPadding + plotHeight * (1f - tick / 100f)
+                drawLine(
+                    color = barColor.copy(alpha = if (tick == 0) .28f else .10f),
+                    start = androidx.compose.ui.geometry.Offset(leftPadding, y),
+                    end = androidx.compose.ui.geometry.Offset(size.width, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+                drawContext.canvas.nativeCanvas.drawText("$tick%", 0f, y + 4.dp.toPx(), labelPaint)
+            }
 
-            // Draw subject code (X-axis)
-            drawContext.canvas.nativeCanvas.drawText(
-                subject.code,
-                x + (barWidth / 2),
-                size.height - 5.dp.toPx(),
-                android.graphics.Paint().apply {
-                    color = labelColor
-                    textSize = 11.sp.toPx()
-                    typeface = android.graphics.Typeface.MONOSPACE
-                    textAlign = android.graphics.Paint.Align.CENTER
-                }
-            )
+            subjects.forEachIndexed { index, subject ->
+                val percentage = if (subject.carryMaximum > 0) {
+                    ((subject.carryMark ?: 0.0) / subject.carryMaximum * 100.0).coerceIn(0.0, 100.0).toFloat()
+                } else 0f
+                val visualHeight = if (percentage == 0f) 3.dp.toPx() else plotHeight * percentage / 100f
+                val x = leftPadding + spacing + index * (barWidth + spacing)
+                val barTop = topPadding + plotHeight - visualHeight
+
+                drawRoundRect(
+                    color = barColor.copy(alpha = if (percentage == 0f) .35f else 1f),
+                    topLeft = androidx.compose.ui.geometry.Offset(x, barTop),
+                    size = androidx.compose.ui.geometry.Size(barWidth, visualHeight),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
+                )
+                drawContext.canvas.nativeCanvas.drawText(
+                    if (percentage % 1f == 0f) "${percentage.toInt()}%" else "%.1f%%".format(percentage),
+                    x + barWidth / 2,
+                    (barTop - 5.dp.toPx()).coerceAtLeast(10.dp.toPx()),
+                    valuePaint
+                )
+                drawContext.canvas.nativeCanvas.drawText(
+                    subject.code,
+                    x + barWidth / 2,
+                    size.height - 5.dp.toPx(),
+                    valuePaint.apply { color = labelColor }
+                )
+                valuePaint.color = textColor
+            }
         }
     }
 }
@@ -1427,48 +1442,115 @@ private fun CarryMarkBarChart(subjects: List<SubjectResult>) {
 @Composable
 private fun PerformanceRadarChart(subjects: List<SubjectResult>) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val valueColor = MaterialTheme.colorScheme.onSurface.toArgb()
     val brandColor = MaterialTheme.colorScheme.primary
     val assessments = subjects.flatMap { it.assessments }
-    val categories = assessments.map { it.assessmentType.trim() }.filter { it.isNotEmpty() }.distinct()
-    val dataPoints = categories.map { category ->
-        val percentages = assessments.filter { it.assessmentType.equals(category, ignoreCase = true) }
-            .mapNotNull { assessment ->
-                assessment.score?.let { (it / assessment.maximum).toFloat().coerceIn(0f, 1f) }
-            }
-        if (percentages.isEmpty()) 0f else percentages.average().toFloat()
+    val componentGroups = assessments
+        .filter { it.assessmentType.isNotBlank() }
+        .groupBy { it.assessmentType.trim().lowercase() }
+    val components = componentGroups.values.map { items ->
+        val scored = items.filter { it.score != null && it.maximum > 0 }
+        val percentage = if (scored.isEmpty()) 0f else {
+            (scored.sumOf { it.score ?: 0.0 } / scored.sumOf { it.maximum } * 100.0).toFloat().coerceIn(0f, 100f)
+        }
+        Triple(items.first().assessmentType.trim(), percentage, scored.isNotEmpty())
     }
 
-    if (categories.isEmpty()) {
+    if (components.isEmpty()) {
         Text("No assessed component data yet", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         return
     }
 
-    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-        val bottomPadding = 34.dp.toPx()
-        val chartHeight = size.height - bottomPadding
-        val slotWidth = size.width / categories.size
-        val barWidth = minOf(38.dp.toPx(), slotWidth * .55f)
-        categories.forEachIndexed { index, label ->
-            val barHeight = chartHeight * dataPoints[index]
-            val x = slotWidth * index + (slotWidth - barWidth) / 2
-            drawRoundRect(
-                color = brandColor,
-                topLeft = androidx.compose.ui.geometry.Offset(x, chartHeight - barHeight),
-                size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
-            )
-            drawContext.canvas.nativeCanvas.drawText(
-                label.take(12),
-                x + barWidth / 2,
-                size.height - 8.dp.toPx(),
-                android.graphics.Paint().apply {
-                    color = labelColor
-                    textSize = 11.sp.toPx()
-                    typeface = android.graphics.Typeface.MONOSPACE
-                    textAlign = android.graphics.Paint.Align.CENTER
+    var selectedIndex by remember(components) { mutableStateOf<Int?>(null) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        androidx.compose.foundation.Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(components) {
+                    detectTapGestures { tap ->
+                        val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f + 4.dp.toPx())
+                        val radius = minOf(size.width, size.height).toFloat() * .31f
+                        val vertices = components.indices.map { index ->
+                            val angle = -Math.PI / 2 + index * (2 * Math.PI / components.size)
+                            androidx.compose.ui.geometry.Offset(
+                                center.x + kotlin.math.cos(angle).toFloat() * radius,
+                                center.y + kotlin.math.sin(angle).toFloat() * radius
+                            )
+                        }
+                        val dataPoints = components.indices.map { index ->
+                            val angle = -Math.PI / 2 + index * (2 * Math.PI / components.size)
+                            val scale = components[index].second / 100f
+                            androidx.compose.ui.geometry.Offset(
+                                center.x + kotlin.math.cos(angle).toFloat() * radius * scale,
+                                center.y + kotlin.math.sin(angle).toFloat() * radius * scale
+                            )
+                        }
+                        val nearest = vertices.indices.minByOrNull { index ->
+                            minOf((vertices[index] - tap).getDistance(), (dataPoints[index] - tap).getDistance())
+                        }
+                        selectedIndex = nearest?.takeIf { index ->
+                            minOf((vertices[index] - tap).getDistance(), (dataPoints[index] - tap).getDistance()) <= 52.dp.toPx()
+                        }
+                    }
                 }
-            )
+        ) {
+            val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f + 4.dp.toPx())
+            val radius = minOf(size.width, size.height) * .31f
+            val count = components.size
+            fun point(index: Int, scale: Float): androidx.compose.ui.geometry.Offset {
+                val angle = -Math.PI / 2 + index * (2 * Math.PI / count)
+                return androidx.compose.ui.geometry.Offset(
+                    center.x + kotlin.math.cos(angle).toFloat() * radius * scale,
+                    center.y + kotlin.math.sin(angle).toFloat() * radius * scale
+                )
+            }
+            fun polygon(scale: Float): androidx.compose.ui.graphics.Path = androidx.compose.ui.graphics.Path().apply {
+                components.indices.forEach { index ->
+                    val vertex = point(index, scale)
+                    if (index == 0) moveTo(vertex.x, vertex.y) else lineTo(vertex.x, vertex.y)
+                }
+                if (count > 2) close()
+            }
+            val gridStroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
+            listOf(.25f, .5f, .75f, 1f).forEach { scale ->
+                if (count > 1) drawPath(polygon(scale), color = brandColor.copy(alpha = if (scale == 1f) .28f else .12f), style = gridStroke)
+                else drawCircle(color = brandColor.copy(alpha = .15f), radius = radius * scale, center = center, style = gridStroke)
+            }
+            components.indices.forEach { index ->
+                drawLine(brandColor.copy(alpha = .18f), center, point(index, 1f), strokeWidth = 1.dp.toPx())
+            }
+
+            val dataPath = androidx.compose.ui.graphics.Path()
+            components.forEachIndexed { index, component ->
+                val dataPoint = point(index, component.second / 100f)
+                if (index == 0) dataPath.moveTo(dataPoint.x, dataPoint.y) else dataPath.lineTo(dataPoint.x, dataPoint.y)
+            }
+            if (count > 2) dataPath.close()
+            if (count > 2) drawPath(dataPath, color = brandColor.copy(alpha = .20f))
+            if (count > 1) drawPath(dataPath, color = brandColor, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
+
+            val labelPaint = android.graphics.Paint().apply {
+                color = labelColor; textSize = 10.sp.toPx(); typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER
+            }
+            val valuePaint = android.graphics.Paint().apply {
+                color = valueColor; textSize = 9.sp.toPx(); typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER
+            }
+            components.forEachIndexed { index, component ->
+                val dataPoint = point(index, component.second / 100f)
+                drawCircle(color = brandColor, radius = 3.5.dp.toPx(), center = dataPoint)
+                val labelPoint = point(index, 1.22f)
+                drawContext.canvas.nativeCanvas.drawText(component.first.take(14), labelPoint.x, labelPoint.y + 3.dp.toPx(), labelPaint)
+                if (selectedIndex == index) {
+                    drawContext.canvas.nativeCanvas.drawText(if (component.third) "%.1f%%".format(component.second) else "No score", dataPoint.x, dataPoint.y - 8.dp.toPx(), valuePaint)
+                }
+            }
         }
+        Text(
+            "0–100% · tap a component for its value",
+            modifier = Modifier.align(Alignment.BottomCenter),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 
@@ -1513,7 +1595,7 @@ private fun SummaryItem(subject: SubjectResult) {
                     )
                 } else {
                     Text(
-                        "Pending",
+                        "Not released yet",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -1606,7 +1688,7 @@ private fun SettingsScreen(
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
                         SettingsRow("Faculty", student?.faculty.orEmpty())
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
-                        SettingsRow("Semester", student?.semester ?: "Not recorded")
+                        SettingsRow("Session", student?.semester ?: "Not recorded")
                         HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
                         SettingsRow("Academic Advisor", student?.academicAdvisor ?: "Not recorded")
                     }

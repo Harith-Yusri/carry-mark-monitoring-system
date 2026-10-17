@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { requireSupabase } from "../lib/supabase";
-import { LecturerInfo, ProgrammeOption } from "../types";
+import { userError } from "../utils/errors";
+import { ClassTeachingAllocation, LecturerInfo, ProgrammeOption } from "../types";
 
 function relationRows<T>(value: T | T[] | null | undefined): T[] {
   if (Array.isArray(value)) return value;
@@ -14,6 +15,20 @@ export interface AdminAcademicContext {
   academicYear: string;
   defaultDeadline: string;
   programmes: ProgrammeOption[];
+}
+
+export type SubmissionAllocation = ClassTeachingAllocation & { staffId: string; lecturerName: string };
+
+export function submissionAllocations(records: LecturerInfo[]): SubmissionAllocation[] {
+  return records.flatMap(lecturer => lecturer.classAllocations.map(allocation => ({
+    staffId: lecturer.id,
+    lecturerName: lecturer.name,
+    ...allocation,
+  })));
+}
+
+export function requiresSubmissionAction(allocation: ClassTeachingAllocation): boolean {
+  return allocation.submissionStatus !== "Finalised";
 }
 
 export function useAdminRecords() {
@@ -155,6 +170,6 @@ export function useAdminRecords() {
     });
   };
 
-  useEffect(() => { load().catch(reason => setError(reason.message)).finally(() => setLoading(false)); }, []);
-  return { records, context, loading, error, reload: () => load().catch(reason => setError(reason.message)).finally(() => setLoading(false)) };
+  useEffect(() => { load().catch(reason => setError(userError(reason, "Unable to load administrative records."))).finally(() => setLoading(false)); }, []);
+  return { records, context, loading, error, reload: () => load().catch(reason => setError(userError(reason, "Unable to refresh administrative records."))).finally(() => setLoading(false)) };
 }
