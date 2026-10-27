@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "UiTM CAMS Student",
+    "slug": "carrymark-student",
+    "scheme": "cmms",
+    "version": "1.0.0",
+    "description": "Student access to the UiTM Continuous Assessment Monitoring System",
+    "orientation": "portrait",
+    "icon": "./assets/cmms-favicon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "my.edu.uitm.carrymark.student"
+    },
+    "android": {
+      "package": "my.edu.uitm.carrymark.student",
+      "adaptiveIcon": {
+        "backgroundColor": "#702082",
+        "foregroundImage": "./assets/cmms-favicon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/cmms-favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/cmms-favicon.png",
+          "color": "#702082"
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}

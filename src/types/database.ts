@@ -26,6 +26,7 @@ export type Database = {
           ends_on: string
           id: string
           is_current: boolean
+          semester_code: string
           semester_no: number
           starts_on: string
           status: Database["public"]["Enums"]["term_status"]
@@ -41,6 +42,7 @@ export type Database = {
           ends_on: string
           id?: string
           is_current?: boolean
+          semester_code: string
           semester_no: number
           starts_on: string
           status?: Database["public"]["Enums"]["term_status"]
@@ -56,6 +58,7 @@ export type Database = {
           ends_on?: string
           id?: string
           is_current?: boolean
+          semester_code?: string
           semester_no?: number
           starts_on?: string
           status?: Database["public"]["Enums"]["term_status"]
@@ -500,30 +503,36 @@ export type Database = {
         Row: {
           auth_user_id: string | null
           created_at: string
+          current_semester: number | null
           full_name: string
           id: string
           is_active: boolean
           matrix_no: string
+          notification_alerts_enabled: boolean
           programme_id: string
           updated_at: string
         }
         Insert: {
           auth_user_id?: string | null
           created_at?: string
+          current_semester?: number | null
           full_name: string
           id?: string
           is_active?: boolean
           matrix_no: string
+          notification_alerts_enabled?: boolean
           programme_id: string
           updated_at?: string
         }
         Update: {
           auth_user_id?: string | null
           created_at?: string
+          current_semester?: number | null
           full_name?: string
           id?: string
           is_active?: boolean
           matrix_no?: string
+          notification_alerts_enabled?: boolean
           programme_id?: string
           updated_at?: string
         }
@@ -729,19 +738,24 @@ export type Database = {
       }
     }
     Functions: {
-      activate_academic_session: { Args: { target_term: string }; Returns: undefined }
-      create_academic_session: { Args: { p_academic_year: string; p_session_no: number; p_starts_on: string; p_ends_on: string; p_default_deadline: string }; Returns: string }
-      delete_academic_session: { Args: { target_term: string }; Returns: undefined }
-      update_academic_session: { Args: { target_term: string; p_academic_year: string; p_session_no: number; p_starts_on: string; p_ends_on: string; p_default_deadline: string }; Returns: undefined }
-      get_academic_session_summaries: {
+      activate_academic_semester: { Args: { target_term: string }; Returns: undefined }
+      create_academic_semester: { Args: { p_academic_year: string; p_semester_code: string; p_starts_on: string; p_ends_on: string; p_default_deadline: string }; Returns: string }
+      delete_academic_semester: { Args: { target_term: string }; Returns: undefined }
+      update_academic_semester: { Args: { target_term: string; p_academic_year: string; p_semester_code: string; p_starts_on: string; p_ends_on: string; p_default_deadline: string }; Returns: undefined }
+      get_academic_semester_summaries: {
         Args: never
-        Returns: { id: string; academic_year: string; session_no: number; starts_on: string; ends_on: string; default_deadline: string; status: string; is_current: boolean; activated_at: string | null; closed_at: string | null; offering_count: number; class_count: number; mark_count: number; submission_count: number; finalised_count: number }[]
+        Returns: { id: string; academic_year: string; semester_code: string; semester_no: number; starts_on: string; ends_on: string; default_deadline: string; status: string; is_current: boolean; activated_at: string | null; closed_at: string | null; offering_count: number; class_count: number; mark_count: number; submission_count: number; finalised_count: number }[]
+      }
+      get_registration_programmes: {
+        Args: never
+        Returns: { id: string; code: string; name: string }[]
       }
       get_offering_student_totals: {
         Args: { target_offering: string }
         Returns: { enrolment_id: string; total_carry: number; eligible: boolean }[]
       }
       set_offering_carry_max: { Args: { target_offering: string; total_weight: number }; Returns: undefined }
+      set_my_notification_alerts_enabled: { Args: { p_enabled: boolean }; Returns: boolean }
       create_lecturer_subject: { Args: { subject_code: string; subject_name: string; offering_semester: number }; Returns: string }
       update_lecturer_subject: { Args: { target_offering: string; subject_name: string; offering_semester: number; teaching_programme_id: string }; Returns: undefined }
       can_access_enrolment: { Args: { target: string }; Returns: boolean }

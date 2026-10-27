@@ -9,6 +9,10 @@ const headers = {
 };
 const reply = (status: number, body: object) => new Response(JSON.stringify(body), { status, headers });
 const denied = () => reply(401, { error: "Invalid staff ID or password, or too many attempts. If needed, wait 15 minutes before trying again." });
+const verificationRequired = () => reply(403, {
+  code: "email_not_confirmed",
+  error: "Please verify your email address before signing in. Check your inbox for the confirmation email.",
+});
 const requiredEnv = (name: string) => {
   const value = Deno.env.get(name);
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
@@ -32,7 +36,11 @@ Deno.serve(async request => {
     // Password verification remains with Supabase Auth; never log credentials.
     const auth = createClient(url, requiredEnv("SUPABASE_ANON_KEY"), options);
     const { data, error } = await auth.auth.signInWithPassword({ email, password: body.password });
-    if (error || !data.session) return denied();
+    if (error) {
+      if (error.code === "email_not_confirmed" || /email not confirmed/i.test(error.message)) return verificationRequired();
+      return denied();
+    }
+    if (!data.session) return denied();
     const { data: profile, error: profileError } = await admin.from("profiles")
       .select("staff_no,role,is_active").eq("id", data.user.id).single();
     if (profileError || !profile?.is_active || !["admin", "lecturer"].includes(profile.role) ||

@@ -4,6 +4,7 @@ import { DarkModeProvider } from "../context/DarkModeContext";
 import { AuthProvider } from "../context/AuthContext";
 import { PortalLayout } from "../layouts/PortalLayout";
 import { WebLogin } from "../features/auth/WebLogin";
+import { WebRegister } from "../features/auth/WebRegister";
 import { LecturerWebPortal } from "../features/lecturer/LecturerWebPortal";
 import { AdminWebPortal } from "../features/admin/AdminWebPortal";
 import { ProtectedRoute } from "../components/ProtectedRoute";
@@ -14,6 +15,7 @@ function MainApp() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<WebLogin />} />
+        <Route path="/register" element={<WebRegister />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/lecturer/login" element={<Navigate to="/" replace />} />
         <Route path="/admin/login" element={<Navigate to="/" replace />} />

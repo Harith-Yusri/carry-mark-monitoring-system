@@ -26,5 +26,6 @@ test('email names the lecturer and outstanding class without including student m
   const text = reminderText('Dr Rashidah Rosman', ['CSC100 — Computing, Section B']);
   assert.match(text, /Dear Dr Rashidah Rosman,/);
   assert.match(text, /CSC100 — Computing, Section B/);
-  assert.match(text, /submit and finalise/);
+  assert.match(text, /complete and finalise/);
+  assert.match(text, /UiTM CAMS/);
 });

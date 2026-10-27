@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { requireSupabase } from "../lib/supabase";
 import { userError } from "../utils/errors";
 import { ClassTeachingAllocation, LecturerInfo, ProgrammeOption } from "../types";
@@ -11,10 +11,18 @@ function relationRows<T>(value: T | T[] | null | undefined): T[] {
 export interface AdminAcademicContext {
   termId: string;
   termLabel: string;
+  semesterCode: string;
   semesterNo: number;
   academicYear: string;
   defaultDeadline: string;
   programmes: ProgrammeOption[];
+}
+
+export interface AdminRecordsViewProps {
+  records: LecturerInfo[];
+  context: AdminAcademicContext | null;
+  loading: boolean;
+  error: string;
 }
 
 export type SubmissionAllocation = ClassTeachingAllocation & { staffId: string; lecturerName: string };
@@ -37,17 +45,17 @@ export function useAdminRecords() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     const db = requireSupabase();
     const [{ data: term, error: termError }, { data: programmes, error: programmeError }] = await Promise.all([
-      db.from("academic_terms").select("id,academic_year,semester_no,default_deadline").eq("is_current", true).maybeSingle(),
+      db.from("academic_terms").select("id,academic_year,semester_code,semester_no,default_deadline").eq("is_current", true).eq("status", "active").maybeSingle(),
       db.from("programmes").select("id,code,name").eq("is_active", true).order("code"),
     ]);
     if (termError) throw termError;
     if (programmeError) throw programmeError;
-    if (!term) throw new Error("No current academic term is configured.");
+    if (!term) throw new Error("No active academic semester is configured.");
 
     const [
       { data: deadlines, error: deadlineError },
@@ -59,9 +67,9 @@ export function useAdminRecords() {
       db.from("subject_offerings").select(`
         id, lecturer_id, status, term_id, deadline_at, updated_at, subject_name_override,
         subjects!subject_offerings_subject_id_fkey(code,name),
-        academic_terms!inner(is_current),
+        academic_terms!inner(is_current,status),
         class_sections(id,label,programme_id,updated_at,programmes!class_sections_programme_id_fkey(id,code,name),enrolments(count),submissions(status,updated_at))
-      `).eq("academic_terms.is_current", true),
+      `).eq("academic_terms.is_current", true).eq("academic_terms.status", "active"),
     ]);
     if (deadlineError) throw deadlineError;
     if (profileError) throw profileError;
@@ -162,14 +170,21 @@ export function useAdminRecords() {
     setRecords(result);
     setContext({
       termId: term.id,
-      termLabel: `Session ${term.semester_no} · ${term.academic_year}`,
+      termLabel: `Semester ${term.semester_no} · ${term.academic_year}`,
+      semesterCode: term.semester_code,
       semesterNo: term.semester_no,
       academicYear: term.academic_year,
       defaultDeadline: term.default_deadline,
       programmes: programmes.map(({ id, code, name }) => ({ id, code, name })),
     });
-  };
+  }, []);
 
-  useEffect(() => { load().catch(reason => setError(userError(reason, "Unable to load administrative records."))).finally(() => setLoading(false)); }, []);
-  return { records, context, loading, error, reload: () => load().catch(reason => setError(userError(reason, "Unable to refresh administrative records."))).finally(() => setLoading(false)) };
+  const reload = useCallback(() => load()
+    .catch(reason => setError(userError(reason, "Unable to refresh administrative records.")))
+    .finally(() => setLoading(false)), [load]);
+
+  useEffect(() => {
+    load().catch(reason => setError(userError(reason, "Unable to load administrative records."))).finally(() => setLoading(false));
+  }, [load]);
+  return { records, context, loading, error, reload };
 }

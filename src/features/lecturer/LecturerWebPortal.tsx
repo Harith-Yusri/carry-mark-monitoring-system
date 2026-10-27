@@ -33,11 +33,11 @@ export function LecturerWebPortal() {
           <div className="subject-hub-top" style={{ alignItems: "center", marginBottom: "16px" }}>
             <button
               onClick={() => setScreen("dashboard")}
-              style={{ background: "transparent", border: "none", color: C.maroon, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: C.sans }}
+              style={{ background: "transparent", border: "none", color: C.maroon, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 600, fontFamily: C.sans }}
             >
               <ChevronLeft size={16} /> Back to My Subjects
             </button>
-            <div className="subject-context-label" style={{ fontFamily: C.mono, fontSize: "12px", color: C.textMuted }}>
+            <div className="subject-context-label" style={{ fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.textMuted }}>
               SUBJECT HUB · <span style={{ color: C.maroon, fontWeight: 700 }}>{currentSubj.code}</span> · {currentSubj.programmeCode} ({currentSubj.name})
             </div>
           </div>
@@ -46,9 +46,9 @@ export function LecturerWebPortal() {
           <section style={{ borderLeft: `3px solid ${C.maroon}`, padding: "8px 0 8px 18px", marginBottom: "22px" }}>
             <div className="subject-header-row" style={{ alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: C.mono, fontSize: "12px", color: C.maroon, fontWeight: 700 }}>COURSE CODE: {currentSubj.code}</div>
-                <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "22px", color: C.text, margin: "2px 0 4px" }}>{currentSubj.name}</h1>
-                <div style={{ fontSize: "13px", color: C.textMuted }}>
+                <div style={{ fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.maroon, fontWeight: 700 }}>COURSE CODE: {currentSubj.code}</div>
+                <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.375rem * var(--staff-text-scale))", color: C.text, margin: "2px 0 4px" }}>{currentSubj.name}</h1>
+                <div style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted }}>
                   {currentSubj.programmeCode} · Semester {currentSubj.progSem} · {currentSubj.students} Registered Students · Lecturer: {user?.name}
                 </div>
               </div>
@@ -73,7 +73,7 @@ export function LecturerWebPortal() {
                   background: "transparent",
                   color: activeTab === t.key ? C.maroon : C.textSub,
                   fontWeight: activeTab === t.key ? 700 : 500,
-                  fontSize: "13px",
+                  fontSize: "calc(0.8125rem * var(--staff-text-scale))",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -82,7 +82,7 @@ export function LecturerWebPortal() {
                   transition: "border-color 0.15s, color 0.15s"
                 }}
               >
-                <span style={{ fontFamily: C.mono, fontSize: "11px", color: activeTab === t.key ? C.maroon : C.textMuted }}>{t.step}</span> {t.label}
+                <span style={{ fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: activeTab === t.key ? C.maroon : C.textMuted }}>{t.step}</span> {t.label}
               </button>
             ))}
           </div>

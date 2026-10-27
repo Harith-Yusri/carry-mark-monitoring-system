@@ -1,6 +1,10 @@
 import { requireSupabase } from "../lib/supabase";
 import { ProgrammeOption } from "../types";
 
+export function formatAcademicSemester(semesterNo: number, academicYear: string) {
+  return `Semester ${semesterNo} · ${academicYear}`;
+}
+
 export interface SubjectSummary {
   offeringId: string;
   programmeId: string;
@@ -76,7 +80,7 @@ function mapSubjectSummary(row: any): SubjectSummary {
     students: Number(row.student_count),
     lastSync: row.updated_at,
     status: row.offering_status === "completed" ? "submitted" : row.offering_status,
-    termLabel: `Session ${row.semester_no}, ${row.academic_year}`,
+    termLabel: formatAcademicSemester(row.semester_no, row.academic_year),
     academicYear: row.academic_year,
     semesterNo: row.semester_no,
   };
@@ -189,16 +193,17 @@ export async function deleteSection(id: string) {
 }
 
 export interface SystemSettingsRecord {
-  termId: string; currentSemester: string; semesterStart: string; semesterEnd: string; globalDeadline: string;
+  termId: string; semesterCode: string; semesterNo: number; academicYear: string; semesterStart: string; semesterEnd: string; globalDeadline: string;
   programmes: { id: string; code: string; name: string }[];
   programmeDeadlines: Record<string, string>; autoRemind: boolean; reminderDays: number | null;
   notificationConfigured: boolean;
 }
 
-export interface AcademicSessionRecord {
+export interface AcademicSemesterRecord {
   id: string;
   academicYear: string;
-  sessionNo: number;
+  semesterCode: string;
+  semesterNo: number;
   startsOn: string;
   endsOn: string;
   defaultDeadline: string;
@@ -213,23 +218,23 @@ export interface AcademicSessionRecord {
   finalisedCount: number;
 }
 
-export async function listAcademicSessions(): Promise<AcademicSessionRecord[]> {
-  const { data, error } = await requireSupabase().rpc("get_academic_session_summaries");
+export async function listAcademicSemesters(): Promise<AcademicSemesterRecord[]> {
+  const { data, error } = await requireSupabase().rpc("get_academic_semester_summaries");
   if (error) throw error;
   return data.map(row => ({
-    id: row.id, academicYear: row.academic_year, sessionNo: row.session_no,
+    id: row.id, academicYear: row.academic_year, semesterCode: row.semester_code, semesterNo: row.semester_no,
     startsOn: row.starts_on, endsOn: row.ends_on, defaultDeadline: row.default_deadline,
-    status: row.status as AcademicSessionRecord["status"], isCurrent: row.is_current,
+    status: row.status as AcademicSemesterRecord["status"], isCurrent: row.is_current,
     activatedAt: row.activated_at, closedAt: row.closed_at,
     offeringCount: Number(row.offering_count), classCount: Number(row.class_count), markCount: Number(row.mark_count),
     submissionCount: Number(row.submission_count), finalisedCount: Number(row.finalised_count),
   }));
 }
 
-export async function createAcademicSession(values: { academicYear: string; sessionNo: number; startsOn: string; endsOn: string; defaultDeadline: string }) {
-  const { data, error } = await requireSupabase().rpc("create_academic_session", {
+export async function createAcademicSemester(values: { academicYear: string; semesterCode: string; startsOn: string; endsOn: string; defaultDeadline: string }) {
+  const { data, error } = await requireSupabase().rpc("create_academic_semester", {
     p_academic_year: values.academicYear,
-    p_session_no: values.sessionNo,
+    p_semester_code: values.semesterCode,
     p_starts_on: values.startsOn,
     p_ends_on: values.endsOn,
     p_default_deadline: new Date(`${values.defaultDeadline}T23:59:59+08:00`).toISOString(),
@@ -238,16 +243,16 @@ export async function createAcademicSession(values: { academicYear: string; sess
   return data;
 }
 
-export async function activateAcademicSession(termId: string) {
-  const { error } = await requireSupabase().rpc("activate_academic_session", { target_term: termId });
+export async function activateAcademicSemester(termId: string) {
+  const { error } = await requireSupabase().rpc("activate_academic_semester", { target_term: termId });
   if (error) throw error;
 }
 
-export async function updateAcademicSession(termId: string, values: { academicYear: string; sessionNo: number; startsOn: string; endsOn: string; defaultDeadline: string }) {
-  const { error } = await requireSupabase().rpc("update_academic_session", {
+export async function updateAcademicSemester(termId: string, values: { academicYear: string; semesterCode: string; startsOn: string; endsOn: string; defaultDeadline: string }) {
+  const { error } = await requireSupabase().rpc("update_academic_semester", {
     target_term: termId,
     p_academic_year: values.academicYear,
-    p_session_no: values.sessionNo,
+    p_semester_code: values.semesterCode,
     p_starts_on: values.startsOn,
     p_ends_on: values.endsOn,
     p_default_deadline: new Date(`${values.defaultDeadline}T23:59:59+08:00`).toISOString(),
@@ -255,8 +260,8 @@ export async function updateAcademicSession(termId: string, values: { academicYe
   if (error) throw error;
 }
 
-export async function deleteAcademicSession(termId: string) {
-  const { error } = await requireSupabase().rpc("delete_academic_session", { target_term: termId });
+export async function deleteAcademicSemester(termId: string) {
+  const { error } = await requireSupabase().rpc("delete_academic_semester", { target_term: termId });
   if (error) throw error;
 }
 
@@ -276,7 +281,9 @@ export async function loadSystemSettings(): Promise<SystemSettingsRecord> {
   (deadlines as any[]).forEach(row => { if (row.programmes?.code) values[row.programmes.code] = row.deadline_at.slice(0, 10); });
   return {
     termId: term.id,
-    currentSemester: `${term.semester_no} / ${term.academic_year}`,
+    semesterCode: term.semester_code,
+    semesterNo: term.semester_no,
+    academicYear: term.academic_year,
     semesterStart: term.starts_on,
     semesterEnd: term.ends_on,
     globalDeadline: term.default_deadline.slice(0, 10),
@@ -290,10 +297,7 @@ export async function loadSystemSettings(): Promise<SystemSettingsRecord> {
 
 export async function saveSystemSettings(settings: SystemSettingsRecord, updatedBy?: string) {
   const db = requireSupabase();
-  const termMatch = settings.currentSemester.match(/^\s*(\d+)\s*\/\s*(.+?)\s*$/);
-  if (!termMatch) throw new Error("Use the session format ‘2 / 2025/2026’. ");
-  const [, semesterText, yearText] = termMatch;
-  const { error: termError } = await db.from("academic_terms").update({ semester_no: Number(semesterText), academic_year: yearText, starts_on: settings.semesterStart, ends_on: settings.semesterEnd, default_deadline: new Date(`${settings.globalDeadline}T23:59:59+08:00`).toISOString() }).eq("id", settings.termId);
+  const { error: termError } = await db.from("academic_terms").update({ starts_on: settings.semesterStart, ends_on: settings.semesterEnd, default_deadline: new Date(`${settings.globalDeadline}T23:59:59+08:00`).toISOString() }).eq("id", settings.termId);
   if (termError) throw termError;
   const deadlineRows = settings.programmes
     .filter(programme => settings.programmeDeadlines[programme.code])
@@ -323,20 +327,20 @@ export async function loadSubjectCreationData() {
   const db = requireSupabase();
   const [catalogue, term] = await Promise.all([
     db.from("subjects").select("code,name,is_active").order("code"),
-    db.from("academic_terms").select("academic_year,semester_no").eq("is_current", true).eq("status", "active").maybeSingle(),
+    db.from("academic_terms").select("academic_year,semester_code,semester_no").eq("is_current", true).eq("status", "active").maybeSingle(),
   ]);
   if (catalogue.error) throw catalogue.error;
   if (term.error) throw term.error;
   if (!term.data) throw new Error("There is no active current academic term.");
-  return { catalogue: catalogue.data, termLabel: `Session ${term.data.semester_no}, ${term.data.academic_year}` };
+  return { catalogue: catalogue.data, termLabel: formatAcademicSemester(term.data.semester_no, term.data.academic_year) };
 }
 
 export async function loadCurrentTermLabel() {
   const { data, error } = await requireSupabase().from("academic_terms")
-    .select("academic_year,semester_no").eq("is_current", true).maybeSingle();
+    .select("academic_year,semester_code,semester_no").eq("is_current", true).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("There is no current academic term.");
-  return `Session ${data.semester_no}, ${data.academic_year}`;
+  return formatAcademicSemester(data.semester_no, data.academic_year);
 }
 
 export async function createLecturerSubject(code: string, name: string, semester: number) {
@@ -354,6 +358,11 @@ export async function updateLecturerSubject(offeringId: string, name: string, se
     offering_semester: semester,
     teaching_programme_id: programmeId,
   });
+  if (error) throw error;
+}
+
+export async function deleteLecturerSubject(offeringId: string) {
+  const { error } = await requireSupabase().rpc("delete_my_lecturer_subject", { target_offering: offeringId });
   if (error) throw error;
 }
 

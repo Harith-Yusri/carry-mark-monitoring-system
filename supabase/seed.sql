@@ -1,8 +1,8 @@
 insert into public.academic_terms (
-  academic_year, semester_no, starts_on, ends_on, default_deadline,
+  academic_year, semester_code, semester_no, starts_on, ends_on, default_deadline,
   carry_max, eligible_threshold, status, is_current
 ) values (
-  '2025/2026', 2, '2026-01-15', '2026-06-30', '2026-06-20 23:59:59+08',
+  '2025/2026', '20262', 2, '2026-01-15', '2026-06-30', '2026-06-20 23:59:59+08',
   50, 40, 'active', true
 )
 on conflict (academic_year, semester_no) do nothing;

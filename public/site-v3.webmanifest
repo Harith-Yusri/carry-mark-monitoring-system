@@ -1,6 +1,6 @@
 {
-  "name": "Carry Mark Monitoring System",
-  "short_name": "CMMS",
+  "name": "UiTM CAMS — Continuous Assessment Monitoring System",
+  "short_name": "CAMS",
   "icons": [
     {
       "src": "/cmms-favicon-v3-192.png",

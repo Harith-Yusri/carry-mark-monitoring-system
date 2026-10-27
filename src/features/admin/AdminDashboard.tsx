@@ -2,11 +2,10 @@ import React from "react";
 import { CheckCircle } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { useReminders } from "../../hooks/useReminders";
-import { useAdminRecords } from "../../hooks/useAdminRecords";
+import type { AdminRecordsViewProps } from "../../hooks/useAdminRecords";
 
-export function AdminDashboard() {
+export function AdminDashboard({ records, context, loading, error }: AdminRecordsViewProps) {
   const C = useColors();
-  const { records, context, loading, error } = useAdminRecords();
   const { sendReminder, sentReminders, sendingReminders, reminderError } = useReminders();
   const programmes = (context?.programmes ?? []).map(programme => {
     const lecturers = records.filter(item => item.programmeCodes.includes(programme.code));
@@ -25,9 +24,9 @@ export function AdminDashboard() {
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px" }}>
         <div>
-          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "11px", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>{context?.termLabel.toUpperCase() ?? "CURRENT TERM"}</div>
-          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "25px", color: C.text, margin: "0 0 5px" }}>Academic Operations</h1>
-          <p style={{ fontSize: "13px", color: C.textMuted, margin: 0 }}>Carry mark readiness, submission exceptions and programme follow-up.</p>
+          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>{context?.termLabel.toUpperCase() ?? "CURRENT SEMESTER"}</div>
+          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5625rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>Academic Operations</h1>
+          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Continuous assessment readiness, submission exceptions and programme follow-up.</p>
         </div>
       </div>
 
@@ -40,12 +39,12 @@ export function AdminDashboard() {
           { value: pendingLecturers.length, label: "REQUIRE ATTENTION", note: "Not finalised", color: C.amber },
           { value: overdue, label: "OVERDUE", note: "Past submission date", color: C.red },
           { value: submitted, label: "FINALISED", note: `of ${total} lecturer records`, color: C.green },
-          { value: `${compliance}%`, label: "FACULTY COMPLIANCE", note: "Current session", color: C.maroon },
+          { value: `${compliance}%`, label: "FACULTY COMPLIANCE", note: "Current semester", color: C.maroon },
         ].map(item => (
           <div key={item.label} style={{ borderColor: C.borderMid }}>
-            <div style={{ color: item.color, fontFamily: C.mono, fontSize: "24px", fontWeight: 700, lineHeight: 1 }}>{item.value}</div>
-            <div style={{ color: C.textSub, fontFamily: C.mono, fontSize: "11px", fontWeight: 700, marginTop: "9px", letterSpacing: ".07em" }}>{item.label}</div>
-            <div style={{ color: C.textMuted, fontSize: "11px", marginTop: "4px" }}>{item.note}</div>
+            <div style={{ color: item.color, fontFamily: C.mono, fontSize: "calc(1.5rem * var(--staff-text-scale))", fontWeight: 700, lineHeight: 1 }}>{item.value}</div>
+            <div style={{ color: C.textSub, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, marginTop: "9px", letterSpacing: ".07em" }}>{item.label}</div>
+            <div style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{item.note}</div>
           </div>
         ))}
       </section>
@@ -54,15 +53,15 @@ export function AdminDashboard() {
         <section>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "16px", marginBottom: "11px" }}>
             <div>
-              <h2 style={{ margin: 0, color: C.text, fontFamily: C.display, fontSize: "16px", fontWeight: 700 }}>Attention queue</h2>
-              <p style={{ margin: "4px 0 0", color: C.textMuted, fontSize: "12px" }}>Overdue and incomplete submissions, ordered by urgency.</p>
+              <h2 style={{ margin: 0, color: C.text, fontFamily: C.display, fontSize: "calc(1rem * var(--staff-text-scale))", fontWeight: 700 }}>Attention queue</h2>
+              <p style={{ margin: "4px 0 0", color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Overdue and incomplete submissions, ordered by urgency.</p>
             </div>
-            <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}>{pendingLecturers.length} OPEN</span>
+            <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{pendingLecturers.length} OPEN</span>
           </div>
 
           <div style={{ borderTop: `2px solid ${C.maroon}` }}>
             {pendingLecturers.length === 0 && (
-              <div style={{ padding: "24px 0", color: C.green, fontSize: "13px" }}>All lecturer submissions are finalised.</div>
+              <div style={{ padding: "24px 0", color: C.green, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>All lecturer submissions are finalised.</div>
             )}
             {pendingLecturers.map(lecturer => {
               const sent = sentReminders.has(lecturer.id);
@@ -72,19 +71,19 @@ export function AdminDashboard() {
                 <div className="attention-row" key={lecturer.id} style={{ display: "grid", gridTemplateColumns: "minmax(190px, 1fr) minmax(105px, .52fr) auto", alignItems: "center", gap: "18px", padding: "14px 4px", borderBottom: `1px solid ${C.borderMid}` }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
-                      <span style={{ color: C.text, fontSize: "13px", fontWeight: 700 }}>{lecturer.name}</span>
-                      <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}>{lecturer.programmeCodes.join(", ") || "NO PROGRAMME"} · {lecturer.id}</span>
+                      <span style={{ color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700 }}>{lecturer.name}</span>
+                      <span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{lecturer.programmeCodes.join(", ") || "NO PROGRAMME"} · {lecturer.id}</span>
                     </div>
-                    <div style={{ color: C.textMuted, fontSize: "11px", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lecturer.subjects.join(", ")} · {lecturer.subjectName}</div>
+                    <div style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lecturer.subjects.join(", ")} · {lecturer.subjectName}</div>
                   </div>
                   <div>
-                    <div style={{ color: statusColor, fontFamily: C.mono, fontSize: "11px", fontWeight: 700, letterSpacing: ".04em" }}>{lecturer.submissionStatus.toUpperCase()}</div>
-                    <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "11px", marginTop: "4px" }}>{lecturer.completionRate}% · due {lecturer.deadline}</div>
+                    <div style={{ color: statusColor, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".04em" }}>{lecturer.submissionStatus.toUpperCase()}</div>
+                    <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{lecturer.completionRate}% · due {lecturer.deadline}</div>
                   </div>
                   <button
                     disabled={sent || isSending}
                     onClick={() => sendReminder(lecturer.id)}
-                    style={{ minWidth: "108px", padding: "7px 10px", borderRadius: "4px", border: `1px solid ${sent ? C.green : C.maroon}66`, background: sent ? C.greenLight : "transparent", color: sent ? C.green : C.maroon, fontSize: "11px", fontWeight: 700, cursor: sent ? "default" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px", whiteSpace: "nowrap" }}
+                    style={{ minWidth: "108px", padding: "7px 10px", borderRadius: "4px", border: `1px solid ${sent ? C.green : C.maroon}66`, background: sent ? C.greenLight : "transparent", color: sent ? C.green : C.maroon, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, cursor: sent ? "default" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px", whiteSpace: "nowrap" }}
                   >
                     {sent && <CheckCircle size={12} />}
                     {sent ? "Email queued" : isSending ? "Sending…" : "Send reminder"}
@@ -96,8 +95,8 @@ export function AdminDashboard() {
         </section>
 
         <section>
-          <h2 style={{ margin: "0 0 4px", color: C.text, fontFamily: C.display, fontSize: "16px", fontWeight: 700 }}>Programme completion</h2>
-          <p style={{ margin: "0 0 11px", color: C.textMuted, fontSize: "12px" }}>Finalisation by academic programme.</p>
+          <h2 style={{ margin: "0 0 4px", color: C.text, fontFamily: C.display, fontSize: "calc(1rem * var(--staff-text-scale))", fontWeight: 700 }}>Programme completion</h2>
+          <p style={{ margin: "0 0 11px", color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Finalisation by academic programme.</p>
           <div style={{ borderTop: `2px solid ${C.textSub}` }}>
             {programmes.map(programme => {
               const programmeTotal = programme.submitted + programme.pending;
@@ -106,13 +105,13 @@ export function AdminDashboard() {
                 <div key={programme.code} style={{ padding: "16px 2px", borderBottom: `1px solid ${C.borderMid}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: "14px", alignItems: "baseline" }}>
                     <div>
-                      <span style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700, fontSize: "12px", marginRight: "8px" }}>{programme.code}</span>
-                      <span style={{ color: C.textSub, fontSize: "12px" }}>{programme.name}</span>
+                      <span style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700, fontSize: "calc(0.75rem * var(--staff-text-scale))", marginRight: "8px" }}>{programme.code}</span>
+                      <span style={{ color: C.textSub, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{programme.name}</span>
                     </div>
-                    <span style={{ color: C.text, fontFamily: C.mono, fontWeight: 700, fontSize: "14px" }}>{rate}%</span>
+                    <span style={{ color: C.text, fontFamily: C.mono, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))" }}>{rate}%</span>
                   </div>
                   <div style={{ height: "4px", background: C.elevated, overflow: "hidden", margin: "11px 0 7px" }}><div style={{ width: `${rate}%`, height: "100%", background: rate === 100 ? C.green : C.maroon }} /></div>
-                  <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "11px" }}>{programme.submitted} finalised · {programme.pending} pending · {programmeTotal} total</div>
+                  <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{programme.submitted} finalised · {programme.pending} pending · {programmeTotal} total</div>
                 </div>
               );
             })}

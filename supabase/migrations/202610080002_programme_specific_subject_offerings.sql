@@ -2,6 +2,14 @@
 -- the shared subject catalogue. Split legacy multi-programme offerings without
 -- deleting their classes, assessments, enrolments, marks or submissions.
 
+-- This migration deliberately backfills archived terms. Temporarily suspend
+-- the application-level archive guard for only the tables moved below; the
+-- migration runs transactionally and restores every trigger before commit.
+alter table public.subject_offerings disable trigger enforce_active_session_write;
+alter table public.class_sections disable trigger enforce_active_session_write;
+alter table public.assessments disable trigger enforce_active_session_write;
+alter table public.marks disable trigger enforce_active_session_write;
+
 alter table public.subject_offerings
   add column programme_id uuid references public.programmes(id) on delete restrict;
 
@@ -285,5 +293,10 @@ grant execute on function public.update_lecturer_subject(uuid, text, integer, uu
 
 -- The catalogue is now programme- and semester-neutral.
 alter table public.subjects drop column programme_semester;
+
+alter table public.subject_offerings enable trigger enforce_active_session_write;
+alter table public.class_sections enable trigger enforce_active_session_write;
+alter table public.assessments enable trigger enforce_active_session_write;
+alter table public.marks enable trigger enforce_active_session_write;
 
 notify pgrst, 'reload schema';

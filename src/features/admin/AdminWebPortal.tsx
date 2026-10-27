@@ -6,7 +6,7 @@ import { LecturerDirectory } from "./LecturerDirectory";
 import { ComplianceReports } from "./ComplianceReports";
 import { AdminSettings } from "./AdminSettings";
 import { SubmissionMonitor } from "./SubmissionMonitor";
-import { SessionHistory } from "./SessionHistory";
+import { SemesterHistory } from "./SessionHistory";
 import { AdminTab } from "../../types";
 import { requiresSubmissionAction, submissionAllocations, useAdminRecords } from "../../hooks/useAdminRecords";
 
@@ -21,7 +21,7 @@ export function AdminWebPortal() {
 
   useEffect(() => {
     if (activeTab === "submissions") void reload();
-  }, [activeTab]);
+  }, [activeTab, reload]);
 
   return (
     <div className="admin-portal">
@@ -30,8 +30,8 @@ export function AdminWebPortal() {
         <nav aria-label="Faculty administration" style={{ background: C.surface, borderTop: `3px solid ${C.maroon}`, borderBottom: `1px solid ${C.border}`, padding: "14px 10px 12px" }}>
           <div style={{ padding: "0 8px 12px", borderBottom: `1px solid ${C.border}`, marginBottom: "10px" }}>
             <div>
-              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "14px", color: C.text }}>Faculty Administration</div>
-              <div style={{ marginTop: "3px", fontSize: "11px", fontFamily: C.mono, color: C.textMuted, letterSpacing: ".06em" }}>FSKM · CARRY MARK CONTROL</div>
+              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text }}>Faculty Administration</div>
+              <div style={{ marginTop: "3px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontFamily: C.mono, color: C.textMuted, letterSpacing: ".06em" }}>FSKM · CONTINUOUS ASSESSMENT</div>
             </div>
           </div>
 
@@ -41,7 +41,7 @@ export function AdminWebPortal() {
               { key: "submissions", label: "Submission Monitor", icon: <ClipboardList size={15} />, pending: pendingSubmissions },
               { key: "directory",  label: "Lecturer Directory",  icon: <Users size={15} /> },
               { key: "compliance", label: "Reports & Exports",    icon: <FileText size={15} /> },
-              { key: "history",    label: "Past Sessions",        icon: <Archive size={15} /> },
+              { key: "history",    label: "Past Semesters",       icon: <Archive size={15} /> },
               { key: "settings",   label: "System Settings",     icon: <Settings size={15} /> },
             ].map(item => (
               <button
@@ -55,7 +55,7 @@ export function AdminWebPortal() {
                   background: activeTab === item.key ? C.maroonLight : "transparent",
                   color: activeTab === item.key ? C.maroon : C.textSub,
                   fontWeight: activeTab === item.key ? 700 : 500,
-                  fontSize: "13px",
+                  fontSize: "calc(0.8125rem * var(--staff-text-scale))",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -82,7 +82,7 @@ export function AdminWebPortal() {
                       alignItems: "center",
                       justifyContent: "center",
                       fontFamily: C.mono,
-                      fontSize: "11px",
+                      fontSize: "calc(0.6875rem * var(--staff-text-scale))",
                       fontWeight: 700,
                     }}
                   >
@@ -97,12 +97,12 @@ export function AdminWebPortal() {
 
       {/* Main Content Pane */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {activeTab === "overview" && <AdminDashboard />}
+        {activeTab === "overview" && <AdminDashboard records={records} context={context} loading={loading} error={error} />}
         {activeTab === "submissions" && <SubmissionMonitor records={records} context={context} loading={loading} error={error} />}
-        {activeTab === "directory" && <LecturerDirectory />}
-        {activeTab === "compliance" && <ComplianceReports />}
-        {activeTab === "history" && <SessionHistory />}
-        {activeTab === "settings" && <AdminSettings onActiveSessionChanged={reload} />}
+        {activeTab === "directory" && <LecturerDirectory records={records} context={context} loading={loading} error={error} />}
+        {activeTab === "compliance" && <ComplianceReports records={records} context={context} loading={loading} error={error} />}
+        {activeTab === "history" && <SemesterHistory />}
+        {activeTab === "settings" && <AdminSettings onActiveSemesterChanged={reload} />}
       </div>
     </div>
   );

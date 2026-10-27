@@ -1,7 +1,7 @@
 
-# UiTM Carry Mark Monitoring System
+# UiTM CAMS — Continuous Assessment Monitoring System
 
-Lecturer and faculty administrator portals backed by Supabase/PostgreSQL. The companion Android student app is in `StudentCarryMark_2.0` and uses the same database.
+Lecturer and faculty administrator portals backed by Supabase/PostgreSQL. The companion student app uses the same database and exposes released carry marks securely.
 
 ## Running the code
 

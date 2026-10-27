@@ -19,7 +19,8 @@ textarea {
 }
 
 .staff-portal {
-  font-size: 14px;
+  --staff-text-scale: 1;
+  font-size: calc(0.875rem * var(--staff-text-scale));
   line-height: 1.5;
 }
 
@@ -271,14 +272,23 @@ textarea:focus-visible,
 }
 
 @media (max-width: 480px) {
+  .portal-header-inner {
+    gap: 8px;
+  }
+
   .portal-product-title {
-    font-size: 14px !important;
-    max-width: 160px;
+    display: none;
   }
 
   .product-mark {
     width: 42px;
     height: 42px;
+  }
+
+  .portal-text-size-control > button {
+    min-width: 26px !important;
+    width: 26px;
+    padding: 0 !important;
   }
 
   .operations-summary {

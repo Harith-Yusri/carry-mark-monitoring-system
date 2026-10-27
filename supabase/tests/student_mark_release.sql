@@ -17,8 +17,8 @@ begin
   insert into public.programmes(id, code, name)
     values (programme_id, test_code, 'Release Test Programme');
   update public.academic_terms set is_current = false where is_current;
-  insert into public.academic_terms(id, academic_year, semester_no, starts_on, ends_on, default_deadline, carry_max, eligible_threshold, status, is_current)
-    values (term_id, test_code, 1, '2026-01-01', '2026-12-31', '2026-12-01', 50, 40, 'active', true);
+  insert into public.academic_terms(id, academic_year, semester_code, semester_no, starts_on, ends_on, default_deadline, carry_max, eligible_threshold, status, is_current)
+    values (term_id, test_code, '20261', 1, '2026-01-01', '2026-12-31', '2026-12-01', 50, 40, 'active', true);
   insert into public.subjects(id, code, name) values (subject_id, test_code, 'Release Test Subject');
   insert into public.subject_offerings(id, subject_id, term_id, lecturer_id, programme_id, programme_semester, carry_max, status)
     values (offering_id, subject_id, term_id, lecturer_id, programme_id, 1, 50, 'active');
@@ -61,6 +61,32 @@ begin
   if jsonb_array_length(portal->'notifications') <> 1 then
     raise exception 'FAIL: finalisation notification was not produced';
   end if;
+
+  execute 'set local role authenticated';
+  if public.set_my_notification_alerts_enabled(false) is distinct from false then
+    raise exception 'FAIL: notification preference was not disabled';
+  end if;
+  execute 'reset role';
+  portal := public.get_my_mobile_portal();
+  if (portal->>'notifications_enabled')::boolean
+     or jsonb_array_length(portal->'notifications') <> 0 then
+    raise exception 'FAIL: disabled student still received notification alerts';
+  end if;
+  if (portal #>> '{subjects,0,carry_mark}')::numeric <> 40 then
+    raise exception 'FAIL: disabling alerts changed finalised carry-mark visibility';
+  end if;
+
+  execute 'set local role authenticated';
+  if public.set_my_notification_alerts_enabled(true) is distinct from true then
+    raise exception 'FAIL: notification preference was not enabled';
+  end if;
+  execute 'reset role';
+  portal := public.get_my_mobile_portal();
+  if not (portal->>'notifications_enabled')::boolean
+     or jsonb_array_length(portal->'notifications') <> 1 then
+    raise exception 'FAIL: enabled student did not receive notification alerts';
+  end if;
+
   execute 'set local role authenticated';
   select count(*) into visible_marks from public.marks where enrolment_id = student_mark_release.enrolment_id;
   execute 'reset role';
@@ -68,4 +94,4 @@ begin
 end;
 $$;
 rollback;
-select 'Passed: draft assessment visibility, draft mark/total privacy, finalised release, direct RLS, and notification flow.' as result;
+select 'Passed: draft assessment visibility, draft mark/total privacy, finalised release, direct RLS, and per-student notification preference.' as result;

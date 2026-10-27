@@ -24,8 +24,8 @@ begin
     (lecturer_b, test_code || 'B', 'Test Lecturer B', 'lecturer'),
     (admin_id, test_code || 'C', 'Test Admin', 'admin');
   update public.academic_terms set is_current = false where is_current;
-  insert into public.academic_terms (id, academic_year, semester_no, starts_on, ends_on, default_deadline, status, is_current)
-    values (term, test_code, 1, '2026-01-01', '2026-12-31', '2026-12-01', 'active', true);
+  insert into public.academic_terms (id, academic_year, semester_code, semester_no, starts_on, ends_on, default_deadline, status, is_current)
+    values (term, test_code, '20261', 1, '2026-01-01', '2026-12-31', '2026-12-01', 'active', true);
 
   perform set_config('request.jwt.claim.sub', lecturer_a::text, true);
   first_offering := public.create_lecturer_subject(' ' || lower(test_code) || ' ', 'Test Subject', 3);

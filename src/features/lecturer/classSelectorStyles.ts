@@ -28,12 +28,12 @@ export const classSelectorIconStyle: CSSProperties = {
 
 export const classSelectorTitleStyle: CSSProperties = {
   margin: "20px 0 8px",
-  fontSize: "20px",
+  fontSize: "calc(1.25rem * var(--staff-text-scale))",
   fontWeight: 700,
 };
 
 export const classSelectorMetaStyle: CSSProperties = {
-  fontSize: "13px",
+  fontSize: "calc(0.8125rem * var(--staff-text-scale))",
   lineHeight: 1.7,
 };
 
@@ -42,6 +42,6 @@ export const classSelectorActionStyle: CSSProperties = {
   alignItems: "center",
   gap: "5px",
   marginTop: "18px",
-  fontSize: "13px",
+  fontSize: "calc(0.8125rem * var(--staff-text-scale))",
   fontWeight: 700,
 };

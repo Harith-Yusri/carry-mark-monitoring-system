@@ -1,4 +1,4 @@
-# Own your Carry Mark Monitoring System
+# Own your Continuous Assessment Monitoring System
 
 Repository-based learning guide • 19 September 2026
 

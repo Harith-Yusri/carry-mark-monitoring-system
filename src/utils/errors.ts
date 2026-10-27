@@ -2,6 +2,7 @@ const safeMessages = [
   /already has an offering/i,
   /already enrolled/i,
   /archived academic session data is read-only/i,
+  /archived academic semester data is read-only/i,
   /assessment carry weights/i,
   /assessment weightage exceeds/i,
   /cannot be changed while/i,

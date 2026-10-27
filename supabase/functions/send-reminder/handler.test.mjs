@@ -8,7 +8,7 @@ import { pendingSections, reminderText } from './email.mjs';
 const source = (await readFile(new URL('./index.ts', import.meta.url), 'utf8'))
   .replace(/^import .*;\n/gm, '');
 const { code } = await transform(source, { loader: 'ts', format: 'cjs' });
-function setup({ role = 'admin', active = true, email = 'lecturer@another-domain.edu', finalised = false, providerOk = true, from = 'Carry Mark System <noreply@verified-domain.com>', mode, testRecipient } = {}) {
+function setup({ role = 'admin', active = true, email = 'lecturer@another-domain.edu', finalised = false, providerOk = true, from = 'UiTM CAMS <noreply@verified-domain.com>', mode, testRecipient } = {}) {
   let handler;
   const calls = { lookups: [], emails: [] };
   const db = {
@@ -56,7 +56,7 @@ test('recipient comes from the linked Auth account, ignoring any supplied email'
   assert.equal(response.status, 200);
   assert.deepEqual(calls.lookups, ['lecturer-auth-id']);
   assert.deepEqual(calls.emails[0].to, ['lecturer@another-domain.edu']);
-  assert.equal(calls.emails[0].from, 'Carry Mark System <noreply@verified-domain.com>');
+  assert.equal(calls.emails[0].from, 'UiTM CAMS <noreply@verified-domain.com>');
   assert.deepEqual(await response.json(), { accepted: true });
 });
 test('unauthenticated, lecturer and inactive admin callers cannot access Auth emails or send', async () => {
@@ -82,7 +82,7 @@ test('provider rejection is reported as failure', async () => {
   assert.equal((await response.json()).accepted, undefined);
 });
 test('production mode rejects the Resend test sender before attempting delivery', async () => {
-  const { calls, request } = setup({ from: 'Carry Mark System <onboarding@resend.dev>' });
+  const { calls, request } = setup({ from: 'UiTM CAMS <onboarding@resend.dev>' });
   const response = await request();
   assert.equal(response.status, 503);
   assert.match((await response.json()).error, /In production/);
@@ -91,7 +91,7 @@ test('production mode rejects the Resend test sender before attempting delivery'
 test('development mode permits the Resend test sender for the configured recipient', async () => {
   const { calls, request } = setup({
     mode: 'development',
-    from: 'Carry Mark System <onboarding@resend.dev>',
+    from: 'UiTM CAMS <onboarding@resend.dev>',
     email: 'test-owner@example.com',
     testRecipient: 'TEST-OWNER@example.com',
   });

@@ -4,14 +4,14 @@ import { readFile } from 'node:fs/promises';
 import { transform } from 'esbuild';
 const source = (await readFile(new URL('./index.ts', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '');
 const { code } = await transform(source, { loader: 'ts', format: 'cjs' });
-function setup({ email = 'updated@example.com', passwordValid = true, active = true, linkedId = 'TS003' } = {}) {
+function setup({ email = 'updated@example.com', passwordValid = true, verificationRequired = false, active = true, linkedId = 'TS003' } = {}) {
   let handler;
   const calls = [];
   const admin = {
     async rpc(name, args) { assert.equal(name, 'resolve_staff_login_email'); assert.equal(args.target_staff_no, 'TS003'); return { data: email }; },
     from() { const query = { select() { return query; }, eq() { return query; }, async single() { return { data: { staff_no: linkedId, role: 'lecturer', is_active: active } }; } }; return query; },
   };
-  const auth = { auth: { async signInWithPassword(credentials) { calls.push(credentials); return passwordValid ? { data: { user: { id: 'uuid' }, session: { access_token: 'access', refresh_token: 'refresh' } } } : { error: new Error('bad password') }; } } };
+  const auth = { auth: { async signInWithPassword(credentials) { calls.push(credentials); if (verificationRequired) return { error: { code: 'email_not_confirmed', message: 'Email not confirmed' } }; return passwordValid ? { data: { user: { id: 'uuid' }, session: { access_token: 'access', refresh_token: 'refresh' } } } : { error: new Error('bad password') }; } } };
   const createClient = (_url, key) => key === 'service' ? admin : auth;
   const Deno = { env: { get: key => key === 'SUPABASE_SERVICE_ROLE_KEY' ? 'service' : 'public' }, serve: value => { handler = value; } };
   new Function('createClient', 'Deno', code)(createClient, Deno);
@@ -38,4 +38,10 @@ test('incorrect passwords, inactive profiles and mismatched staff IDs never rece
     assert.equal(response.status, 401);
     assert.equal((await response.json()).access_token, undefined);
   }
+});
+test('unconfirmed lecturer receives a verification message without tokens', async () => {
+  const { request } = setup({ verificationRequired: true, active: false });
+  const response = await request();
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).code, 'email_not_confirmed');
 });

@@ -8,40 +8,45 @@
 
 For local development with Docker, use `npx supabase start` followed by `npx supabase db reset`.
 
-## Academic session lifecycle
+## Academic semester lifecycle
 
-Admins manage sessions in **System Settings > Academic Session Lifecycle**. A new
-session is created as a draft. Activating that draft atomically completes the old
-session's offerings, marks the previous session closed and read-only, and makes
-the draft the only active session. Session-owned academic records are retained;
+Admins manage semesters in **System Settings > Academic Semester Lifecycle**. A new
+semester is created as a draft. Activating that draft atomically completes the old
+semester's offerings, marks the previous semester closed and read-only, and makes
+the draft the only active semester. Semester-owned academic records are retained;
 they are never reset or deleted.
 
-During testing, an admin may edit any session's identity, dates and default
-deadline, or reopen an archived session. Reopening performs another atomic
-switch: the current session is archived, the selected session becomes active,
+Each row stores a unique five-digit `semester_code` separately from
+`academic_year`. For example, `20254` is displayed as `Semester 4 · 2025/2026`
+and `20262` as `Semester 2 · 2025/2026`.
+
+During testing, an admin may edit any semester's code, academic year, dates and default
+deadline, or reopen an archived semester. Reopening performs another atomic
+switch: the current semester is archived, the selected semester becomes active,
 and its offerings return to the statuses they had before archival. Confirmation
 messages show counts for classes, marks, submissions and finalised classes. This
 is a reversible switch, not a destructive reset.
 
-For test cleanup, admins may permanently delete a draft or archived session only
+For test cleanup, admins may permanently delete a draft or archived semester only
 when it contains no subject offerings or dependent academic data. The active
-session and any populated session cannot be deleted; keep populated sessions
+semester and any populated semester cannot be deleted; keep populated semesters
 archived or reopen them instead.
 
-The active session drives admin monitoring, lecturer subject creation and the
-student mobile portal. Admins can review archived session totals under **Past
-Sessions**. Lecturers can open **Past Sessions** from My Subjects and inspect
+The active semester drives admin monitoring, lecturer subject creation and the
+student mobile portal. Admins can review archived semester totals under **Past
+Semesters**. Lecturers can open **Past Semesters** from My Subjects and inspect
 their archived classes and assessment structure without editing them. The normal
-student payload and student RLS access are limited to active-session enrolments.
+student payload and student RLS access are limited to active-semester enrolments.
 
 Permanent records include users, staff/student identities, programmes and the
 subject catalogue. Offerings, class sections, programme deadlines, enrolments,
-assessments, marks, submissions and notification settings belong to a session
+assessments, marks, submissions and notification settings belong to a semester
 through `subject_offerings.term_id` or a dependent foreign-key path.
 
-Apply `202610070004_academic_session_lifecycle.sql` and
+Apply `202610070004_academic_session_lifecycle.sql`,
 `202610070005_reversible_session_transitions.sql` and
-`202610070006_delete_empty_test_sessions.sql`. Verify the full reversible transition
+`202610070006_delete_empty_test_sessions.sql` and
+`202610180001_uitm_semester_codes.sql`. Verify the full reversible transition
 inside a rolled-back transaction with:
 
 ```sh
@@ -64,6 +69,39 @@ select
 Create lecturer users the same way using role `lecturer`. Programmes are selected
 on their subject teaching assignments, not on lecturer profiles.
 
+## Student and lecturer self-registration
+
+Apply migrations through `202610240005_registration_role_from_email_domain.sql`
+and deploy both public login functions:
+
+```sh
+npx supabase functions deploy staff-login --no-verify-jwt --project-ref YOUR_PROJECT_REF
+npx supabase functions deploy student-login --no-verify-jwt --project-ref YOUR_PROJECT_REF
+```
+
+The web and Expo **Create Account** forms call Supabase Auth `signUp()` directly.
+The Expo form uses the `cams-student-registration` source and accepts only
+`@student.uitm.edu.my`; the staff portal uses `cams-lecturer-registration` and
+accepts only `@uitm.edu.my`. An Auth trigger verifies that the source and exact
+domain agree without trusting frontend role metadata, rejects the retired shared
+registration source, and creates the linked application record inactive. A second
+trigger activates that record only when Auth records email confirmation. Passwords
+remain exclusively in Supabase Auth. Lecturer profiles do not receive a programme;
+student programme options come from active `programmes` rows.
+
+In **Authentication > Providers > Email**, enable **Confirm email**. In
+**Authentication > URL Configuration**, allow the deployed web origin and
+`cmms://auth/callback` as a redirect URL. Keep public Admin signup unavailable;
+create Admin accounts only through the existing administrator bootstrap workflow.
+For prototype delivery, Supabase's built-in sender is sufficient but is rate-limited;
+configure custom SMTP later for production volume.
+
+The Expo resend action calls `supabase.auth.resend({ type: 'signup', ... })` with
+the same `cmms://auth/callback` redirect used by signup. Supabase intentionally
+returns a successful empty response for both unknown and already-confirmed email
+addresses, so the public UI uses non-enumerating confirmation copy unless Auth
+returns an explicit delivery, rate-limit, or already-confirmed error.
+
 
 ## Manual reminder emails
 
@@ -78,7 +116,7 @@ Setup:
 2. Create a Resend API key. Store all reminder settings in Supabase **Edge Functions > Secrets**. Never put them in a `VITE_` variable, a local `.env` file, or source control.
 3. Choose one email mode:
 
-   - Development: set `REMINDER_EMAIL_MODE=development`, `REMINDER_FROM_EMAIL=Carry Mark System <onboarding@resend.dev>`, and `REMINDER_TEST_RECIPIENT` to the single address Resend permits for test delivery. The selected lecturer's Supabase Auth email must match that address exactly (case-insensitively); the function refuses every other recipient.
+   - Development: set `REMINDER_EMAIL_MODE=development`, `REMINDER_FROM_EMAIL=UiTM CAMS <onboarding@resend.dev>`, and `REMINDER_TEST_RECIPIENT` to the single address Resend permits for test delivery. The selected lecturer's Supabase Auth email must match that address exactly (case-insensitively); the function refuses every other recipient.
    - Production: set `REMINDER_EMAIL_MODE=production` and `REMINDER_FROM_EMAIL=Faculty Administration <noreply@your-verified-domain.com>`. Add and verify that custom domain in Resend first. See [Resend domain documentation](https://resend.com/docs/dashboard/domains/introduction). Production rejects `@resend.dev` senders and permits real lecturer Auth emails. `REMINDER_TEST_RECIPIENT` is not used.
 
    If `REMINDER_EMAIL_MODE` is absent, the function defaults to production. Any unsupported value fails closed.
@@ -107,13 +145,13 @@ catalogue entry. Programme and programme semester belong to each teaching
 offering. Subject creation remains programme-neutral; the first class assigns
 the offering programme, and every later class must use that programme. The
 same subject can therefore be offered for different programmes or semesters in
-one academic session without sharing classes, assessments or marks.
+one academic semester without sharing classes, assessments or marks.
 
 Apply migrations through `202610080002_programme_specific_subject_offerings.sql`
 before using this form. The
 `create_lecturer_subject` RPC validates active lecturer access and resolves the
-owner and session on the server. A database uniqueness constraint rejects only
-an exact lecturer/subject/programme/semester/session duplicate and also protects
+owner and academic semester on the server. A database uniqueness constraint rejects only
+an exact lecturer/subject/programme/programme-semester/academic-semester duplicate and also protects
 concurrent requests. General table write permissions remain unchanged.
 
 Verification:
