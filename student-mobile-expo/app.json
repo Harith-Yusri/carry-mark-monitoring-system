@@ -1,22 +1,35 @@
 {
   "expo": {
-    "name": "UiTM CAMS Student",
+    "name": "CAMS",
     "slug": "carrymark-student",
     "scheme": "cmms",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/961c3a68-5741-4ee3-815d-fba6136f26af",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "description": "Student access to the UiTM Continuous Assessment Monitoring System",
     "orientation": "portrait",
     "icon": "./assets/cmms-favicon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "my.edu.uitm.carrymark.student"
+      "bundleIdentifier": "my.edu.uitm.carrymark.student",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": ["whatsapp"]
+      }
     },
     "android": {
       "package": "my.edu.uitm.carrymark.student",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#702082",
-        "foregroundImage": "./assets/cmms-favicon.png"
+        "foregroundImage": "./assets/cams-adaptive-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -25,6 +38,32 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "gifEnabled": false,
+            "webpEnabled": false,
+            "webpAnimated": false,
+            "useLegacyPackaging": false
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/cams-splash-mark.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#0D1020",
+          "dark": {
+            "image": "./assets/cams-splash-mark.png",
+            "backgroundColor": "#0D1020"
+          }
+        }
+      ],
       [
         "expo-secure-store",
         {
@@ -38,7 +77,23 @@
           "color": "#702082"
         }
       ],
-      "expo-status-bar"
-    ]
+      "expo-status-bar",
+      [
+        "expo-web-browser",
+        {
+          "experimentalLauncherActivity": false
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "961c3a68-5741-4ee3-815d-fba6136f26af"
+      }
+    }
   }
 }

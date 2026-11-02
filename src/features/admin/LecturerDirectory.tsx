@@ -41,7 +41,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
             placeholder="Name, staff ID, programme or subject"
-            style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "4px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none" }}
+            style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.input, border: `1px solid ${C.borderMid}`, borderRadius: "4px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none" }}
           />
         </label>
         <label style={{ display: "block", flex: "0 1 300px", minWidth: "220px" }}>
@@ -51,7 +51,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
             value={programmeId}
             onChange={event => setProgrammeId(event.target.value)}
             disabled={loading}
-            style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "4px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none", cursor: loading ? "default" : "pointer" }}
+            style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", background: C.input, border: `1px solid ${C.borderMid}`, borderRadius: "4px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none", cursor: loading ? "default" : "pointer" }}
           >
             <option value="">All Programmes</option>
             {(context?.programmes ?? []).map(programme => (
@@ -93,7 +93,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
                   <td style={{ padding: "14px 10px" }}>
                     <div
                       title={lecturer.programmeAssignments.map(assignment => `${assignment.code} — ${assignment.name}`).join("\n") || "No current teaching allocation"}
-                      style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700 }}
+                      style={{ color: C.code, fontFamily: C.mono, fontWeight: 700 }}
                     >
                       {lecturer.programmeCodes.join(", ") || "—"}
                     </div>
@@ -101,7 +101,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
                   <td style={{ padding: "14px 10px", color: C.textSub }}>
                     {lecturer.programmeAssignments.length ? lecturer.programmeAssignments.map(assignment => (
                       <div key={assignment.id} style={{ marginBottom: "6px" }}>
-                        <div style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700, marginBottom: "2px" }}>{assignment.code}</div>
+                        <div style={{ color: C.code, fontFamily: C.mono, fontWeight: 700, marginBottom: "2px" }}>{assignment.code}</div>
                         {groupSubjects(lecturer.classAllocations, assignment.id).map(subject => (
                           <div key={subject.code} style={{ color: C.text, lineHeight: 1.45 }}>
                             <span style={{ fontFamily: C.mono, fontWeight: 600 }}>{subject.code}</span>

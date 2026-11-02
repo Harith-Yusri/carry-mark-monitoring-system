@@ -69,38 +69,66 @@ select
 Create lecturer users the same way using role `lecturer`. Programmes are selected
 on their subject teaching assignments, not on lecturer profiles.
 
-## Student and lecturer self-registration
+## Student Google OAuth and lecturer self-registration
 
-Apply migrations through `202610240005_registration_role_from_email_domain.sql`
-and deploy both public login functions:
+Apply migrations through `202610280001_student_google_oauth.sql`. Lecturer
+registration and staff login continue to use the existing staff flow:
 
 ```sh
 npx supabase functions deploy staff-login --no-verify-jwt --project-ref YOUR_PROJECT_REF
+```
+
+The Expo student app uses Supabase Google OAuth only. In **Authentication >
+Providers > Google**, enable Google and add the Web OAuth client ID and secret.
+Register the Supabase callback URL shown on that provider page in Google Cloud;
+it has the form `https://PROJECT_REF.supabase.co/auth/v1/callback`. In
+**Authentication > URL Configuration**, allow `cmms://auth/callback`; Expo Go
+is not used for OAuth callback testing because it does not contain the CAMS
+custom native scheme. Use an Android or iOS development/preview build instead.
+
+In **Authentication > Hooks**, enable the Postgres **Before User Created** hook
+`public.hook_restrict_student_google_domain`. It rejects a new Google identity
+unless its verified address ends exactly in `@student.uitm.edu.my`; email/password
+staff and administrator workflows are not changed. The onboarding RPC validates
+the Google identity again, derives the Student ID from the email local part, and
+atomically links an existing unlinked student row or creates one. Unique
+constraints on both `students.matrix_no` and `students.auth_user_id`, plus the RPC
+lock/checks, prevent duplicate profiles.
+
+Redeploy `student-login` once to retire the former Student ID/password endpoint:
+
+```sh
 npx supabase functions deploy student-login --no-verify-jwt --project-ref YOUR_PROJECT_REF
 ```
 
-The web and Expo **Create Account** forms call Supabase Auth `signUp()` directly.
-The Expo form uses the `cams-student-registration` source and accepts only
-`@student.uitm.edu.my`; the staff portal uses `cams-lecturer-registration` and
-accepts only `@uitm.edu.my`. An Auth trigger verifies that the source and exact
-domain agree without trusting frontend role metadata, rejects the retired shared
-registration source, and creates the linked application record inactive. A second
-trigger activates that record only when Auth records email confirmation. Passwords
-remain exclusively in Supabase Auth. Lecturer profiles do not receive a programme;
-student programme options come from active `programmes` rows.
+The retired endpoint returns HTTP 410 and never issues tokens. It remains as a
+small compatibility response so old clients fail clearly instead of reaching the
+former password flow.
+
+For temporary demonstrations while Google OAuth is being configured, the Expo
+client can reveal a hidden demo action only when `EXPO_PUBLIC_DEMO_MODE=true`.
+The corresponding `student-demo-login` Edge Function also fails closed unless
+its server-side `DEMO_LOGIN_ENABLED=true` secret is present. Store
+`DEMO_STUDENT_EMAIL` and `DEMO_STUDENT_PASSWORD` only in Supabase Edge Function
+secrets, never in Expo variables or source control. Deploy with:
+
+```sh
+npx supabase functions deploy student-demo-login --no-verify-jwt --project-ref YOUR_PROJECT_REF
+```
+
+Disable both flags, or delete the Edge Function, before production.
+
+The staff portal remains the only public lecturer registration entry point. It
+uses `cams-lecturer-registration`, accepts only `@uitm.edu.my`, and still requires
+Supabase email confirmation. Lecturer profiles do not receive a programme;
+student onboarding programme options come from active `programmes` rows.
 
 In **Authentication > Providers > Email**, enable **Confirm email**. In
 **Authentication > URL Configuration**, allow the deployed web origin and
 `cmms://auth/callback` as a redirect URL. Keep public Admin signup unavailable;
 create Admin accounts only through the existing administrator bootstrap workflow.
-For prototype delivery, Supabase's built-in sender is sufficient but is rate-limited;
-configure custom SMTP later for production volume.
-
-The Expo resend action calls `supabase.auth.resend({ type: 'signup', ... })` with
-the same `cmms://auth/callback` redirect used by signup. Supabase intentionally
-returns a successful empty response for both unknown and already-confirmed email
-addresses, so the public UI uses non-enumerating confirmation copy unless Auth
-returns an explicit delivery, rate-limit, or already-confirmed error.
+For staff prototype email delivery, Supabase's built-in sender is sufficient but
+is rate-limited; configure custom SMTP later for production volume.
 
 
 ## Manual reminder emails

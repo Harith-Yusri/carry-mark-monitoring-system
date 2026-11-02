@@ -1,17 +1,25 @@
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { clearStoredAuth, hasExpiredPersistedSession, recordAuthActivity, setSessionPersistence } from "@/lib/authStorage";
 import { configurationError, supabase } from "@/lib/supabase";
+import { logOAuthError } from "@/lib/oauthDiagnostics";
 import { StudentPortalPayload } from "@/types/portal";
 
+WebBrowser.maybeCompleteAuthSession();
+
+const oauthCompletions = new Map<string, Promise<void>>();
+
 export type RegistrationProgramme = { id: string; code: string; name: string };
-export const MOBILE_AUTH_REDIRECT_URI = "cmms://auth/callback";
-export type RegistrationInput = {
-  fullName: string;
-  identifier: string;
+export const demoModeEnabled = process.env.EXPO_PUBLIC_DEMO_MODE === "true";
+export type StudentOnboardingState = {
+  auth_user_id: string;
   email: string;
-  password: string;
-  confirmPassword: string;
-  programmeId?: string;
-  currentSemester?: number;
+  student_id: string;
+  full_name: string;
+  programme_id: string | null;
+  current_semester: number | null;
+  profile_complete: boolean;
 };
 
 export function isStudentEmail(value: string) {
@@ -24,127 +32,27 @@ function requireConfiguration() {
   if (configurationError) throw new Error(configurationError);
 }
 
-async function requireSession() {
+async function requireSession(trace?: <T>(stage: string, operation: () => Promise<T>) => Promise<T>) {
   requireConfiguration();
-  if (await hasExpiredPersistedSession()) {
+  const run = trace ?? (async <T>(_stage: string, operation: () => Promise<T>) => operation());
+  if (await run("session inactivity check", hasExpiredPersistedSession)) {
     await supabase.auth.signOut({ scope: "local" });
     await clearStoredAuth();
     throw new Error("Your session expired after 7 days of inactivity.");
   }
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await run("Supabase Auth getSession", () => supabase.auth.getSession());
   if (error) throw error;
   if (!data.session) throw new Error("Your session has expired.");
 }
 
-export async function signIn(studentId: string, password: string, keepSignedIn: boolean) {
-  requireConfiguration();
-  await setSessionPersistence(keepSignedIn);
-  const { data: tokens, error } = await supabase.functions.invoke("student-login", {
-    body: { studentId: studentId.trim(), password },
-  });
-  if (error) {
-    const details = error.context instanceof Response ? await error.context.json().catch(() => null) : null;
-    await supabase.auth.signOut({ scope: "local" });
-    await clearStoredAuth();
-    throw new Error(details?.error ?? "Unable to sign in. Please try again.");
-  }
-  if (!tokens?.access_token || !tokens?.refresh_token) throw new Error("Sign in failed.");
-  const { error: sessionError } = await supabase.auth.setSession(tokens);
-  if (sessionError) throw sessionError;
-  await recordAuthActivity();
+export function getMobileAuthRedirectUri() {
+  const configuredScheme = Constants.expoConfig?.scheme;
+  const scheme = Array.isArray(configuredScheme) ? configuredScheme[0] : configuredScheme;
+  if (!scheme) throw new Error("The CAMS mobile authentication scheme is not configured.");
+  return Linking.createURL("auth/callback", { scheme });
 }
 
-export async function loadRegistrationProgrammes() {
-  requireConfiguration();
-  const { data, error } = await supabase.rpc("get_registration_programmes");
-  if (error) throw error;
-  return (data ?? []) as RegistrationProgramme[];
-}
-
-function validateRegistration(input: RegistrationInput) {
-  const fullName = input.fullName.trim();
-  const identifier = input.identifier.trim().toUpperCase();
-  const email = input.email.trim().toLowerCase();
-  if (fullName.length < 2 || fullName.length > 150) throw new Error("Enter your full name.");
-  if (!isStudentEmail(email)) throw new Error("Please use your UiTM student email.");
-  if (!/^[A-Z0-9._-]{2,100}$/.test(identifier)) throw new Error("Enter a valid Student ID.");
-  if (input.password.length < 8) throw new Error("Password must contain at least 8 characters.");
-  if (input.password !== input.confirmPassword) throw new Error("Passwords do not match.");
-  if (!input.programmeId) throw new Error("Select your programme.");
-  if (!Number.isInteger(input.currentSemester) || input.currentSemester! < 1 || input.currentSemester! > 12) throw new Error("Current semester must be between 1 and 12.");
-  return { fullName, identifier, email };
-}
-
-export async function registerAccount(input: RegistrationInput) {
-  requireConfiguration();
-  const values = validateRegistration(input);
-  const metadata: Record<string, string | number> = {
-    registration_source: "cams-student-registration",
-    full_name: values.fullName,
-    identifier: values.identifier,
-    programme_id: input.programmeId!,
-    current_semester: input.currentSemester!,
-  };
-  const { data, error } = await supabase.auth.signUp({
-    email: values.email,
-    password: input.password,
-    options: { data: metadata, emailRedirectTo: MOBILE_AUTH_REDIRECT_URI },
-  });
-  if (error) {
-    if (/UiTM student email|student registration requires/i.test(error.message)) throw new Error("Please use your UiTM student email.");
-    if (/already registered|already been registered|user already exists/i.test(error.message)) throw new Error("That email or Student ID is already registered.");
-    if (/database error saving new user|unexpected_failure/i.test(error.message)) throw new Error("That email or Student ID may already be registered. Check your details or contact an administrator.");
-    if (/rate limit|too many requests/i.test(error.message)) throw new Error("Too many signup emails were requested. Please wait and try again.");
-    if (/password/i.test(error.message)) throw new Error(error.message);
-    throw new Error("Unable to create your account. Please check your details and try again.");
-  }
-  if (data.user && data.user.identities?.length === 0) throw new Error("That email or Student ID is already registered.");
-  if (data.session) {
-    await supabase.auth.signOut({ scope: "local" });
-    throw new Error("Email confirmation is not enabled for this project. Ask an administrator to enable it before registering.");
-  }
-}
-
-export async function resendSignupConfirmation(emailValue: string) {
-  requireConfiguration();
-  const email = emailValue.trim().toLowerCase();
-  if (!isStudentEmail(email)) {
-    throw new Error("Please use your UiTM student email.");
-  }
-  try {
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email,
-      options: { emailRedirectTo: MOBILE_AUTH_REDIRECT_URI },
-    });
-    if (error) throw error;
-  } catch (reason) {
-    if (__DEV__) console.error("[Signup confirmation resend]", reason);
-    const authError = reason as { message?: string; code?: string; status?: number };
-    const details = `${authError.code ?? ""} ${authError.message ?? ""}`;
-    if (/already.{0,20}(confirmed|verified)|email.{0,20}(confirmed|verified)/i.test(details)) {
-      throw new Error("This email is already verified. Please sign in.");
-    }
-    if (authError.status === 429 || /rate.?limit|too many requests|over_email_send_rate_limit/i.test(details)) {
-      throw new Error("Too many verification emails were requested. Please wait before trying again.");
-    }
-    if (/smtp|email provider|sending confirmation email|email hook|mailer/i.test(details)) {
-      throw new Error("Supabase could not deliver the verification email. Please try again later or contact an administrator.");
-    }
-    if (/redirect|not allowed/i.test(details)) {
-      throw new Error("The CAMS verification redirect is not configured correctly. Please contact an administrator.");
-    }
-    throw new Error("Unable to request a new verification email. Please try again.");
-  }
-
-  // Supabase deliberately returns the same successful response for an unknown
-  // address and an already-confirmed account. Keep this copy non-enumerating.
-  return {
-    message: "If this email has a pending CAMS signup, a new verification email has been requested. If it is already verified, please sign in.",
-  };
-}
-
-function authCallbackParams(url: string) {
+function callbackParams(url: string) {
   const values = new URLSearchParams();
   const queryStart = url.indexOf("?");
   const hashStart = url.indexOf("#");
@@ -158,34 +66,190 @@ function authCallbackParams(url: string) {
   return values;
 }
 
-export async function completeEmailVerification(url: string): Promise<"student"> {
-  requireConfiguration();
-  const params = authCallbackParams(url);
-  const errorCode = params.get("error_code") ?? params.get("error");
-  if (errorCode) {
-    if (errorCode === "otp_expired" || /expired/i.test(params.get("error_description") ?? "")) {
-      throw new Error("This verification link has expired. Request a fresh email below.");
-    }
-    throw new Error("This verification link is invalid or has already been used. Request a fresh email below.");
-  }
-
+function oauthCallback(url: string) {
+  const params = callbackParams(url);
   const code = params.get("code");
   const accessToken = params.get("access_token");
   const refreshToken = params.get("refresh_token");
+  {
+    let scheme: string | null = null;
+    let path: string | null = null;
+    try {
+      const parsed = new URL(url);
+      scheme = parsed.protocol.replace(":", "");
+      path = `${parsed.hostname}${parsed.pathname}`;
+    } catch { /* The parameter-presence diagnostics below remain useful. */ }
+    console.info("[CAMS OAuth] callback", {
+      scheme,
+      path,
+      hasCode: Boolean(code),
+      hasAccessToken: Boolean(accessToken),
+      hasRefreshToken: Boolean(refreshToken),
+      hasError: params.has("error") || params.has("error_description"),
+    });
+  }
+  return { params, code, accessToken, refreshToken };
+}
+
+async function establishGoogleSession(url: string) {
+  requireConfiguration();
+  const { params, code, accessToken, refreshToken } = oauthCallback(url);
+  const callbackError = params.get("error_description") ?? params.get("error");
+  if (callbackError) {
+    logOAuthError("Provider returned an OAuth callback error", {
+      code: params.get("error_code") ?? params.get("error"), message: callbackError,
+    });
+    if (/UiTM student Google account/i.test(callbackError)) {
+      throw new Error("Please sign in using your UiTM student Google account.");
+    }
+    throw new Error(callbackError);
+  }
+
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) throw error;
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      logOAuthError("PKCE code exchange failed", error);
+      throw error;
+    }
+    if (!data.session) throw new Error("Supabase did not return a session after the Google code exchange.");
   } else if (accessToken && refreshToken) {
-    const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-    if (error) throw error;
+    const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    if (error) {
+      logOAuthError("Implicit token session setup failed", error);
+      throw error;
+    }
+    if (!data.session) throw new Error("Supabase did not establish a session from the Google tokens.");
   } else {
-    throw new Error("The verification link is incomplete. Request a fresh email below.");
+    throw new Error("The Google sign-in response is incomplete. Please try again.");
   }
 
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user?.email) throw error ?? new Error("The verified account could not be loaded.");
-  if (!isStudentEmail(data.user.email)) throw new Error("Please use your UiTM student email.");
-  return "student";
+  if (error || !data.user?.email) {
+    if (error) logOAuthError("Authenticated Google user lookup failed", error);
+    throw error ?? new Error("The Google account could not be loaded.");
+  }
+  const providers = data.user.app_metadata?.providers as string[] | undefined;
+  const provider = data.user.app_metadata?.provider as string | undefined;
+  if (!isStudentEmail(data.user.email) || (provider !== "google" && !providers?.includes("google"))) {
+    await signOut();
+    throw new Error("Please sign in using your UiTM student Google account.");
+  }
+  await recordAuthActivity();
+}
+
+export function completeGoogleOAuth(url: string) {
+  const params = callbackParams(url);
+  const code = params.get("code");
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  const callbackKey = code ? `code:${code}` : accessToken && refreshToken ? `tokens:${accessToken}:${refreshToken}` : `url:${url}`;
+  const existing = oauthCompletions.get(callbackKey);
+  if (existing) {
+    if (__DEV__) console.info("[CAMS OAuth] duplicate callback ignored");
+    return existing;
+  }
+  const completion = establishGoogleSession(url).catch(reason => {
+    logOAuthError("callback processing failed", reason);
+    throw reason;
+  });
+  oauthCompletions.set(callbackKey, completion);
+  return completion;
+}
+
+export async function signInWithGoogle() {
+  requireConfiguration();
+  await setSessionPersistence(true);
+  const redirectTo = getMobileAuthRedirectUri();
+  console.info("[CAMS OAuth] redirectTo", redirectTo);
+  console.info("[CAMS OAuth] configuration", {
+    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL?.trim(),
+    scheme: Constants.expoConfig?.scheme,
+    executionEnvironment: Constants.executionEnvironment,
+    development: __DEV__,
+  });
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo,
+      skipBrowserRedirect: true,
+      queryParams: { hd: "student.uitm.edu.my", prompt: "select_account" },
+    },
+  });
+  if (error) {
+    logOAuthError("Authorize URL creation failed", error);
+    if (/UiTM student Google account/i.test(error.message)) {
+      throw new Error("Please sign in using your UiTM student Google account.");
+    }
+    throw error;
+  }
+  if (!data.url) throw new Error("Google sign-in could not be started.");
+  {
+    const authorizeUrl = new URL(data.url);
+    console.info("[CAMS OAuth] authorize", {
+      endpoint: `${authorizeUrl.origin}${authorizeUrl.pathname}`,
+      provider: authorizeUrl.searchParams.get("provider"),
+      redirectTo: authorizeUrl.searchParams.get("redirect_to"),
+    });
+  }
+
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+  console.info("[CAMS OAuth] browser result", { type: result.type });
+  if (result.type === "cancel" || result.type === "dismiss") return false;
+  if (result.type !== "success") throw new Error("Google sign-in did not complete. Please try again.");
+  await completeGoogleOAuth(result.url);
+  return true;
+}
+
+export async function signInAsDemoStudent() {
+  requireConfiguration();
+  if (!demoModeEnabled) throw new Error("Demo login is disabled.");
+  await setSessionPersistence(true);
+
+  const { data, error } = await supabase.functions.invoke("student-demo-login", { body: {} });
+  if (error) {
+    const details = error.context instanceof Response
+      ? await error.context.json().catch(() => null) as { error?: string } | null
+      : null;
+    throw new Error(details?.error ?? "Demo login is unavailable. Please try again.");
+  }
+  if (!data?.access_token || !data?.refresh_token) {
+    throw new Error("Demo login did not return a valid session.");
+  }
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+  });
+  if (sessionError) throw sessionError;
+  await recordAuthActivity();
+}
+
+export async function loadRegistrationProgrammes() {
+  requireConfiguration();
+  const { data, error } = await supabase.rpc("get_registration_programmes");
+  if (error) throw error;
+  return (data ?? []) as RegistrationProgramme[];
+}
+
+export async function loadStudentBootstrap() {
+  requireConfiguration();
+  const { data, error } = await supabase.rpc("get_my_student_bootstrap");
+  if (error) throw error;
+  const bootstrap = data as unknown as {
+    onboarding: StudentOnboardingState | null;
+    portal: StudentPortalPayload | null;
+  };
+  if (!bootstrap?.onboarding) throw new Error("Unable to load your CAMS student profile.");
+  return bootstrap;
+}
+
+export async function completeStudentProfile(programmeId: string, currentSemester: number) {
+  requireConfiguration();
+  const { error } = await supabase.rpc("complete_my_student_profile", {
+    p_programme_id: programmeId,
+    p_current_semester: currentSemester,
+  });
+  if (error) throw error;
 }
 
 export async function signOut() {
@@ -196,11 +260,42 @@ export async function signOut() {
   }
 }
 
-export async function loadPortal(): Promise<StudentPortalPayload> {
-  await requireSession();
-  const { data, error } = await supabase.rpc("get_my_mobile_portal");
+export async function loadPortal(signal?: AbortSignal): Promise<StudentPortalPayload> {
+  const started = Date.now();
+  const trace = async <T>(stage: string, operation: () => Promise<T>): Promise<T> => {
+    if (signal?.aborted) throw new Error(`Student portal cancelled before ${stage}`);
+    if (__DEV__) console.info("[CAMS Portal] start", { stage, elapsedMs: Date.now() - started });
+    try {
+      const result = await operation();
+      if (signal?.aborted) throw new Error(`Student portal cancelled during ${stage}`);
+      if (__DEV__) console.info("[CAMS Portal] resolved", { stage, elapsedMs: Date.now() - started });
+      return result;
+    } catch (reason) {
+      if (__DEV__) console.warn("[CAMS Portal] rejected", {
+        stage, elapsedMs: Date.now() - started,
+        message: reason instanceof Error ? reason.message : String(reason),
+      });
+      throw reason;
+    }
+  };
+  await requireSession(trace);
+  const { data, error } = await trace("RPC get_my_mobile_portal", async () => {
+    const request = supabase.rpc("get_my_mobile_portal");
+    const response = await (signal ? request.abortSignal(signal) : request);
+    if (response.error) throw response.error;
+    return response;
+  });
   if (error) throw error;
-  await recordAuthActivity();
+  if (__DEV__) console.info("[CAMS Portal] payload", {
+    elapsedMs: Date.now() - started,
+    subjects: (data as StudentPortalPayload)?.subjects?.map(subject => ({
+      code: subject.code,
+      finalised: subject.is_finalised,
+      hasReleasedMarks: subject.is_finalised && subject.carry_mark !== null,
+    })),
+  });
+  // Activity storage must not hold a successfully loaded academic payload back.
+  void trace("record auth activity", recordAuthActivity).catch(() => undefined);
   return data as StudentPortalPayload;
 }
 
@@ -210,6 +305,35 @@ export async function setNotificationAlertsEnabled(enabled: boolean) {
   if (error) throw error;
   await recordAuthActivity();
   return data;
+}
+
+export async function registerPushDevice(installationId: string, expoPushToken: string, platform: "android" | "ios") {
+  await requireSession();
+  const { data, error } = await supabase.rpc("register_my_push_device", {
+    p_installation_id: installationId,
+    p_expo_push_token: expoPushToken,
+    p_platform: platform,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function unregisterPushDevice(installationId: string) {
+  await requireSession();
+  const { error } = await supabase.rpc("unregister_my_push_device", { p_installation_id: installationId });
+  if (error) throw error;
+}
+
+export async function sendPushTest() {
+  await requireSession();
+  const { data, error } = await supabase.functions.invoke("send-student-push", { body: { action: "test" } });
+  if (error) {
+    const details = error.context instanceof Response
+      ? await error.context.json().catch(() => null) as { error?: string } | null
+      : null;
+    throw new Error(details?.error ?? "Unable to send the test notification.");
+  }
+  return data as { sent?: number; skipped?: number };
 }
 
 export async function joinClass(code: string) {
@@ -229,4 +353,12 @@ export async function submitMarkDispute(offeringId: string, assessment: string, 
   });
   if (error) throw error;
   await recordAuthActivity();
+}
+
+export async function loadAssignedLecturerWhatsApp(offeringId: string) {
+  await requireSession();
+  const { data, error } = await supabase.rpc("get_my_lecturer_whatsapp", { target_offering: offeringId });
+  if (error) throw error;
+  await recordAuthActivity();
+  return typeof data === "string" ? data : null;
 }

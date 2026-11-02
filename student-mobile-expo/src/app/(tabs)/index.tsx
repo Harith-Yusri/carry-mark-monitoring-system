@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { Bell, BellRing, BookOpen, Plus, X } from "lucide-react-native";
 import { useState } from "react";
-import { FlatList, Modal, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ButtonText, Card, ErrorBanner, Field, Heading, PrimaryButton, Screen, typography } from "@/components/ui";
 import { SubjectCard } from "@/components/SubjectCard";
 import { useStudent } from "@/context/StudentContext";
@@ -10,12 +11,17 @@ import { fonts } from "@/theme/fonts";
 
 export default function DashboardScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { student, subjects, notifications, loading, actionLoading, error, refresh, joinClass, clearError } = useStudent();
   const [joinOpen, setJoinOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [code, setCode] = useState("");
+  const closeJoin = () => {
+    Keyboard.dismiss();
+    setJoinOpen(false);
+  };
   const submitJoin = async () => {
-    if (await joinClass(code)) { setCode(""); setJoinOpen(false); }
+    if (await joinClass(code)) { setCode(""); closeJoin(); }
   };
 
   return <Screen>
@@ -47,13 +53,23 @@ export default function DashboardScreen() {
       ListEmptyComponent={<Card style={styles.empty}><View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}><BookOpen size={26} color={colors.accent} /></View><Text style={[styles.emptyTitle, { color: colors.text }]}>Your subjects will appear here</Text><Text style={[typography.body, { color: colors.muted, textAlign: "center" }]}>Use Join Class when your lecturer shares an invitation code for the current semester.</Text></Card>}
     />
 
-    <Modal visible={joinOpen} transparent animationType="slide" onRequestClose={() => setJoinOpen(false)}>
-      <Pressable style={styles.overlay} onPress={() => setJoinOpen(false)}><Pressable style={[styles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => undefined}>
-        <View style={styles.modalHeader}><View style={{ flex: 1, gap: 4 }}><Heading size={24}>Join a class</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>Enter the invitation code provided by your lecturer.</Text></View><Pressable onPress={() => setJoinOpen(false)} accessibilityLabel="Close join class"><X size={22} color={colors.muted} /></Pressable></View>
-        <Field label="Class code" value={code} onChangeText={value => { setCode(value.toUpperCase()); clearError(); }} autoCapitalize="characters" placeholder="ABC123" />
-        <ErrorBanner message={error} />
-        <PrimaryButton onPress={() => void submitJoin()} disabled={!code.trim() || actionLoading}><Plus size={18} color={colors.white} /><ButtonText>{actionLoading ? "Joining…" : "Join Class"}</ButtonText></PrimaryButton>
-      </Pressable></Pressable>
+    <Modal visible={joinOpen} transparent animationType="slide" onRequestClose={closeJoin}>
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <ScrollView
+          style={styles.joinScroll}
+          contentContainerStyle={[styles.joinScrollContent, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+          <Pressable style={styles.joinBackdrop} onPress={closeJoin} accessibilityRole="button" accessibilityLabel="Dismiss join class" />
+          <View style={[styles.modal, { backgroundColor: colors.surface, borderColor: colors.border, paddingBottom: Math.max(30, insets.bottom + 14) }]}>
+            <View style={styles.modalHeader}><View style={{ flex: 1, gap: 4 }}><Heading size={24}>Join a class</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>Enter the invitation code provided by your lecturer.</Text></View><Pressable onPress={closeJoin} accessibilityLabel="Close join class"><X size={22} color={colors.muted} /></Pressable></View>
+            <Field label="Class code" value={code} onChangeText={value => { setCode(value.toUpperCase()); clearError(); }} autoCapitalize="characters" placeholder="ABC123" />
+            <ErrorBanner message={error} />
+            <PrimaryButton onPress={() => void submitJoin()} disabled={!code.trim() || actionLoading}><Plus size={18} color={colors.white} /><ButtonText>{actionLoading ? "Joining…" : "Join Class"}</ButtonText></PrimaryButton>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
 
     <Modal visible={notificationsOpen} transparent animationType="slide" onRequestClose={() => setNotificationsOpen(false)}>
@@ -81,6 +97,9 @@ const styles = StyleSheet.create({
   emptyIcon: { width: 54, height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   emptyTitle: { fontFamily: fonts.display, fontWeight: "700", fontSize: 18 },
   overlay: { flex: 1, backgroundColor: "#050711B8", justifyContent: "flex-end" },
+  joinScroll: { flex: 1 },
+  joinScrollContent: { flexGrow: 1 },
+  joinBackdrop: { flexGrow: 1, minHeight: 18 },
   modal: { width: "100%", maxWidth: 560, alignSelf: "center", borderWidth: StyleSheet.hairlineWidth, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 30, gap: 18 },
   modalHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 14 },
   notification: { flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 13, borderRadius: 14 },

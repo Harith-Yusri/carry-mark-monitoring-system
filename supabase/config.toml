@@ -1,6 +1,10 @@
 [auth]
 additional_redirect_urls = ["cmms://auth/callback"]
 
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/hook_restrict_student_google_domain"
+
 [functions.send-reminder]
 # The handler validates the user's token with Auth and checks the active admin role.
 verify_jwt = false
@@ -10,5 +14,14 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.student-login]
-# Public password sign-in; the handler resolves Student ID server-side.
+# Retired Student ID/password endpoint; returns HTTP 410 without tokens.
+verify_jwt = false
+
+[functions.student-demo-login]
+# Development-only login. The handler requires its own server-side enable flag.
+verify_jwt = false
+
+[functions.send-student-push]
+# Accepts either a verified student bearer token for the rate-limited self-test,
+# or the dedicated server-only secret used by the database push trigger.
 verify_jwt = false

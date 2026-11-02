@@ -1,14 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useMemo, useState } from "react";
 import { Archive, LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { AdminDashboard } from "./AdminDashboard";
-import { LecturerDirectory } from "./LecturerDirectory";
-import { ComplianceReports } from "./ComplianceReports";
-import { AdminSettings } from "./AdminSettings";
-import { SubmissionMonitor } from "./SubmissionMonitor";
-import { SemesterHistory } from "./SessionHistory";
 import { AdminTab } from "../../types";
 import { requiresSubmissionAction, submissionAllocations, useAdminRecords } from "../../hooks/useAdminRecords";
+
+const AdminDashboard = lazy(() => import("./AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
+const LecturerDirectory = lazy(() => import("./LecturerDirectory").then((module) => ({ default: module.LecturerDirectory })));
+const ComplianceReports = lazy(() => import("./ComplianceReports").then((module) => ({ default: module.ComplianceReports })));
+const AdminSettings = lazy(() => import("./AdminSettings").then((module) => ({ default: module.AdminSettings })));
+const SubmissionMonitor = lazy(() => import("./SubmissionMonitor").then((module) => ({ default: module.SubmissionMonitor })));
+const SemesterHistory = lazy(() => import("./SessionHistory").then((module) => ({ default: module.SemesterHistory })));
 
 export function AdminWebPortal() {
   const C = useColors();
@@ -19,15 +20,11 @@ export function AdminWebPortal() {
     [records],
   );
 
-  useEffect(() => {
-    if (activeTab === "submissions") void reload();
-  }, [activeTab, reload]);
-
   return (
     <div className="admin-portal">
       {/* Admin Sidebar Navigation */}
       <div className="admin-sidebar">
-        <nav aria-label="Faculty administration" style={{ background: C.surface, borderTop: `3px solid ${C.maroon}`, borderBottom: `1px solid ${C.border}`, padding: "14px 10px 12px" }}>
+        <nav aria-label="Faculty administration" style={{ background: C.chrome, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.maroon}`, padding: "14px 10px 12px" }}>
           <div style={{ padding: "0 8px 12px", borderBottom: `1px solid ${C.border}`, marginBottom: "10px" }}>
             <div>
               <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text }}>Faculty Administration</div>
@@ -97,12 +94,14 @@ export function AdminWebPortal() {
 
       {/* Main Content Pane */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {activeTab === "overview" && <AdminDashboard records={records} context={context} loading={loading} error={error} />}
-        {activeTab === "submissions" && <SubmissionMonitor records={records} context={context} loading={loading} error={error} />}
-        {activeTab === "directory" && <LecturerDirectory records={records} context={context} loading={loading} error={error} />}
-        {activeTab === "compliance" && <ComplianceReports records={records} context={context} loading={loading} error={error} />}
-        {activeTab === "history" && <SemesterHistory />}
-        {activeTab === "settings" && <AdminSettings onActiveSemesterChanged={reload} />}
+        <Suspense fallback={<div role="status" aria-live="polite" style={{ color: C.textMuted, padding: "24px" }}>Loading section…</div>}>
+          {activeTab === "overview" && <AdminDashboard records={records} context={context} loading={loading} error={error} />}
+          {activeTab === "submissions" && <SubmissionMonitor records={records} context={context} loading={loading} error={error} />}
+          {activeTab === "directory" && <LecturerDirectory records={records} context={context} loading={loading} error={error} />}
+          {activeTab === "compliance" && <ComplianceReports records={records} context={context} loading={loading} error={error} />}
+          {activeTab === "history" && <SemesterHistory />}
+          {activeTab === "settings" && <AdminSettings onActiveSemesterChanged={reload} />}
+        </Suspense>
       </div>
     </div>
   );

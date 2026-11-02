@@ -50,7 +50,7 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
           value={programmeCode}
           onChange={event => setProgrammeCode(event.target.value)}
           disabled={loading}
-          style={{ width: "100%", minHeight: "42px", boxSizing: "border-box", padding: "9px 12px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none", cursor: loading ? "default" : "pointer" }}
+          style={{ width: "100%", minHeight: "42px", boxSizing: "border-box", padding: "9px 12px", background: C.input, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none", cursor: loading ? "default" : "pointer" }}
         >
           {programmeOptions.map(item => (
             <option key={item.code || "all"} value={item.code}>
@@ -95,8 +95,8 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
                 <tr key={allocation.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                   <td style={{ padding: "13px 12px", fontFamily: C.mono, color: C.textMuted }}>{allocation.staffId}</td>
                   <td style={{ padding: "13px 12px", fontWeight: 600, color: C.text }}>{allocation.lecturerName}</td>
-                  <td style={{ padding: "13px 12px", color: C.textSub }}><span style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700 }}>{allocation.programmeCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{allocation.programmeName}</span></td>
-                  <td style={{ padding: "13px 12px", color: C.textSub }}><span style={{ fontFamily: C.mono, color: C.maroon }}>{allocation.subjectCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{allocation.subjectName}</span></td>
+                  <td style={{ padding: "13px 12px", color: C.textSub }}><span style={{ color: C.code, fontFamily: C.mono, fontWeight: 700 }}>{allocation.programmeCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}>{allocation.programmeName}</span></td>
+                  <td style={{ padding: "13px 12px", color: C.textSub }}><span style={{ fontFamily: C.mono, color: C.code, fontWeight: 600 }}>{allocation.subjectCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}>{allocation.subjectName}</span></td>
                   <td style={{ padding: "13px 12px", color: C.text, fontWeight: 600 }}>{allocation.classLabel}</td>
                   <td style={{ padding: "13px 12px" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, padding: "4px 7px", borderRadius: "4px", background: finalised ? C.greenLight : overdue ? C.redLight : C.amberLight, color: finalised ? C.green : overdue ? C.red : C.amber }}>

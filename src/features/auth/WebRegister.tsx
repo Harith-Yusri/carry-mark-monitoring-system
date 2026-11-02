@@ -47,7 +47,7 @@ export function WebRegister() {
     display: "block", fontFamily: C.mono, fontSize: "11px", letterSpacing: ".06em",
     fontWeight: 600, color: C.textMuted, marginBottom: "7px",
   };
-  const inputStyle = fieldStyle(C.bg, C.borderMid, C.text);
+  const inputStyle = fieldStyle(C.input, C.borderMid, C.text);
 
   return (
     <div className="login-shell" style={{ fontFamily: C.sans, background: C.surface, color: C.text }}>

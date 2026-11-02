@@ -1,26 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Check, CheckCircle, ChevronLeft, ChevronRight, Copy, KeyRound, MoreVertical, Plus, RefreshCw, Users, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { useAuth } from "../../context/AuthContext";
-import { AssessmentRecord, loadOfferingWeightage, createSection, deleteSection, finaliseSection, listProgrammes, loadOfferingData, rotateJoinCode, SectionRecord, updateSection, upsertMark } from "../../services/carryMarkApi";
+import { AssessmentRecord, ClassSectionSummary, createSection, deleteSection, finaliseSection, listProgrammes, rotateJoinCode, SectionRecord, updateSection, upsertMarks } from "../../services/carryMarkApi";
 import { ProgrammeOption } from "../../types";
 import { classSelectorActionStyle, classSelectorCardStyle, classSelectorGridStyle, classSelectorIconStyle, classSelectorMetaStyle, classSelectorTitleStyle } from "./classSelectorStyles";
 import { userError } from "../../utils/errors";
+import { useSubjectClassData } from "../../hooks/useSubjectClassData";
 
 type StudentRecord = SectionRecord["students"][number] & { id: string };
 type ClassSection = Omit<SectionRecord, "students"> & { students: StudentRecord[] };
 const blankForm = { label: "", capacity: "", programmeId: "" };
 type ClassForm = typeof blankForm;
 
-export function MarksEntryTab({ offeringId, offeringProgrammeId, subjectCode }: { offeringId: string; offeringProgrammeId: string; subjectCode: string }) {
+export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, subjectCode }: { offeringId: string; offeringIds?: string[]; offeringProgrammeId: string; subjectCode: string }) {
   const C = useColors();
   const { user } = useAuth();
-  const [sections, setSections] = useState<ClassSection[]>([]);
-  const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
-  const [carryMax, setCarryMax] = useState<number | null>(null);
-  const [eligibleThreshold, setEligibleThreshold] = useState<number | null>(null);
+  const { sections, selectedId, setSelectedId, selected: selectedRecord, assessments, carryMax, eligibleThreshold,
+    loading, detailLoading, error: loadError, reload, updateDetailedSections } = useSubjectClassData(offeringId, offeringIds);
+  const selected = selectedRecord ? { ...selectedRecord, students: selectedRecord.students.map(student => ({ ...student, id: student.enrolmentId })) } : null;
   const [programmes, setProgrammes] = useState<ProgrammeOption[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [modal, setModal] = useState<"add" | "edit" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
@@ -28,51 +27,75 @@ export function MarksEntryTab({ offeringId, offeringProgrammeId, subjectCode }: 
   const [synced, setSynced] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [rotatingId, setRotatingId] = useState<string | null>(null);
-  const reload = async () => {
-    const [data, settings, programmeOptions] = await Promise.all([loadOfferingData(offeringId), loadOfferingWeightage(offeringId), listProgrammes()]);
-    setAssessments(data.assessments);
-    setCarryMax(settings.carryMax); setEligibleThreshold(settings.eligibleThreshold);
-    setProgrammes(programmeOptions);
-    setSections(data.sections.map(section => ({ ...section, students: section.students.map(student => ({ ...student, id: student.enrolmentId })) })));
-  };
-  useEffect(() => { reload().catch(console.error); }, [offeringId]);
-  const selected = sections.find(section => section.id === selectedId) ?? null;
+  const pendingMarks = useRef(new Map<string, { enrolmentId: string; assessmentId: string; score: number; enteredBy: string }>());
+  const saveTimer = useRef<number | null>(null);
+  useEffect(() => {
+    return () => { if (saveTimer.current !== null) window.clearTimeout(saveTimer.current); };
+  }, [offeringId]);
+  const [programmeError, setProgrammeError] = useState("");
+  useEffect(() => {
+    if (!modal) return;
+    let active = true;
+    setProgrammeError("");
+    listProgrammes().then(rows => { if (active) setProgrammes(rows); })
+      .catch(reason => { if (active) setProgrammeError(userError(reason, "Unable to load programmes.")); });
+    return () => { active = false; };
+  }, [modal]);
   const formValid = form.label.trim().length > 0 && Number(form.capacity) > 0 && programmes.some(programme => programme.id === form.programmeId);
 
   const openAdd = () => { setForm({ ...blankForm, programmeId: offeringProgrammeId }); setEditingId(null); setModal("add"); };
-  const openEdit = (section: ClassSection) => { setForm({ label: section.label, capacity: String(section.capacity), programmeId: section.programmeId }); setEditingId(section.id); setMenuId(null); setModal("edit"); };
+  const openEdit = (section: ClassSectionSummary) => { setForm({ label: section.label, capacity: String(section.capacity), programmeId: section.programmeId }); setEditingId(section.id); setMenuId(null); setModal("edit"); };
   const closeModal = () => { setModal(null); setEditingId(null); setForm(blankForm); };
   const saveSection = async () => {
     if (!formValid) return;
     const values = { label: form.label.trim(), capacity: Number(form.capacity), programmeId: form.programmeId };
-    if (modal === "edit" && editingId) await updateSection(editingId, values); else await createSection(offeringId, values);
+    if (modal === "edit" && editingId) await updateSection(editingId, values); else {
+      const matching = sections.find(section => section.programmeId === values.programmeId);
+      await createSection(matching?.offeringId ?? offeringId, values);
+    }
     await reload(); closeModal();
   };
-  const removeSection = async (section: ClassSection) => { setMenuId(null); if (window.confirm(`Remove “${section.label}”?\n\nThe class section and its mark-entry records will be deleted. This cannot be undone.`)) { await deleteSection(section.id); await reload(); if (selectedId === section.id) setSelectedId(null); } };
-  const updateMark = async (studentId: string, assessmentId: string, rawValue: string) => {
+  const removeSection = async (section: ClassSectionSummary) => { setMenuId(null); if (window.confirm(`Remove “${section.label}”?\n\nThe class section and its mark-entry records will be deleted. This cannot be undone.`)) { await deleteSection(section.id); await reload(); if (selectedId === section.id) setSelectedId(null); } };
+  const flushPendingMarks = async () => {
+    if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    const rows = [...pendingMarks.current.values()];
+    pendingMarks.current.clear();
+    if (!rows.length) return;
+    try { await upsertMarks(rows); }
+    catch (reason) {
+      for (const row of rows) {
+        const key = `${row.enrolmentId}:${row.assessmentId}`;
+        if (!pendingMarks.current.has(key)) pendingMarks.current.set(key, row);
+      }
+      window.alert(userError(reason, "Unable to save marks."));
+      throw reason;
+    }
+  };
+  const updateMark = (studentId: string, assessmentId: string, rawValue: string) => {
     if (!selected || selected.finalised || !user?.authId) return;
     const assessment = assessments.find(item => item.id === assessmentId);
     if (!assessment) return;
     const value = Math.max(0, Math.min(Number(rawValue) || 0, assessment.maxMarks));
-    try {
-      await upsertMark(studentId, assessmentId, value, user.authId);
-      setSections(previous => previous.map(section => section.id !== selected.id ? section : { ...section, students: section.students.map(student => {
-        if (student.id !== studentId) return student;
-        const scores = { ...student.scores, [assessmentId]: value };
-        const totalCarry = Math.round(assessments.reduce((sum, item) => sum + (scores[item.id] ?? 0) / item.maxMarks * item.weightage, 0) * 100) / 100;
-        return { ...student, scores, totalCarry, eligible: eligibleThreshold === null ? student.eligible : totalCarry >= eligibleThreshold };
-      }) }));
-    } catch (reason) { window.alert(userError(reason, "Unable to save mark.")); }
+    pendingMarks.current.set(`${studentId}:${assessmentId}`, { enrolmentId: studentId, assessmentId, score: value, enteredBy: user.authId });
+    if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => { void flushPendingMarks().catch(() => undefined); }, 600);
+    updateDetailedSections(previous => previous.map(section => section.id !== selected.id ? section : { ...section, students: section.students.map(student => {
+      if (student.enrolmentId !== studentId) return student;
+      const scores = { ...student.scores, [assessmentId]: value };
+      const totalCarry = Math.round(assessments.reduce((sum, item) => sum + (scores[item.id] ?? 0) / item.maxMarks * item.weightage, 0) * 100) / 100;
+      return { ...student, scores, totalCarry, eligible: eligibleThreshold === null ? student.eligible : totalCarry >= eligibleThreshold };
+    }) }));
   };
   const finalise = async () => { if (selected && !selected.finalised && window.confirm(`Finalise carry marks for ${selected.label}?\n\nMarks will be locked, released to students, and students will be notified.`)) { await finaliseSection(selected.id); await reload(); } };
-  const syncMarks = async () => { await reload(); setSynced(true); window.setTimeout(() => setSynced(false), 2200); };
-  const copyJoinCode = async (section: ClassSection) => {
+  const syncMarks = async () => { await flushPendingMarks(); await reload(); setSynced(true); window.setTimeout(() => setSynced(false), 2200); };
+  const copyJoinCode = async (section: Pick<SectionRecord, "id" | "joinCode">) => {
     if (!section.joinCode) return;
     await navigator.clipboard.writeText(section.joinCode);
     setCopiedId(section.id);
     window.setTimeout(() => setCopiedId(null), 1800);
   };
-  const regenerateJoinCode = async (section: ClassSection) => {
+  const regenerateJoinCode = async (section: Pick<SectionRecord, "id" | "label">) => {
     setMenuId(null);
     if (!window.confirm(`Generate a new invitation code for ${section.label}?\n\nThe current code will stop working immediately.`)) return;
     setRotatingId(section.id);
@@ -81,24 +104,32 @@ export function MarksEntryTab({ offeringId, offeringProgrammeId, subjectCode }: 
   const fieldStyle: React.CSSProperties = { width: "100%", height: "43px", boxSizing: "border-box", padding: "0 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", marginBottom: "7px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", letterSpacing: ".06em" };
 
+  if (selectedId && !selected) return <div style={{ padding: "20px", color: C.textMuted }}>
+    <button onClick={() => setSelectedId(null)} style={{ color: C.maroon, background: "transparent", border: 0, cursor: "pointer", marginBottom: "14px" }}>‹ All Classes</button>
+    {loadError ? <p role="alert" style={{ color: C.red }}>{loadError}</p> : <p role="status">Loading this class's marks…</p>}
+    {loadError && <button onClick={() => void reload().catch(() => undefined)}>Try again</button>}
+  </div>;
   if (!selected) return <div>
+    {loading && <p role="status" style={{ color: C.textMuted }}>Loading class sections…</p>}
+    {loadError && <p role="alert" style={{ color: C.red }}>{loadError}</p>}
     <div className="responsive-action-header" style={{ marginBottom: "20px" }}><div><h2 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.25rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>Select a Class</h2><p style={{ color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))", margin: 0 }}>{subjectCode} has {sections.length} class section{sections.length === 1 ? "" : "s"}. Choose one to begin entering marks.</p></div><button onClick={openAdd} style={{ padding: "10px 15px", border: "none", borderRadius: "7px", background: C.maroon, color: "#fff", fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "7px" }}><Plus size={16} /> Add Class Section</button></div>
     <div style={classSelectorGridStyle}>{sections.map(section => <div key={section.id} role="button" tabIndex={0} aria-label={`Enter marks for ${section.label}`} onClick={() => setSelectedId(section.id)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(section.id); } }} style={{ ...classSelectorCardStyle, background: C.surface, border: `1px solid ${C.borderMid}` }} onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={event => { event.currentTarget.style.borderColor = C.borderMid; event.currentTarget.style.transform = "none"; }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}><div style={{ ...classSelectorIconStyle, background: C.maroonLight, border: `1px solid ${C.maroon}55`, color: C.maroon }}><Users size={21} /></div><div style={{ display: "flex", alignItems: "center", gap: "7px" }}><span style={{ padding: "5px 8px", border: `1px solid ${C.borderMid}`, borderRadius: "5px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{section.students.length} students</span><button aria-label={`Manage ${section.label}`} onClick={event => { event.stopPropagation(); setMenuId(menuId === section.id ? null : section.id); }} style={{ padding: "3px", border: "none", background: "transparent", color: C.textMuted, cursor: "pointer" }}><MoreVertical size={18} /></button></div></div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}><div style={{ ...classSelectorIconStyle, background: C.maroonLight, border: `1px solid ${C.maroon}55`, color: C.maroon }}><Users size={21} /></div><div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap", gap: "7px", minWidth: 0 }}><span style={{ padding: "5px 8px", border: `1px solid ${C.borderMid}`, borderRadius: "5px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{section.studentCount} students</span><span aria-label={`Class marks ${section.finalised ? "finalised" : "pending"}`} style={{ padding: "4px 7px", borderRadius: "5px", background: section.finalised ? C.greenLight : C.amberLight, color: section.finalised ? C.green : C.amber, border: `1px solid ${section.finalised ? C.green : C.amber}44`, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, fontWeight: 700, whiteSpace: "nowrap" }}>{section.finalised ? "FINALISED" : "PENDING"}</span><button aria-label={`Manage ${section.label}`} onClick={event => { event.stopPropagation(); setMenuId(menuId === section.id ? null : section.id); }} style={{ padding: "3px", border: "none", background: "transparent", color: C.textMuted, cursor: "pointer" }}><MoreVertical size={18} /></button></div></div>
       {menuId === section.id && <div onClick={event => event.stopPropagation()} style={{ position: "absolute", right: "18px", top: "53px", zIndex: 4, minWidth: "145px", padding: "5px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", boxShadow: "0 10px 30px rgba(0,0,0,.3)" }}><button onClick={() => openEdit(section)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.text, textAlign: "left", cursor: "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Edit class</button><button onClick={() => regenerateJoinCode(section)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.text, textAlign: "left", cursor: "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Regenerate code</button><button onClick={() => removeSection(section)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.red, textAlign: "left", cursor: "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Remove class</button></div>}
-      <h3 style={{ ...classSelectorTitleStyle, color: C.text, fontFamily: C.display }}>{section.label}</h3><div style={{ ...classSelectorMetaStyle, color: C.textMuted }}>{section.programmeCode} · {section.students.length} enrolled · capacity {section.capacity}</div>
+      <h3 style={{ ...classSelectorTitleStyle, color: C.text, fontFamily: C.display }}>{section.label}</h3><div style={{ ...classSelectorMetaStyle, color: C.textMuted }}><strong style={{ fontWeight: 700, color: C.text }}>{section.programmeCode}</strong> · {section.studentCount} enrolled · capacity {section.capacity}</div>
       <button onClick={event => { event.stopPropagation(); void copyJoinCode(section); }} disabled={!section.joinCode} title="Copy class invitation code" style={{ width: "100%", marginTop: "12px", padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.textSub, cursor: section.joinCode ? "pointer" : "default" }}><span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}><KeyRound size={13} /> CLASS CODE</span><strong style={{ fontFamily: C.mono, fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.maroon, letterSpacing: ".08em" }}>{rotatingId === section.id ? "GENERATING…" : section.joinCode ?? "NOT SET"}</strong>{copiedId === section.id ? <Check size={13} color={C.green} /> : <Copy size={13} />}</button>
       <div style={{ ...classSelectorActionStyle, color: C.maroon }}>Enter Marks <ChevronRight size={14} /></div>
     </div>)}</div>
-    {sections.length === 0 && <div style={{ padding: "40px", textAlign: "center", background: C.surface, border: `1px dashed ${C.borderMid}`, borderRadius: "10px", color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No class sections yet. Select Add Class Section to create the first one.</div>}
-    {modal && <ClassModal C={C} mode={modal} form={form} setForm={setForm} close={closeModal} save={saveSection} valid={formValid} subjectCode={subjectCode} programmes={programmes} fieldStyle={fieldStyle} labelStyle={labelStyle} />}
+    {!loading && !loadError && sections.length === 0 && <div style={{ padding: "40px", textAlign: "center", background: C.surface, border: `1px dashed ${C.borderMid}`, borderRadius: "10px", color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No class sections yet. Select Add Class Section to create the first one.</div>}
+    {modal && <ClassModal error={programmeError} C={C} mode={modal} form={form} setForm={setForm} close={closeModal} save={saveSection} valid={formValid} subjectCode={subjectCode} programmes={programmes} fieldStyle={fieldStyle} labelStyle={labelStyle} />}
   </div>;
-  return <MarkGrid assessments={assessments} carryMax={carryMax} C={C} sections={sections} selected={selected} setSelectedId={setSelectedId} updateMark={updateMark} syncMarks={syncMarks} synced={synced} finalise={finalise} copyJoinCode={copyJoinCode} copiedId={copiedId} regenerateJoinCode={regenerateJoinCode} rotatingId={rotatingId} />;
+  return <div>{detailLoading && <p role="status" style={{ color: C.textMuted }}>Refreshing class data…</p>}{loadError && <p role="alert" style={{ color: C.red }}>{loadError}</p>}<MarkGrid assessments={assessments} carryMax={carryMax} C={C} sections={sections} selected={selected} setSelectedId={setSelectedId} updateMark={updateMark} flushPendingMarks={flushPendingMarks} syncMarks={syncMarks} synced={synced} finalise={finalise} copyJoinCode={copyJoinCode} copiedId={copiedId} regenerateJoinCode={regenerateJoinCode} rotatingId={rotatingId} /></div>;
 }
 
-function ClassModal({ C, mode, form, setForm, close, save, valid, subjectCode, programmes, fieldStyle, labelStyle }: any) {
+function ClassModal({ error, C, mode, form, setForm, close, save, valid, subjectCode, programmes, fieldStyle, labelStyle }: any) {
   return <div role="dialog" aria-modal="true" style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", background: "rgba(0,0,0,.72)" }} onMouseDown={event => { if (event.target === event.currentTarget) close(); }}><div style={{ width: "100%", maxWidth: "480px", padding: "28px", boxSizing: "border-box", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "11px" }}>
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "22px" }}><div><h3 style={{ margin: "0 0 5px", color: C.text, fontFamily: C.display, fontSize: "calc(1.3125rem * var(--staff-text-scale))", fontWeight: 700 }}>{mode === "add" ? "Add Class Section" : "Edit Class Section"}</h3><div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{subjectCode}</div></div><button aria-label="Close" onClick={close} style={{ border: "none", background: "transparent", color: C.textMuted, cursor: "pointer" }}><X size={21} /></button></div>
+    {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
     <div style={{ marginBottom: "15px" }}><label style={labelStyle}>CLASS LABEL</label><input autoFocus value={form.label} onChange={(event: any) => setForm((previous: ClassForm) => ({ ...previous, label: event.target.value }))} placeholder="e.g. Class D" style={fieldStyle} /></div>
     <div style={{ marginBottom: "15px" }}><label style={labelStyle}>PROGRAMME</label><select aria-label="Programme" value={form.programmeId} onChange={(event: any) => setForm((previous: ClassForm) => ({ ...previous, programmeId: event.target.value }))} style={fieldStyle}><option value="">Select programme</option>{programmes.map((programme: ProgrammeOption) => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>
     <div style={{ marginBottom: "22px" }}><label style={labelStyle}>STUDENT CAPACITY</label><input type="number" min="1" value={form.capacity} onChange={(event: any) => setForm((previous: ClassForm) => ({ ...previous, capacity: event.target.value }))} placeholder="e.g. 20" style={fieldStyle} /></div>
@@ -106,12 +137,12 @@ function ClassModal({ C, mode, form, setForm, close, save, valid, subjectCode, p
   </div></div>;
 }
 
-function MarkGrid({ assessments, carryMax, C, sections, selected, setSelectedId, updateMark, syncMarks, synced, finalise, copyJoinCode, copiedId, regenerateJoinCode, rotatingId }: any) {
+function MarkGrid({ assessments, carryMax, C, sections, selected, setSelectedId, updateMark, flushPendingMarks, syncMarks, synced, finalise, copyJoinCode, copiedId, regenerateJoinCode, rotatingId }: any) {
   const markFields = assessments.map((item: AssessmentRecord) => ({ key: item.id, label: item.name, max: item.maxMarks }));
   return <div style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px", padding: "20px" }}>
     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", marginBottom: "18px", flexWrap: "wrap" }}><div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}><button onClick={() => setSelectedId(null)} style={{ padding: "8px 10px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.textSub, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}><ChevronLeft size={14} /> All Classes</button><div><h2 style={{ margin: "2px 0 4px", color: C.text, fontFamily: C.display, fontSize: "calc(1.25rem * var(--staff-text-scale))", fontWeight: 700 }}>Mark Entry — {selected.label}</h2><div style={{ color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{selected.programmeCode} · {selected.students.length} students · capacity {selected.capacity}</div><div style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{selected.finalised ? "Marks are released to students." : "Draft marks remain private until finalisation."}</div></div></div><div style={{ display: "flex", gap: "9px" }}><button onClick={syncMarks} style={{ padding: "9px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: synced ? C.green : C.textSub, cursor: "pointer", display: "flex", gap: "6px", alignItems: "center", fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 600 }}><RefreshCw size={14} /> {synced ? "Draft Synced" : "Sync Draft"}</button><button disabled={selected.finalised} onClick={finalise} style={{ padding: "9px 13px", background: selected.finalised ? C.greenLight : C.maroon, border: `1px solid ${selected.finalised ? C.green : C.maroon}55`, borderRadius: "6px", color: selected.finalised ? C.green : "#fff", cursor: selected.finalised ? "default" : "pointer", display: "flex", gap: "6px", alignItems: "center", fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 700 }}><CheckCircle size={14} /> {selected.finalised ? "Carry Marks Finalised" : "Finalise & Release"}</button></div></div>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "14px", flexWrap: "wrap", padding: "12px 14px", marginBottom: "14px", background: C.maroonLight, border: `1px solid ${C.maroon}55`, borderRadius: "7px" }}><div><div style={{ display: "flex", alignItems: "center", gap: "6px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", letterSpacing: ".06em" }}><KeyRound size={13} /> STUDENT CLASS INVITATION CODE</div><strong style={{ display: "block", marginTop: "5px", color: C.maroon, fontFamily: C.mono, fontSize: "calc(1.125rem * var(--staff-text-scale))", letterSpacing: ".1em" }}>{rotatingId === selected.id ? "GENERATING…" : selected.joinCode ?? "NOT GENERATED"}</strong></div><div style={{ display: "flex", gap: "8px" }}><button disabled={!selected.joinCode} onClick={() => copyJoinCode(selected)} style={{ padding: "8px 11px", display: "flex", alignItems: "center", gap: "6px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: copiedId === selected.id ? C.green : C.textSub, cursor: selected.joinCode ? "pointer" : "default", fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700 }}>{copiedId === selected.id ? <Check size={13} /> : <Copy size={13} />}{copiedId === selected.id ? "Copied" : "Copy Code"}</button><button disabled={rotatingId === selected.id} onClick={() => regenerateJoinCode(selected)} style={{ padding: "8px 11px", display: "flex", alignItems: "center", gap: "6px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.textSub, cursor: rotatingId === selected.id ? "wait" : "pointer", fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700 }}><RefreshCw size={13} /> New Code</button></div></div>
-    <div style={{ display: "flex", gap: "7px", marginBottom: "17px", overflowX: "auto" }}>{sections.map((section: ClassSection) => <button key={section.id} onClick={() => setSelectedId(section.id)} style={{ padding: "7px 11px", borderRadius: "6px", border: `1px solid ${selected.id === section.id ? C.maroon : C.borderMid}`, background: selected.id === section.id ? C.maroonLight : C.elevated, color: selected.id === section.id ? C.maroon : C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: selected.id === section.id ? 700 : 500, cursor: "pointer", whiteSpace: "nowrap" }}>{section.label} · {section.programmeCode} ({section.students.length})</button>)}</div>
-    <div style={{ overflowX: "auto" }}><table style={{ width: "100%", minWidth: "900px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}><thead><tr style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", borderBottom: `1px solid ${C.borderMid}` }}><th style={{ padding: "10px" }}>STUDENT ID</th><th style={{ padding: "10px" }}>NAME</th>{markFields.map(field => <th key={field.key} style={{ padding: "10px" }}>{field.label.toUpperCase()} /{field.max}</th>)}<th style={{ padding: "10px" }}>CARRY MARK /{carryMax ?? "Not set"}</th><th style={{ padding: "10px" }}>ELIGIBILITY</th></tr></thead><tbody>{selected.students.map((student: StudentRecord) => { const rawTotal = student.totalCarry; return <tr key={student.id} style={{ borderBottom: `1px solid ${C.border}` }}><td style={{ padding: "10px", color: C.textMuted, fontFamily: C.mono }}>{student.matrixNo}</td><td style={{ padding: "10px", color: C.text, fontWeight: 600 }}>{student.name}</td>{markFields.map(field => <td key={field.key} style={{ padding: "7px 10px" }}><input disabled={selected.finalised} type="number" min="0" max={field.max} value={student.scores[field.key] ?? ""} onChange={event => updateMark(student.id, field.key, event.target.value)} style={{ width: "48px", height: "32px", boxSizing: "border-box", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "5px", color: C.text, textAlign: "center", fontFamily: C.mono, opacity: selected.finalised ? .65 : 1 }} /></td>)}<td style={{ padding: "10px", color: student.eligible ? C.green : C.amber, fontFamily: C.mono, fontWeight: 700 }}>{rawTotal}</td><td style={{ padding: "10px" }}><span style={{ padding: "3px 6px", borderRadius: "4px", background: student.eligible ? C.greenLight : C.redLight, color: student.eligible ? C.green : C.red, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700 }}>{student.eligible ? "QUALIFIED" : "INELIGIBLE"}</span></td></tr>; })}</tbody></table>{selected.students.length === 0 && <div style={{ padding: "34px", textAlign: "center", color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>This class has no student roster yet.</div>}</div>
+    <div style={{ display: "flex", gap: "7px", marginBottom: "17px", overflowX: "auto" }}>{sections.map((section: ClassSectionSummary) => <button key={section.id} onClick={() => setSelectedId(section.id)} style={{ padding: "7px 11px", borderRadius: "6px", border: `1px solid ${selected.id === section.id ? C.maroon : C.borderMid}`, background: selected.id === section.id ? C.maroonLight : C.elevated, color: selected.id === section.id ? C.maroon : C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: selected.id === section.id ? 700 : 500, cursor: "pointer", whiteSpace: "nowrap" }}>{section.label} · {section.programmeCode} ({section.studentCount})</button>)}</div>
+    <div style={{ overflowX: "auto" }}><table style={{ width: "100%", minWidth: "900px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}><thead><tr style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", borderBottom: `1px solid ${C.borderMid}` }}><th style={{ padding: "10px" }}>STUDENT ID</th><th style={{ padding: "10px" }}>NAME</th>{markFields.map(field => <th key={field.key} style={{ padding: "10px" }}>{field.label.toUpperCase()} /{field.max}</th>)}<th style={{ padding: "10px" }}>CARRY MARK /{carryMax ?? "Not set"}</th><th style={{ padding: "10px" }}>ELIGIBILITY</th></tr></thead><tbody>{selected.students.map((student: StudentRecord) => { const rawTotal = student.totalCarry; return <tr key={student.id} style={{ borderBottom: `1px solid ${C.border}` }}><td style={{ padding: "10px", color: C.textMuted, fontFamily: C.mono }}>{student.matrixNo}</td><td style={{ padding: "10px", color: C.text, fontWeight: 600 }}>{student.name}</td>{markFields.map(field => <td key={field.key} style={{ padding: "7px 10px" }}><input disabled={selected.finalised} type="number" min="0" max={field.max} value={student.scores[field.key] ?? ""} onChange={event => updateMark(student.id, field.key, event.target.value)} onBlur={() => void flushPendingMarks().catch(() => undefined)} style={{ width: "48px", height: "32px", boxSizing: "border-box", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "5px", color: C.text, textAlign: "center", fontFamily: C.mono, opacity: selected.finalised ? .65 : 1 }} /></td>)}<td style={{ padding: "10px", color: student.eligible ? C.green : C.amber, fontFamily: C.mono, fontWeight: 700 }}>{rawTotal}</td><td style={{ padding: "10px" }}><span style={{ padding: "3px 6px", borderRadius: "4px", background: student.eligible ? C.greenLight : C.redLight, color: student.eligible ? C.green : C.red, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700 }}>{student.eligible ? "QUALIFIED" : "INELIGIBLE"}</span></td></tr>; })}</tbody></table>{selected.students.length === 0 && <div style={{ padding: "34px", textAlign: "center", color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>This class has no student roster yet.</div>}</div>
   </div>;
 }

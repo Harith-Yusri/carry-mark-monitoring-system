@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# FCM private server credentials: upload to EAS, never bundle or commit.
+/credentials/
+*firebase-adminsdk*.json
+*service-account*.json
+
+# google-services.json is Android client configuration (public identifiers).
+# Keep it in the build context, or supply GOOGLE_SERVICES_JSON as an EAS file variable.

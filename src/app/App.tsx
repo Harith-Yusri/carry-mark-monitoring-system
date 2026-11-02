@@ -1,54 +1,65 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { DarkModeProvider } from "../context/DarkModeContext";
 import { AuthProvider } from "../context/AuthContext";
-import { PortalLayout } from "../layouts/PortalLayout";
 import { WebLogin } from "../features/auth/WebLogin";
-import { WebRegister } from "../features/auth/WebRegister";
-import { LecturerWebPortal } from "../features/lecturer/LecturerWebPortal";
-import { AdminWebPortal } from "../features/admin/AdminWebPortal";
 import { ProtectedRoute } from "../components/ProtectedRoute";
+
+const PortalLayout = lazy(() => import("../layouts/PortalLayout").then((module) => ({ default: module.PortalLayout })));
+const WebRegister = lazy(() => import("../features/auth/WebRegister").then((module) => ({ default: module.WebRegister })));
+const LecturerWebPortal = lazy(() => import("../features/lecturer/LecturerWebPortal").then((module) => ({ default: module.LecturerWebPortal })));
+const AdminWebPortal = lazy(() => import("../features/admin/AdminWebPortal").then((module) => ({ default: module.AdminWebPortal })));
+
+function RouteFallback() {
+  return (
+    <div role="status" aria-live="polite" style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+      Loading CAMS…
+    </div>
+  );
+}
 
 function MainApp() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<WebLogin />} />
-        <Route path="/register" element={<WebRegister />} />
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/lecturer/login" element={<Navigate to="/" replace />} />
-        <Route path="/admin/login" element={<Navigate to="/" replace />} />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<WebLogin />} />
+          <Route path="/register" element={<WebRegister />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/lecturer/login" element={<Navigate to="/" replace />} />
+          <Route path="/admin/login" element={<Navigate to="/" replace />} />
 
-        {/* Protected Lecturer Routes */}
-        <Route 
-          path="/lecturer" 
-          element={
-            <ProtectedRoute allowedRole="lecturer">
-              <PortalLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/lecturer/dashboard" replace />} />
-          <Route path="dashboard" element={<LecturerWebPortal />} />
-        </Route>
+          {/* Protected Lecturer Routes */}
+          <Route
+            path="/lecturer"
+            element={
+              <ProtectedRoute allowedRole="lecturer">
+                <PortalLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/lecturer/dashboard" replace />} />
+            <Route path="dashboard" element={<LecturerWebPortal />} />
+          </Route>
 
-        {/* Protected Admin Routes */}
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedRoute allowedRole="admin">
-              <PortalLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminWebPortal />} />
-        </Route>
+          {/* Protected Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <PortalLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminWebPortal />} />
+          </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

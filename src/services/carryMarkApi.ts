@@ -1,11 +1,13 @@
 import { requireSupabase } from "../lib/supabase";
 import { ProgrammeOption } from "../types";
+import { groupLecturerSubjects } from "./lecturerSubjectGroups";
 
 export function formatAcademicSemester(semesterNo: number, academicYear: string) {
   return `Semester ${semesterNo} · ${academicYear}`;
 }
 
 export interface SubjectSummary {
+  offerings?: SubjectSummary[];
   offeringId: string;
   programmeId: string;
   programmeIds: string[];
@@ -59,10 +61,29 @@ export interface SectionRecord {
   students: MarkStudent[];
 }
 
+export type ClassSectionSummary = Omit<SectionRecord, "students"> & { offeringId: string; studentCount: number };
+
+export async function loadSubjectClassSummaries(offeringIds: string[]): Promise<ClassSectionSummary[]> {
+  const ids = [...new Set(offeringIds)];
+  if (!ids.length) return [];
+  const { data, error } = await requireSupabase().from("class_sections")
+    .select("id,offering_id,programme_id,label,day_of_week,starts_at,ends_at,room,capacity,join_code,programmes!inner(code,name),enrolments(count),submissions(status)")
+    .in("offering_id", ids).eq("enrolments.status", "enrolled").order("label");
+  if (error) throw error;
+  return data.map((row: any) => ({
+    id: row.id, offeringId: row.offering_id, programmeId: row.programme_id,
+    programmeCode: row.programmes.code, programmeName: row.programmes.name,
+    label: row.label, dayOfWeek: row.day_of_week, startsAt: row.starts_at, endsAt: row.ends_at,
+    room: row.room, capacity: row.capacity, joinCode: row.join_code,
+    studentCount: Number(row.enrolments?.[0]?.count ?? 0),
+    finalised: (Array.isArray(row.submissions) ? row.submissions : [row.submissions]).some((submission: { status?: string } | null) => submission?.status === "finalised"),
+  }));
+}
+
 export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
   const { data, error } = await requireSupabase().rpc("get_my_lecturer_subjects");
   if (error) throw error;
-  return data.map(mapSubjectSummary);
+  return groupLecturerSubjects(data.map(mapSubjectSummary));
 }
 
 function mapSubjectSummary(row: any): SubjectSummary {
@@ -79,6 +100,8 @@ function mapSubjectSummary(row: any): SubjectSummary {
     progSem: row.programme_semester ?? 0,
     students: Number(row.student_count),
     lastSync: row.updated_at,
+    // Lecturer RPCs derive this display status from all class submissions in
+    // the subject/lecturer/term/programme-semester context, not stored offering.status.
     status: row.offering_status === "completed" ? "submitted" : row.offering_status,
     termLabel: formatAcademicSemester(row.semester_no, row.academic_year),
     academicYear: row.academic_year,
@@ -89,7 +112,19 @@ function mapSubjectSummary(row: any): SubjectSummary {
 export async function listArchivedLecturerSubjects(): Promise<SubjectSummary[]> {
   const { data, error } = await requireSupabase().rpc("get_my_archived_lecturer_subjects");
   if (error) throw error;
-  return data.map(mapSubjectSummary);
+  return groupLecturerSubjects(data.map(mapSubjectSummary));
+}
+
+export async function loadLecturerSubjectDashboard() {
+  const { data, error } = await requireSupabase().rpc("get_my_lecturer_subject_dashboard");
+  if (error) throw error;
+  const dashboard = data as any;
+  if (!dashboard?.term) throw new Error("There is no active current academic term.");
+  return {
+    current: groupLecturerSubjects((dashboard.current ?? []).map(mapSubjectSummary)),
+    archived: groupLecturerSubjects((dashboard.archived ?? []).map(mapSubjectSummary)),
+    termLabel: formatAcademicSemester(dashboard.term.semester_no, dashboard.term.academic_year),
+  };
 }
 
 export async function listAssessments(offeringId: string): Promise<AssessmentRecord[]> {
@@ -106,8 +141,10 @@ export async function saveAssessment(offeringId: string, item: Omit<AssessmentRe
     const { error } = await db.from("assessments").update({ name: item.name, assessment_type: item.type, max_score: item.maxMarks, carry_weight: item.weightage }).eq("id", id);
     if (error) throw error;
   } else {
-    const existing = await listAssessments(offeringId);
-    const { error } = await db.from("assessments").insert({ offering_id: offeringId, name: item.name, assessment_type: item.type, max_score: item.maxMarks, carry_weight: item.weightage, position: existing.length + 1 });
+    const { data: lastAssessment, error: positionError } = await db.from("assessments")
+      .select("position").eq("offering_id", offeringId).order("position", { ascending: false }).limit(1).maybeSingle();
+    if (positionError) throw positionError;
+    const { error } = await db.from("assessments").insert({ offering_id: offeringId, name: item.name, assessment_type: item.type, max_score: item.maxMarks, carry_weight: item.weightage, position: (lastAssessment?.position ?? 0) + 1 });
     if (error) throw error;
   }
 }
@@ -119,8 +156,12 @@ export async function deleteAssessment(id: string) {
 
 export async function loadOfferingData(offeringId: string): Promise<{ assessments: AssessmentRecord[]; sections: SectionRecord[] }> {
   const db = requireSupabase();
-  const assessments = await listAssessments(offeringId);
-  const { data: sectionRows, error: sectionError } = await db.from("class_sections").select("*,programmes!inner(code,name)").eq("offering_id", offeringId).order("label");
+  const [assessments, { data: sectionRows, error: sectionError }] = await Promise.all([
+    listAssessments(offeringId),
+    db.from("class_sections")
+      .select("id,programme_id,label,day_of_week,starts_at,ends_at,room,capacity,join_code,programmes!inner(code,name)")
+      .eq("offering_id", offeringId).order("label"),
+  ]);
   if (sectionError) throw sectionError;
   const sectionIds = sectionRows.map(row => row.id);
   if (!sectionIds.length) return { assessments, sections: [] };
@@ -137,15 +178,26 @@ export async function loadOfferingData(offeringId: string): Promise<{ assessment
   ]) : [{ data: [], error: null }, { data: [], error: null }];
   if (marksError) throw marksError;
   if (totalsError) throw totalsError;
+  return mapOfferingData(assessments, sectionRows, enrolments, submissions, marks, totals);
+}
+
+function mapOfferingData(assessments: AssessmentRecord[], sectionRows: any[], enrolments: any[], submissions: any[], marks: any[], totals: any[]): { assessments: AssessmentRecord[]; sections: SectionRecord[] } {
   const marksByEnrolment = new Map<string, Record<string, number | null>>();
   marks.forEach(row => { const values = marksByEnrolment.get(row.enrolment_id) ?? {}; values[row.assessment_id] = row.score == null ? null : Number(row.score); marksByEnrolment.set(row.enrolment_id, values); });
   const totalsByEnrolment = new Map(totals.map(row => [row.enrolment_id, row]));
+  const enrolmentsBySection = new Map<string, any[]>();
+  for (const enrolment of enrolments as any[]) {
+    const sectionEnrolments = enrolmentsBySection.get(enrolment.section_id) ?? [];
+    sectionEnrolments.push(enrolment);
+    enrolmentsBySection.set(enrolment.section_id, sectionEnrolments);
+  }
+  const finalisedSections = new Set(submissions.filter(value => value.status === "finalised").map(value => value.section_id));
   return { assessments, sections: sectionRows.map(row => ({
     id: row.id, programmeId: row.programme_id, programmeCode: (row.programmes as any).code, programmeName: (row.programmes as any).name,
     label: row.label, dayOfWeek: row.day_of_week, startsAt: row.starts_at, endsAt: row.ends_at,
     room: row.room, capacity: row.capacity, joinCode: row.join_code,
-    finalised: submissions.some(value => value.section_id === row.id && value.status === "finalised"),
-    students: (enrolments as any[]).filter(value => value.section_id === row.id).map(value => ({
+    finalised: finalisedSections.has(row.id),
+    students: (enrolmentsBySection.get(row.id) ?? []).map(value => ({
       enrolmentId: value.id, studentId: value.student_id, matrixNo: value.students.matrix_no, name: value.students.full_name,
       scores: marksByEnrolment.get(value.id) ?? {}, totalCarry: Number(totalsByEnrolment.get(value.id)?.total_carry ?? 0),
       eligible: Boolean(totalsByEnrolment.get(value.id)?.eligible),
@@ -153,8 +205,45 @@ export async function loadOfferingData(offeringId: string): Promise<{ assessment
   })) };
 }
 
-export async function upsertMark(enrolmentId: string, assessmentId: string, score: number, enteredBy: string) {
-  const { error } = await requireSupabase().from("marks").upsert({ enrolment_id: enrolmentId, assessment_id: assessmentId, score, entered_by: enteredBy }, { onConflict: "enrolment_id,assessment_id" });
+// Class IDs are already available from the summary list. Query independent
+// resources together instead of waiting for section -> enrolment -> mark IDs.
+export async function loadSubjectClassDetail(section: ClassSectionSummary) {
+  const db = requireSupabase();
+  const [assessments, settings, enrolments, submissions, marks, totals] = await Promise.all([
+    listAssessments(section.offeringId),
+    loadOfferingWeightage(section.offeringId),
+    db.from("enrolments").select("id,section_id,student_id,students!inner(matrix_no,full_name)").eq("section_id", section.id).eq("status", "enrolled"),
+    db.from("submissions").select("section_id,status").eq("section_id", section.id),
+    db.from("marks").select("enrolment_id,assessment_id,score,enrolments!inner(section_id,status)").eq("enrolments.section_id", section.id).eq("enrolments.status", "enrolled"),
+    db.rpc("get_offering_student_totals", { target_offering: section.offeringId }),
+  ]);
+  for (const response of [enrolments, submissions, marks, totals]) if (response.error) throw response.error;
+  const rawSection = {
+    id: section.id, programme_id: section.programmeId, label: section.label,
+    day_of_week: section.dayOfWeek, starts_at: section.startsAt, ends_at: section.endsAt,
+    room: section.room, capacity: section.capacity, join_code: section.joinCode,
+    programmes: { code: section.programmeCode, name: section.programmeName },
+  };
+  return { data: mapOfferingData(assessments, [rawSection], enrolments.data ?? [], submissions.data ?? [], marks.data ?? [], totals.data ?? []), settings };
+}
+
+// Combine only the class selector; assessment IDs and settings stay owned by
+// their original offering so existing marks/finalisation are never remapped.
+export async function loadSubjectClassData(offeringIds: string[]) {
+  return Promise.all([...new Set(offeringIds)].map(async offeringId => {
+    const [data, settings] = await Promise.all([loadOfferingData(offeringId), loadOfferingWeightage(offeringId)]);
+    return { offeringId, data, settings };
+  }));
+}
+
+export async function upsertMarks(rows: { enrolmentId: string; assessmentId: string; score: number; enteredBy: string }[]) {
+  if (!rows.length) return;
+  const { error } = await requireSupabase().from("marks").upsert(rows.map(row => ({
+    enrolment_id: row.enrolmentId,
+    assessment_id: row.assessmentId,
+    score: row.score,
+    entered_by: row.enteredBy,
+  })), { onConflict: "enrolment_id,assessment_id" });
   if (error) throw error;
 }
 
@@ -231,6 +320,20 @@ export async function listAcademicSemesters(): Promise<AcademicSemesterRecord[]>
   }));
 }
 
+export async function listArchivedSemesterSummaries() {
+  const { data, error } = await requireSupabase().rpc("get_admin_semester_history");
+  if (error) throw error;
+  return data.map(row => ({
+    id: row.id,
+    label: `Semester ${row.semester_no} · ${row.academic_year} · ${row.semester_code}`,
+    dates: `${row.starts_on} – ${row.ends_on}`,
+    offerings: Number(row.offering_count),
+    classes: Number(row.class_count),
+    enrolments: Number(row.enrolment_count),
+    finalised: Number(row.finalised_count),
+  }));
+}
+
 export async function createAcademicSemester(values: { academicYear: string; semesterCode: string; startsOn: string; endsOn: string; defaultDeadline: string }) {
   const { data, error } = await requireSupabase().rpc("create_academic_semester", {
     p_academic_year: values.academicYear,
@@ -267,12 +370,14 @@ export async function deleteAcademicSemester(termId: string) {
 
 export async function loadSystemSettings(): Promise<SystemSettingsRecord> {
   const db = requireSupabase();
-  const { data: term, error } = await db.from("academic_terms").select("*").eq("is_current", true).single();
+  const { data: term, error } = await db.from("academic_terms")
+    .select("id,semester_code,semester_no,academic_year,starts_on,ends_on,default_deadline")
+    .eq("is_current", true).single();
   if (error) throw error;
   const [{ data: programmes, error: programmeError }, { data: deadlines, error: deadlineError }, { data: notification, error: notificationError }] = await Promise.all([
     db.from("programmes").select("id,code,name").eq("is_active", true).order("code"),
     db.from("programme_deadlines").select("deadline_at,programmes!inner(code)").eq("term_id", term.id),
-    db.from("notification_settings").select("*").eq("term_id", term.id).maybeSingle(),
+    db.from("notification_settings").select("auto_remind,reminder_days").eq("term_id", term.id).maybeSingle(),
   ]);
   if (programmeError) throw programmeError;
   if (deadlineError) throw deadlineError;

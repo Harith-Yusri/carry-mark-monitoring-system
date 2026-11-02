@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BookOpen, Plus, CheckCircle, ChevronRight, MoreVertical, Trash2, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
 import { useAuth } from "../../context/AuthContext";
-import { createLecturerSubject, deleteLecturerSubject, listArchivedLecturerSubjects, listProgrammes, loadCurrentTermLabel, loadOfferingData, loadSubjectCreationData, SubjectCatalogueEntry, listLecturerSubjects, SubjectSummary, updateLecturerSubject } from "../../services/carryMarkApi";
+import { createLecturerSubject, deleteLecturerSubject, listProgrammes, loadLecturerSubjectDashboard, loadOfferingData, loadSubjectCreationData, SubjectCatalogueEntry, listLecturerSubjects, SubjectSummary, updateLecturerSubject } from "../../services/carryMarkApi";
 import { ProgrammeOption } from "../../types";
 import { userError } from "../../utils/errors";
 
@@ -55,8 +55,8 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const programmeCount = new Set(visibleSubjects.flatMap(subject => subject.programmeIds)).size;
 
   useEffect(() => {
-    Promise.all([listLecturerSubjects(), listArchivedLecturerSubjects(), loadCurrentTermLabel()])
-      .then(([items, archived, termLabel]) => {
+    loadLecturerSubjectDashboard()
+      .then(({ current: items, archived, termLabel }) => {
         setSubjects(items); setArchivedSubjects(archived); setCreationTerm(termLabel);
         const current = items[0];
         const termMatch = termLabel.match(/^Semester\s+(\d+)\s+·\s+(.+)$/);
@@ -95,7 +95,10 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
 
   const openArchivedDetail = async (subject: LecturerSubject) => {
     setArchiveError("");
-    try { setArchivedDetail({ subject, data: await loadOfferingData(subject.offeringId) }); }
+    try {
+      const loaded = await Promise.all((subject.offerings ?? [subject]).map(offering => loadOfferingData(offering.offeringId)));
+      setArchivedDetail({ subject, data: { sections: loaded.flatMap(data => data.sections), assessments: loaded.flatMap(data => data.assessments) } });
+    }
     catch (reason) { setArchiveError(userError(reason, "Unable to load archived subject details.")); }
   };
 
@@ -200,8 +203,8 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
           return (
             <div key={ps}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "28px", height: "28px", background: C.maroonLight, border: `1px solid ${C.maroon}44`, borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontFamily: C.mono, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, color: C.maroon }}>{ps}</span>
+                <div style={{ width: "28px", height: "28px", background: C.metadataLight, border: `1px solid ${C.border}`, borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontFamily: C.mono, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, color: C.metadata }}>{ps}</span>
                 </div>
                 <span style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text }}>Programme Semester {ps}</span>
                 <span style={{ fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}>· {psSubs.length} subject{psSubs.length !== 1 ? "s" : ""}</span>
@@ -218,13 +221,13 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                       tabIndex={0}
                       onClick={() => isCurrentSelection ? onSelectSubject(subj) : openArchivedDetail(subj)}
                       onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); isCurrentSelection ? onSelectSubject(subj) : openArchivedDetail(subj); } }}
-                      style={{ position: "relative", textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "8px", padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" }}
-                      onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.transform = "translateY(-2px)"; }}
-                      onMouseLeave={event => { event.currentTarget.style.borderColor = C.border; event.currentTarget.style.transform = "none"; }}
+                      style={{ position: "relative", textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "8px", padding: "18px 20px", cursor: "pointer", boxShadow: C.panelShadow, transition: "border-color 0.15s, box-shadow 0.15s" }}
+                      onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.boxShadow = C.panelShadowHover; }}
+                      onMouseLeave={event => { event.currentTarget.style.borderColor = C.border; event.currentTarget.style.boxShadow = C.panelShadow; }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0, marginBottom: "8px", whiteSpace: "nowrap" }}>
-                        <span style={{ flexShrink: 0, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.maroon, fontWeight: 600 }}>{subj.code}</span>
-                        <span title={subj.programmeCodes.join(", ") || "No classes"} aria-label={subj.programmeCodes.length ? `Programmes ${subj.programmeCodes.join(", ")}` : "No classes"} style={{ flexShrink: 1, minWidth: 0, maxWidth: "76px", overflow: "hidden", textOverflow: "ellipsis", fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, background: C.maroonLight, border: `1px solid ${C.maroon}44`, color: C.maroon, borderRadius: "3px", padding: "2px 5px" }}>{subj.programmeCodes.length > 1 ? `${subj.programmeCodes[0]} +${subj.programmeCodes.length - 1}` : subj.programmeCodes[0] ?? "NO CLASSES"}</span>
+                        <span style={{ flexShrink: 0, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.code, fontWeight: 650 }}>{subj.code}</span>
+                        <span title={subj.programmeCodes.join(", ") || "No classes"} aria-label={subj.programmeCodes.length ? `Programmes ${subj.programmeCodes.join(", ")}` : "No classes"} style={{ flexShrink: 1, minWidth: 0, maxWidth: "76px", overflow: "hidden", textOverflow: "ellipsis", fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, background: C.metadataLight, border: `1px solid ${C.border}`, color: C.metadata, borderRadius: "3px", padding: "2px 5px" }}>{subj.programmeCodes.length > 1 ? `${subj.programmeCodes[0]} +${subj.programmeCodes.length - 1}` : subj.programmeCodes[0] ?? "NO CLASSES"}</span>
                         <span style={{ flexShrink: 0, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, background: C.elevated, border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: "3px", padding: "2px 5px" }}>SEM {subj.progSem}</span>
                         <span style={{ flex: 1, minWidth: 0 }} />
                         <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, fontFamily: C.mono, padding: "2px 6px", borderRadius: "3px", background: isSubmitted ? C.greenLight : C.amberLight, color: isSubmitted ? C.green : C.amber, border: `1px solid ${isSubmitted ? C.green + "44" : C.amber + "44"}` }}>
@@ -232,7 +235,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                         </span>
                         {isCurrentSelection ? <button aria-label={`Manage ${subj.code}`} onClick={event => { event.stopPropagation(); setMenuOfferingId(menuOfferingId === subj.offeringId ? null : subj.offeringId); }} style={{ flexShrink: 0, padding: "2px", border: "none", background: "transparent", color: C.textMuted, cursor: "pointer" }}><MoreVertical size={17} /></button> : <span style={{ flexShrink: 0, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.625rem * var(--staff-text-scale))" }}>READ-ONLY</span>}
                       </div>
-                      {menuOfferingId === subj.offeringId && <div onClick={event => event.stopPropagation()} style={{ position: "absolute", right: "18px", top: "49px", zIndex: 4, minWidth: "156px", padding: "5px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", boxShadow: "0 10px 30px rgba(0,0,0,.3)" }}><button onClick={() => openEditModal(subj)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.text, textAlign: "left", cursor: "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Edit subject</button><button disabled={deletingOfferingId === subj.offeringId} onClick={() => deleteSubject(subj)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.red, textAlign: "left", cursor: deletingOfferingId === subj.offeringId ? "wait" : "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))", display: "flex", alignItems: "center", gap: "6px" }}><Trash2 size={12} />{deletingOfferingId === subj.offeringId ? "Deleting…" : "Delete subject"}</button></div>}
+                      {menuOfferingId === subj.offeringId && <div onClick={event => event.stopPropagation()} style={{ position: "absolute", right: "18px", top: "49px", zIndex: 4, minWidth: "156px", padding: "5px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", boxShadow: "0 10px 30px rgba(0,0,0,.3)" }}>{(subj.offerings ?? [subj]).map(offering => <React.Fragment key={offering.offeringId}><button onClick={() => openEditModal(offering)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.text, textAlign: "left", cursor: "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Edit subject{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button><button disabled={deletingOfferingId === offering.offeringId} onClick={() => deleteSubject(offering)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.red, textAlign: "left", cursor: deletingOfferingId === offering.offeringId ? "wait" : "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))", display: "flex", alignItems: "center", gap: "6px" }}><Trash2 size={12} />{deletingOfferingId === offering.offeringId ? "Deleting…" : "Delete subject"}{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button></React.Fragment>)}</div>}
                       <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text, marginBottom: "10px" }}>{subj.name}</div>
                       <div style={{ display: "flex", gap: "14px", marginBottom: "10px", fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.textMuted }}>
                         <div><span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.students}</span> students</div>

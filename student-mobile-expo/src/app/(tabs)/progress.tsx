@@ -1,4 +1,4 @@
- import { BarChart3, CheckCircle2, Clock3, LockKeyhole } from "lucide-react-native";
+import { AlertCircle, BarChart3, CheckCircle2, Clock3, LockKeyhole } from "lucide-react-native";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SubjectBarChart } from "@/components/charts";
 import { Card, Heading, Screen, typography } from "@/components/ui";
@@ -45,6 +45,8 @@ export default function ProgressScreen() {
       </Card> : <Card style={styles.subjectList}>
         {subjects.map((subject, index) => {
           const isReleased = subject.is_finalised && subject.carry_mark !== null;
+          const isIneligible = isReleased && subject.eligible === false;
+          const resultColor = isIneligible ? colors.danger : colors.success;
           const percentage = isReleased && subject.carry_maximum > 0
             ? Math.max(0, Math.min(100, subject.carry_mark! / subject.carry_maximum * 100))
             : null;
@@ -53,25 +55,26 @@ export default function ProgressScreen() {
             styles.subjectRow,
             index < subjects.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
           ]}>
-            <View style={[styles.subjectIcon, { backgroundColor: isReleased ? `${colors.success}18` : `${colors.warning}18` }]}>
-              {isReleased
-                ? <CheckCircle2 size={20} color={colors.success} />
+            <View style={[styles.subjectIcon, { backgroundColor: isReleased ? `${resultColor}18` : `${colors.warning}18` }]}>
+              {isIneligible
+                ? <AlertCircle size={20} color={colors.danger} />
+                : isReleased ? <CheckCircle2 size={20} color={colors.success} />
                 : <LockKeyhole size={19} color={colors.warning} />}
             </View>
             <View style={styles.subjectCopy}>
               <View style={styles.subjectHeadingRow}>
                 <Text style={[styles.subjectCode, { color: colors.accent }]}>{subject.code}</Text>
-                <View style={[styles.statusChip, { backgroundColor: isReleased ? `${colors.success}18` : `${colors.warning}18` }]}>
-                  <Text style={[styles.statusText, { color: isReleased ? colors.success : colors.warning }]}>{isReleased ? "RELEASED" : "PENDING"}</Text>
+                <View style={[styles.statusChip, { backgroundColor: isReleased ? `${resultColor}18` : `${colors.warning}18` }]}>
+                  <Text style={[styles.statusText, { color: isReleased ? resultColor : colors.warning }]}>{isIneligible ? "INELIGIBLE" : isReleased ? "RELEASED" : "PENDING"}</Text>
                 </View>
               </View>
               <Text style={[styles.subjectName, { color: colors.textSecondary }]} numberOfLines={2}>{subject.name}</Text>
             </View>
             <View style={styles.markColumn}>
-              <Text style={[styles.markValue, { color: isReleased ? colors.text : colors.muted }]}>
+              <Text style={[styles.markValue, { color: isReleased ? resultColor : colors.muted }]}>
                 {percentage === null ? "—" : `${percentage.toFixed(0)}%`}
               </Text>
-              <Text style={[styles.markCaption, { color: colors.muted }]}>
+              <Text style={[styles.markCaption, { color: isIneligible ? colors.danger : colors.muted }]}>
                 {isReleased ? `${subject.carry_mark}/${subject.carry_maximum}` : "Not released"}
               </Text>
             </View>

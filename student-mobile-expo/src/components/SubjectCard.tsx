@@ -1,4 +1,4 @@
-import { ChevronRight, CheckCircle2, Clock3, LockKeyhole, UserRound, UsersRound } from "lucide-react-native";
+import { AlertCircle, ChevronRight, CheckCircle2, Clock3, LockKeyhole, UserRound, UsersRound } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Card, typography } from "@/components/ui";
 import { useTheme } from "@/context/ThemeContext";
@@ -8,7 +8,9 @@ import { fonts } from "@/theme/fonts";
 export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPress: () => void }) {
   const { colors } = useTheme();
   const released = subject.is_finalised && subject.carry_mark !== null;
-  const statusColor = released ? colors.success : colors.warning;
+  const ineligible = released && subject.eligible === false;
+  const resultColor = ineligible ? colors.danger : colors.success;
+  const statusColor = released ? resultColor : colors.warning;
 
   return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`View ${subject.code} assessment details`}>
     {({ pressed }) => <Card style={[styles.card, { opacity: pressed ? .86 : 1 }]}>
@@ -17,8 +19,8 @@ export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPr
           <Text style={[styles.code, { color: colors.accent }]}>{subject.code}</Text>
         </View>
         <View style={[styles.status, { backgroundColor: `${statusColor}16`, borderColor: `${statusColor}55` }]}>
-          {released ? <CheckCircle2 size={13} color={statusColor} /> : <Clock3 size={13} color={statusColor} />}
-          <Text style={[styles.statusText, { color: statusColor }]}>{released ? "RELEASED" : "PENDING"}</Text>
+          {ineligible ? <AlertCircle size={13} color={statusColor} /> : released ? <CheckCircle2 size={13} color={statusColor} /> : <Clock3 size={13} color={statusColor} />}
+          <Text style={[styles.statusText, { color: statusColor }]}>{ineligible ? "INELIGIBLE" : released ? "RELEASED" : "PENDING"}</Text>
         </View>
       </View>
 
@@ -29,15 +31,15 @@ export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPr
         <View style={styles.metaItem}><UserRound size={15} color={colors.muted} /><Text numberOfLines={1} style={[typography.body, styles.metaText, { color: colors.textSecondary }]}>{subject.lecturer}</Text></View>
       </View>
 
-      <View style={[styles.resultBand, { backgroundColor: released ? `${colors.success}10` : colors.elevated }]}>
+      <View style={[styles.resultBand, { backgroundColor: released ? `${resultColor}10` : colors.elevated }]}>
         <View style={styles.resultCopy}>
-          {released ? <CheckCircle2 size={17} color={colors.success} /> : <LockKeyhole size={17} color={colors.muted} />}
+          {ineligible ? <AlertCircle size={17} color={colors.danger} /> : released ? <CheckCircle2 size={17} color={colors.success} /> : <LockKeyhole size={17} color={colors.muted} />}
           <View>
             <Text style={[styles.resultLabel, { color: colors.muted }]}>CARRY MARK</Text>
-            <Text style={[typography.bodyStrong, { color: released ? colors.success : colors.textSecondary }]}>{released ? "Finalised and released" : "Not released yet"}</Text>
+            <Text style={[typography.bodyStrong, { color: released ? resultColor : colors.textSecondary }]}>{ineligible ? "Finalised · not eligible" : released ? "Finalised and released" : "Not released yet"}</Text>
           </View>
         </View>
-        {released && <Text style={[styles.mark, { color: colors.success }]}>{subject.carry_mark!.toFixed(0)}<Text style={[styles.markMaximum, { color: colors.textSecondary }]}>/{subject.carry_maximum.toFixed(0)}</Text></Text>}
+        {released && <Text style={[styles.mark, { color: resultColor }]}>{subject.carry_mark!.toFixed(0)}<Text style={[styles.markMaximum, { color: colors.textSecondary }]}>/{subject.carry_maximum.toFixed(0)}</Text></Text>}
       </View>
 
       <View style={styles.actionRow}>

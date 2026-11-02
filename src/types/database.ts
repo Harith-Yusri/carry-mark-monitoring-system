@@ -366,36 +366,45 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          data: Json
           delivery_status: string
           id: string
           read_at: string | null
-          recipient_id: string
+          recipient_id: string | null
           related_entity_id: string | null
+          release_id: string | null
           sent_at: string | null
+          student_id: string | null
           title: string
           type: string
         }
         Insert: {
           body: string
           created_at?: string
+          data?: Json
           delivery_status?: string
           id?: string
           read_at?: string | null
-          recipient_id: string
+          recipient_id?: string | null
           related_entity_id?: string | null
+          release_id?: string | null
           sent_at?: string | null
+          student_id?: string | null
           title: string
           type: string
         }
         Update: {
           body?: string
           created_at?: string
+          data?: Json
           delivery_status?: string
           id?: string
           read_at?: string | null
-          recipient_id?: string
+          recipient_id?: string | null
           related_entity_id?: string | null
+          release_id?: string | null
           sent_at?: string | null
+          student_id?: string | null
           title?: string
           type?: string
         }
@@ -407,7 +416,98 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "notifications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      student_push_devices: {
+        Row: {
+          active: boolean
+          created_at: string
+          expo_push_token: string
+          id: string
+          installation_id: string
+          last_error: string | null
+          last_registered_at: string
+          platform: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          expo_push_token: string
+          id?: string
+          installation_id: string
+          last_error?: string | null
+          last_registered_at?: string
+          platform: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          expo_push_token?: string
+          id?: string
+          installation_id?: string
+          last_error?: string | null
+          last_registered_at?: string
+          platform?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [{
+          foreignKeyName: "student_push_devices_student_id_fkey"
+          columns: ["student_id"]
+          isOneToOne: false
+          referencedRelation: "students"
+          referencedColumns: ["id"]
+        }]
+      }
+      student_push_deliveries: {
+        Row: {
+          attempted_at: string
+          created_at: string
+          device_id: string
+          error_code: string | null
+          error_message: string | null
+          expo_ticket_id: string | null
+          id: string
+          notification_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempted_at?: string
+          created_at?: string
+          device_id: string
+          error_code?: string | null
+          error_message?: string | null
+          expo_ticket_id?: string | null
+          id?: string
+          notification_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempted_at?: string
+          created_at?: string
+          device_id?: string
+          error_code?: string | null
+          error_message?: string | null
+          expo_ticket_id?: string | null
+          id?: string
+          notification_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -441,6 +541,32 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lecturer_contacts: {
+        Row: {
+          lecturer_id: string
+          whatsapp_phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          lecturer_id: string
+          whatsapp_phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          lecturer_id?: string
+          whatsapp_phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lecturer_contacts_lecturer_id_fkey"
+            columns: ["lecturer_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       programme_deadlines: {
         Row: {
@@ -658,6 +784,7 @@ export type Database = {
           reopen_reason: string | null
           reopened_at: string | null
           reopened_by: string | null
+          release_id: string | null
           section_id: string
           status: Database["public"]["Enums"]["submission_status"]
           updated_at: string
@@ -669,6 +796,7 @@ export type Database = {
           reopen_reason?: string | null
           reopened_at?: string | null
           reopened_by?: string | null
+          release_id?: string | null
           section_id: string
           status?: Database["public"]["Enums"]["submission_status"]
           updated_at?: string
@@ -680,6 +808,7 @@ export type Database = {
           reopen_reason?: string | null
           reopened_at?: string | null
           reopened_by?: string | null
+          release_id?: string | null
           section_id?: string
           status?: Database["public"]["Enums"]["submission_status"]
           updated_at?: string
@@ -738,6 +867,14 @@ export type Database = {
       }
     }
     Functions: {
+      get_my_lecturer_whatsapp: { Args: { target_offering: string }; Returns: string | null }
+      get_admin_current_overview: { Args: never; Returns: Json }
+      get_admin_semester_history: {
+        Args: never
+        Returns: { id: string; academic_year: string; semester_code: string; semester_no: number; starts_on: string; ends_on: string; offering_count: number; class_count: number; enrolment_count: number; finalised_count: number }[]
+      }
+      get_my_lecturer_subject_dashboard: { Args: never; Returns: Json }
+      get_my_student_bootstrap: { Args: never; Returns: Json }
       activate_academic_semester: { Args: { target_term: string }; Returns: undefined }
       create_academic_semester: { Args: { p_academic_year: string; p_semester_code: string; p_starts_on: string; p_ends_on: string; p_default_deadline: string }; Returns: string }
       delete_academic_semester: { Args: { target_term: string }; Returns: undefined }
@@ -750,12 +887,30 @@ export type Database = {
         Args: never
         Returns: { id: string; code: string; name: string }[]
       }
+      get_my_student_onboarding_state: {
+        Args: never
+        Returns: {
+          auth_user_id: string
+          email: string
+          student_id: string
+          full_name: string
+          programme_id: string | null
+          current_semester: number | null
+          profile_complete: boolean
+        }[]
+      }
+      complete_my_student_profile: {
+        Args: { p_programme_id: string; p_current_semester: number }
+        Returns: string
+      }
       get_offering_student_totals: {
         Args: { target_offering: string }
         Returns: { enrolment_id: string; total_carry: number; eligible: boolean }[]
       }
       set_offering_carry_max: { Args: { target_offering: string; total_weight: number }; Returns: undefined }
       set_my_notification_alerts_enabled: { Args: { p_enabled: boolean }; Returns: boolean }
+      register_my_push_device: { Args: { p_installation_id: string; p_expo_push_token: string; p_platform: string }; Returns: string }
+      unregister_my_push_device: { Args: { p_installation_id: string }; Returns: undefined }
       create_lecturer_subject: { Args: { subject_code: string; subject_name: string; offering_semester: number }; Returns: string }
       update_lecturer_subject: { Args: { target_offering: string; subject_name: string; offering_semester: number; teaching_programme_id: string }; Returns: undefined }
       can_access_enrolment: { Args: { target: string }; Returns: boolean }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "456262494408",
+    "project_id": "cams-4f8b5",
+    "storage_bucket": "cams-4f8b5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:456262494408:android:c442c6a30d0934f5f11dfd",
+        "android_client_info": {
+          "package_name": "my.edu.uitm.carrymark.student"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEjgmwdeTfHJo41Kcn4yzO5pdJjufogQ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

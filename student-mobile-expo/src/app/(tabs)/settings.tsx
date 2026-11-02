@@ -4,15 +4,23 @@ import {
   BellRing, Building2, CalendarDays, GraduationCap, Hash,
   LogOut, Moon, Smartphone,
 } from "lucide-react-native";
-import { useCallback, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { Card, Heading, Screen, typography } from "@/components/ui";
+import { StudentAvatar } from "@/components/StudentAvatar";
 import { useStudent } from "@/context/StudentContext";
 import { useTheme } from "@/context/ThemeContext";
+import { sendPushTest } from "@/services/studentApi";
+
+const pushTestMode = process.env.EXPO_PUBLIC_PUSH_TEST_MODE === "true";
+const PUSH_TEST_TIMEOUT_MS = 30_000;
+const PUSH_TEST_TIMEOUT_MESSAGE = "The test request timed out. Delivery may still complete. Check your notifications before trying again.";
 
 export default function SettingsScreen() {
   const { colors, mode, toggle } = useTheme();
   const { student, notifications_enabled, actionLoading, setNotificationAlertsEnabled, logout, refresh } = useStudent();
+  const [testingPush, setTestingPush] = useState(false);
+  const pushTestInFlight = useRef(false);
 
   useFocusEffect(useCallback(() => {
     void refresh();
@@ -30,6 +38,40 @@ export default function SettingsScreen() {
     }
   };
 
+  const testPushNotification = async () => {
+    if (pushTestInFlight.current || notifications_enabled === false) return;
+    pushTestInFlight.current = true;
+    setTestingPush(true);
+    let timedOut = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const request = async () => {
+        const push = await import("@/lib/pushNotifications");
+        if (timedOut) throw new Error(PUSH_TEST_TIMEOUT_MESSAGE);
+        const token = await push.registerForStudentPushNotifications();
+        // Registration may finish after the UI deadline; do not start a late send.
+        if (timedOut) throw new Error(PUSH_TEST_TIMEOUT_MESSAGE);
+        if (!token) throw new Error("Allow notifications in your phone settings, then try again on your physical device.");
+        return sendPushTest();
+      };
+      const deadline = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          timedOut = true;
+          reject(new Error(PUSH_TEST_TIMEOUT_MESSAGE));
+        }, PUSH_TEST_TIMEOUT_MS);
+      });
+      const result = await Promise.race([request(), deadline]);
+      if (!result?.sent) throw new Error("No active device token was available. Reopen Settings and try again.");
+      Alert.alert("Test notification sent", "Check your notification tray.");
+    } catch (reason) {
+      Alert.alert("Push notification test", reason instanceof Error ? reason.message : "Unable to send the test notification.");
+    } finally {
+      clearTimeout(timeoutId);
+      pushTestInFlight.current = false;
+      setTestingPush(false);
+    }
+  };
+
   return <Screen>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
@@ -39,11 +81,7 @@ export default function SettingsScreen() {
 
       <Card style={styles.profileCard}>
         <View style={styles.identityRow}>
-          <View style={[styles.avatarRing, { borderColor: `${colors.accent}55` }]}>
-            <View style={[styles.avatar, { backgroundColor: colors.primarySoft }]}>
-              <Text style={[styles.avatarText, { color: colors.accent }]}>{student?.name?.charAt(0).toUpperCase() ?? "S"}</Text>
-            </View>
-          </View>
+          <StudentAvatar name={student?.name} />
           <View style={styles.identityCopy}>
             <Text style={[styles.name, { color: colors.text }]}>{student?.name ?? "Student"}</Text>
             <View style={styles.idRow}><Hash size={13} color={colors.muted} /><Text style={[styles.studentId, { color: colors.textSecondary }]}>{student?.matrix_number ?? "Not recorded"}</Text></View>
@@ -81,6 +119,24 @@ export default function SettingsScreen() {
             thumbColor={colors.white}
           />}
         />
+        {pushTestMode && <>
+          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+          <InfoRow
+            icon={<Smartphone size={20} color={colors.accent} />}
+            title="Development push test"
+            detail="Send one secured test notification to your registered devices"
+            trailing={<Pressable
+              accessibilityRole="button"
+              disabled={testingPush || notifications_enabled === false}
+              onPress={() => void testPushNotification()}
+              style={({ pressed }) => [styles.testButton, {
+                backgroundColor: colors.primarySoft,
+                borderColor: colors.primary,
+                opacity: testingPush || notifications_enabled === false ? .45 : pressed ? .75 : 1,
+              }]}
+            ><Text style={[styles.testButtonText, { color: colors.accent }]}>{testingPush ? "Sending…" : "Send test"}</Text></Pressable>}
+          />
+        </>}
       </SettingsSection>
 
       <SettingsSection title="App" subtitle="Appearance and app information">
@@ -146,9 +202,6 @@ const styles = StyleSheet.create({
   eyebrow: { fontSize: 11, lineHeight: 15, fontWeight: "800", letterSpacing: 1.5 },
   profileCard: { gap: 16 },
   identityRow: { flexDirection: "row", alignItems: "center", gap: 14 },
-  avatarRing: { width: 66, height: 66, borderRadius: 23, borderWidth: 1, padding: 4 },
-  avatar: { flex: 1, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  avatarText: { fontSize: 26, lineHeight: 32, fontWeight: "800" },
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
   name: { fontSize: 20, lineHeight: 26, fontWeight: "800" },
   idRow: { flexDirection: "row", alignItems: "center", gap: 3 },
@@ -174,4 +227,6 @@ const styles = StyleSheet.create({
   infoDetail: { fontSize: 11, lineHeight: 16, fontWeight: "500" },
   rowDivider: { height: StyleSheet.hairlineWidth, marginLeft: 51 },
   logout: { minHeight: 52, borderWidth: 1, borderRadius: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
+  testButton: { minHeight: 36, borderWidth: 1, borderRadius: 10, paddingHorizontal: 11, alignItems: "center", justifyContent: "center" },
+  testButtonText: { fontSize: 11, lineHeight: 15, fontWeight: "800" },
 });

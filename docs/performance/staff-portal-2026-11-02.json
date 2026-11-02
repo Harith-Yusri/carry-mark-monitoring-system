@@ -1,0 +1,6503 @@
+{
+  "measurement_scope": "Production browser + fully intercepted synthetic responses at 200 ms/request; not end-to-end measurements of the real Supabase RPC network. Database timings use existing live data with numeric-only outputs, staff JWT context and authenticated RLS, six samples. Public settings requests supply a separate real network reference.",
+  "before": {
+    "latencyMs": 200,
+    "scenarios": [
+      {
+        "name": "admin initial restore",
+        "jsMs": 18.406,
+        "layoutMs": 8.828000000000001,
+        "styleMs": 2.331,
+        "elapsedMs": 833.3235000000001,
+        "requests": [
+          {
+            "endpoint": "/auth/v1/user",
+            "ms": 203.47145799999998,
+            "bytes": 181
+          },
+          {
+            "endpoint": "/rest/v1/profiles",
+            "ms": 203.13012499999996,
+            "bytes": 132
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_admin_current_overview",
+            "ms": 203.61591700000008,
+            "bytes": 9769
+          }
+        ],
+        "afterLastResponseMs": 176.32125000000008,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 8.199999988079071,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.199999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-C4HfPlHj.js",
+            "ms": 3.699999988079071,
+            "bytes": 4393
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 3.800000011920929,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-Btk7YIYb.js",
+            "ms": 4.5,
+            "bytes": 2480
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 3.9000000059604645,
+            "bytes": 662
+          },
+          {
+            "name": "useReminders-BqJmy2rv.js",
+            "ms": 4,
+            "bytes": 1202
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Submission Monitor",
+        "jsMs": 4.298,
+        "layoutMs": 1.6279999999999992,
+        "styleMs": 2.655,
+        "elapsedMs": 103.44954200000006,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 8.199999988079071,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.199999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-C4HfPlHj.js",
+            "ms": 3.699999988079071,
+            "bytes": 4393
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 3.800000011920929,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-Btk7YIYb.js",
+            "ms": 4.5,
+            "bytes": 2480
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 3.9000000059604645,
+            "bytes": 662
+          },
+          {
+            "name": "useReminders-BqJmy2rv.js",
+            "ms": 4,
+            "bytes": 1202
+          },
+          {
+            "name": "SubmissionMonitor-C6Thn6Uz.js",
+            "ms": 8,
+            "bytes": 2744
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Lecturer Directory",
+        "jsMs": 2.5820000000000007,
+        "layoutMs": 0.8319999999999994,
+        "styleMs": 1.9890000000000003,
+        "elapsedMs": 55.56404199999997,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 8.199999988079071,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.199999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-C4HfPlHj.js",
+            "ms": 3.699999988079071,
+            "bytes": 4393
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 3.800000011920929,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-Btk7YIYb.js",
+            "ms": 4.5,
+            "bytes": 2480
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 3.9000000059604645,
+            "bytes": 662
+          },
+          {
+            "name": "useReminders-BqJmy2rv.js",
+            "ms": 4,
+            "bytes": 1202
+          },
+          {
+            "name": "SubmissionMonitor-C6Thn6Uz.js",
+            "ms": 8,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-A8rFXG-G.js",
+            "ms": 2.4000000059604645,
+            "bytes": 2229
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Reports & Exports",
+        "jsMs": 2.8460000000000014,
+        "layoutMs": 1.7250000000000008,
+        "styleMs": 3.9099999999999993,
+        "elapsedMs": 66.39558299999999,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 8.199999988079071,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.199999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-C4HfPlHj.js",
+            "ms": 3.699999988079071,
+            "bytes": 4393
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 3.800000011920929,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-Btk7YIYb.js",
+            "ms": 4.5,
+            "bytes": 2480
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 3.9000000059604645,
+            "bytes": 662
+          },
+          {
+            "name": "useReminders-BqJmy2rv.js",
+            "ms": 4,
+            "bytes": 1202
+          },
+          {
+            "name": "SubmissionMonitor-C6Thn6Uz.js",
+            "ms": 8,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-A8rFXG-G.js",
+            "ms": 2.4000000059604645,
+            "bytes": 2229
+          },
+          {
+            "name": "csv-C0MVtPRy.js",
+            "ms": 2.800000011920929,
+            "bytes": 1080
+          },
+          {
+            "name": "ComplianceReports-CDG48DsS.js",
+            "ms": 3.0999999940395355,
+            "bytes": 2574
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Past Semesters",
+        "jsMs": 3.8410000000000006,
+        "layoutMs": 3.4589999999999987,
+        "styleMs": 6.937,
+        "elapsedMs": 266.8582919999999,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/rpc/get_admin_semester_history",
+            "ms": 203.20766600000002,
+            "bytes": 240
+          }
+        ],
+        "afterLastResponseMs": 13.67595899999992,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 8.199999988079071,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.199999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-C4HfPlHj.js",
+            "ms": 3.699999988079071,
+            "bytes": 4393
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 3.800000011920929,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-Btk7YIYb.js",
+            "ms": 4.5,
+            "bytes": 2480
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 3.9000000059604645,
+            "bytes": 662
+          },
+          {
+            "name": "useReminders-BqJmy2rv.js",
+            "ms": 4,
+            "bytes": 1202
+          },
+          {
+            "name": "SubmissionMonitor-C6Thn6Uz.js",
+            "ms": 8,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-A8rFXG-G.js",
+            "ms": 2.4000000059604645,
+            "bytes": 2229
+          },
+          {
+            "name": "csv-C0MVtPRy.js",
+            "ms": 2.800000011920929,
+            "bytes": 1080
+          },
+          {
+            "name": "ComplianceReports-CDG48DsS.js",
+            "ms": 3.0999999940395355,
+            "bytes": 2574
+          },
+          {
+            "name": "SessionHistory-B4UJUVUX.js",
+            "ms": 3.800000011920929,
+            "bytes": 1198
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 3.9000000059604645,
+            "bytes": 3728
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Admin Dashboard revisit",
+        "jsMs": 1.7369999999999954,
+        "layoutMs": 0.9710000000000031,
+        "styleMs": 1.8759999999999992,
+        "elapsedMs": 17.559749999999894,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 8.199999988079071,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.199999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-C4HfPlHj.js",
+            "ms": 3.699999988079071,
+            "bytes": 4393
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 3.800000011920929,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-Btk7YIYb.js",
+            "ms": 4.5,
+            "bytes": 2480
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 3.9000000059604645,
+            "bytes": 662
+          },
+          {
+            "name": "useReminders-BqJmy2rv.js",
+            "ms": 4,
+            "bytes": 1202
+          },
+          {
+            "name": "SubmissionMonitor-C6Thn6Uz.js",
+            "ms": 8,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-A8rFXG-G.js",
+            "ms": 2.4000000059604645,
+            "bytes": 2229
+          },
+          {
+            "name": "csv-C0MVtPRy.js",
+            "ms": 2.800000011920929,
+            "bytes": 1080
+          },
+          {
+            "name": "ComplianceReports-CDG48DsS.js",
+            "ms": 3.0999999940395355,
+            "bytes": 2574
+          },
+          {
+            "name": "SessionHistory-B4UJUVUX.js",
+            "ms": 3.800000011920929,
+            "bytes": 1198
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 3.9000000059604645,
+            "bytes": 3728
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "lecturer initial restore",
+        "jsMs": 30.072000000000003,
+        "layoutMs": 10.317,
+        "styleMs": 2.7399999999999998,
+        "elapsedMs": 827.3457920000001,
+        "requests": [
+          {
+            "endpoint": "/auth/v1/user",
+            "ms": 202.75795900000026,
+            "bytes": 181
+          },
+          {
+            "endpoint": "/rest/v1/profiles",
+            "ms": 202.85433300000022,
+            "bytes": 139
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_my_lecturer_subject_dashboard",
+            "ms": 204.13162499999999,
+            "bytes": 1762
+          }
+        ],
+        "afterLastResponseMs": 158.67495800000006,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 9.900000005960464,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.100000023841858,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-VQsksU9O.js",
+            "ms": 3.2999999821186066,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-CP_mALjr.js",
+            "ms": 5.600000023841858,
+            "bytes": 6043
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 5.0999999940395355,
+            "bytes": 3728
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.5,
+            "bytes": 983
+          },
+          {
+            "name": "x-BnAV9Bis.js",
+            "ms": 5.699999988079071,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 6.199999988079071,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-Dzvg3vzh.js",
+            "ms": 6.5999999940395355,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-BXRw8nV2.js",
+            "ms": 6.200000017881393,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-B93cOd4D.js",
+            "ms": 6.5999999940395355,
+            "bytes": 603
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Subject Hub Assessments",
+        "jsMs": 18.258999999999997,
+        "layoutMs": 1.7999999999999996,
+        "styleMs": 2.453,
+        "elapsedMs": 278.22695799999974,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 204.5045,
+            "bytes": 966
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 204.48900000000003,
+            "bytes": 59
+          }
+        ],
+        "afterLastResponseMs": 19.289624999999887,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 9.900000005960464,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.100000023841858,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-VQsksU9O.js",
+            "ms": 3.2999999821186066,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-CP_mALjr.js",
+            "ms": 5.600000023841858,
+            "bytes": 6043
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 5.0999999940395355,
+            "bytes": 3728
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.5,
+            "bytes": 983
+          },
+          {
+            "name": "x-BnAV9Bis.js",
+            "ms": 5.699999988079071,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 6.199999988079071,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-Dzvg3vzh.js",
+            "ms": 6.5999999940395355,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-BXRw8nV2.js",
+            "ms": 6.200000017881393,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-B93cOd4D.js",
+            "ms": 6.5999999940395355,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-BJHpMbMx.js",
+            "ms": 3.5,
+            "bytes": 3958
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Marks Entry class selector",
+        "jsMs": 7.077,
+        "layoutMs": 1.6750000000000012,
+        "styleMs": 2.241,
+        "elapsedMs": 825.8251249999998,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 203.88749999999982,
+            "bytes": 966
+          },
+          {
+            "endpoint": "/rest/v1/class_sections",
+            "ms": 204.12279200000012,
+            "bytes": 1286
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 204.2909999999997,
+            "bytes": 59
+          },
+          {
+            "endpoint": "/rest/v1/programmes",
+            "ms": 204.21629099999973,
+            "bytes": 369
+          },
+          {
+            "endpoint": "/rest/v1/enrolments",
+            "ms": 204.55000000000018,
+            "bytes": 1321
+          },
+          {
+            "endpoint": "/rest/v1/submissions",
+            "ms": 204.2284169999998,
+            "bytes": 76
+          },
+          {
+            "endpoint": "/rest/v1/marks",
+            "ms": 203.5884170000004,
+            "bytes": 3661
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_offering_student_totals",
+            "ms": 202.97795900000028,
+            "bytes": 541
+          }
+        ],
+        "afterLastResponseMs": 161.41733299999987,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 9.900000005960464,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.100000023841858,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-VQsksU9O.js",
+            "ms": 3.2999999821186066,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-CP_mALjr.js",
+            "ms": 5.600000023841858,
+            "bytes": 6043
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 5.0999999940395355,
+            "bytes": 3728
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.5,
+            "bytes": 983
+          },
+          {
+            "name": "x-BnAV9Bis.js",
+            "ms": 5.699999988079071,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 6.199999988079071,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-Dzvg3vzh.js",
+            "ms": 6.5999999940395355,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-BXRw8nV2.js",
+            "ms": 6.200000017881393,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-B93cOd4D.js",
+            "ms": 6.5999999940395355,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-BJHpMbMx.js",
+            "ms": 3.5,
+            "bytes": 3958
+          },
+          {
+            "name": "classSelectorStyles-DjDpa-wF.js",
+            "ms": 5,
+            "bytes": 1032
+          },
+          {
+            "name": "MarksEntryTab-C2mBe8sD.js",
+            "ms": 5.5999999940395355,
+            "bytes": 6345
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 5,
+            "bytes": 777
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Marks Entry chosen class",
+        "jsMs": 4.105999999999998,
+        "layoutMs": 1.483999999999999,
+        "styleMs": 1.7499999999999998,
+        "elapsedMs": 25.587541999999758,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 9.900000005960464,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.100000023841858,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-VQsksU9O.js",
+            "ms": 3.2999999821186066,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-CP_mALjr.js",
+            "ms": 5.600000023841858,
+            "bytes": 6043
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 5.0999999940395355,
+            "bytes": 3728
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.5,
+            "bytes": 983
+          },
+          {
+            "name": "x-BnAV9Bis.js",
+            "ms": 5.699999988079071,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 6.199999988079071,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-Dzvg3vzh.js",
+            "ms": 6.5999999940395355,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-BXRw8nV2.js",
+            "ms": 6.200000017881393,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-B93cOd4D.js",
+            "ms": 6.5999999940395355,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-BJHpMbMx.js",
+            "ms": 3.5,
+            "bytes": 3958
+          },
+          {
+            "name": "classSelectorStyles-DjDpa-wF.js",
+            "ms": 5,
+            "bytes": 1032
+          },
+          {
+            "name": "MarksEntryTab-C2mBe8sD.js",
+            "ms": 5.5999999940395355,
+            "bytes": 6345
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 5,
+            "bytes": 777
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Export class selector",
+        "jsMs": 4.6770000000000005,
+        "layoutMs": 1.2329999999999997,
+        "styleMs": 1.720000000000001,
+        "elapsedMs": 812.3866670000002,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 204.54025000000001,
+            "bytes": 966
+          },
+          {
+            "endpoint": "/rest/v1/class_sections",
+            "ms": 204.67633399999977,
+            "bytes": 1286
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 204.5985839999994,
+            "bytes": 59
+          },
+          {
+            "endpoint": "/rest/v1/enrolments",
+            "ms": 203.5278330000001,
+            "bytes": 1321
+          },
+          {
+            "endpoint": "/rest/v1/submissions",
+            "ms": 203.51279200000045,
+            "bytes": 76
+          },
+          {
+            "endpoint": "/rest/v1/marks",
+            "ms": 204.0832079999991,
+            "bytes": 3661
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_offering_student_totals",
+            "ms": 203.7761249999994,
+            "bytes": 541
+          }
+        ],
+        "afterLastResponseMs": 158.34862499999963,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 9.900000005960464,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.100000023841858,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-VQsksU9O.js",
+            "ms": 3.2999999821186066,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-CP_mALjr.js",
+            "ms": 5.600000023841858,
+            "bytes": 6043
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 5.0999999940395355,
+            "bytes": 3728
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.5,
+            "bytes": 983
+          },
+          {
+            "name": "x-BnAV9Bis.js",
+            "ms": 5.699999988079071,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 6.199999988079071,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-Dzvg3vzh.js",
+            "ms": 6.5999999940395355,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-BXRw8nV2.js",
+            "ms": 6.200000017881393,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-B93cOd4D.js",
+            "ms": 6.5999999940395355,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-BJHpMbMx.js",
+            "ms": 3.5,
+            "bytes": 3958
+          },
+          {
+            "name": "classSelectorStyles-DjDpa-wF.js",
+            "ms": 5,
+            "bytes": 1032
+          },
+          {
+            "name": "MarksEntryTab-C2mBe8sD.js",
+            "ms": 5.5999999940395355,
+            "bytes": 6345
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 5,
+            "bytes": 777
+          },
+          {
+            "name": "ExportTab-RcC_uaFX.js",
+            "ms": 4,
+            "bytes": 2899
+          },
+          {
+            "name": "csv-C0MVtPRy.js",
+            "ms": 3.5999999940395355,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "My Subjects revisit",
+        "jsMs": 3.935999999999995,
+        "layoutMs": 1.4100000000000015,
+        "styleMs": 2.144,
+        "elapsedMs": 310.5570830000006,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/rpc/get_my_lecturer_subject_dashboard",
+            "ms": 202.4300830000002,
+            "bytes": 1762
+          }
+        ],
+        "afterLastResponseMs": 84.62175000000025,
+        "chunks": [
+          {
+            "name": "index-Din77Y-P.js",
+            "ms": 9.900000005960464,
+            "bytes": 123376
+          },
+          {
+            "name": "PortalLayout-C4ONMU0G.js",
+            "ms": 3.100000023841858,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-VQsksU9O.js",
+            "ms": 3.2999999821186066,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-CP_mALjr.js",
+            "ms": 5.600000023841858,
+            "bytes": 6043
+          },
+          {
+            "name": "carryMarkApi-tEcqPdp-.js",
+            "ms": 5.0999999940395355,
+            "bytes": 3728
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.5,
+            "bytes": 983
+          },
+          {
+            "name": "x-BnAV9Bis.js",
+            "ms": 5.699999988079071,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-D28iwUgA.js",
+            "ms": 6.199999988079071,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-Dzvg3vzh.js",
+            "ms": 6.5999999940395355,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-BXRw8nV2.js",
+            "ms": 6.200000017881393,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-B93cOd4D.js",
+            "ms": 6.5999999940395355,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-BJHpMbMx.js",
+            "ms": 3.5,
+            "bytes": 3958
+          },
+          {
+            "name": "classSelectorStyles-DjDpa-wF.js",
+            "ms": 5,
+            "bytes": 1032
+          },
+          {
+            "name": "MarksEntryTab-C2mBe8sD.js",
+            "ms": 5.5999999940395355,
+            "bytes": 6345
+          },
+          {
+            "name": "users-CdG1w_Xq.js",
+            "ms": 5,
+            "bytes": 777
+          },
+          {
+            "name": "ExportTab-RcC_uaFX.js",
+            "ms": 4,
+            "bytes": 2899
+          },
+          {
+            "name": "csv-C0MVtPRy.js",
+            "ms": 3.5999999940395355,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      }
+    ]
+  },
+  "after": {
+    "latencyMs": 200,
+    "scenarios": [
+      {
+        "name": "admin initial restore",
+        "jsMs": 30.578999999999997,
+        "layoutMs": 12.968,
+        "styleMs": 4.354,
+        "elapsedMs": 856.3354580000001,
+        "requests": [
+          {
+            "endpoint": "/auth/v1/user",
+            "ms": 204.83754199999998,
+            "bytes": 181,
+            "startMs": 37.72770800000001,
+            "endMs": 242.59187500000007
+          },
+          {
+            "endpoint": "/rest/v1/profiles",
+            "ms": 204.83579199999997,
+            "bytes": 132,
+            "startMs": 250.02925000000005,
+            "endMs": 454.87408300000004
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_admin_current_overview",
+            "ms": 205.7075420000001,
+            "bytes": 9769,
+            "startMs": 483.0085,
+            "endMs": 688.726792
+          }
+        ],
+        "afterLastResponseMs": 167.60866600000008,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10.900000005960464,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.9000000059604645,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-CfZqmNQL.js",
+            "ms": 4.5,
+            "bytes": 4383
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.199999988079071,
+            "bytes": 983
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-DRs1eB-_.js",
+            "ms": 4.9000000059604645,
+            "bytes": 2479
+          },
+          {
+            "name": "useReminders-DXPuD1YW.js",
+            "ms": 4.300000011920929,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 4.299999982118607,
+            "bytes": 662
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Submission Monitor",
+        "jsMs": 3.8739999999999988,
+        "layoutMs": 1.4470000000000003,
+        "styleMs": 2.1649999999999996,
+        "elapsedMs": 58.87212499999987,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10.900000005960464,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.9000000059604645,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-CfZqmNQL.js",
+            "ms": 4.5,
+            "bytes": 4383
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.199999988079071,
+            "bytes": 983
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-DRs1eB-_.js",
+            "ms": 4.9000000059604645,
+            "bytes": 2479
+          },
+          {
+            "name": "useReminders-DXPuD1YW.js",
+            "ms": 4.300000011920929,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 4.299999982118607,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-Drxca-ua.js",
+            "ms": 4.699999988079071,
+            "bytes": 2742
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Lecturer Directory",
+        "jsMs": 2.673000000000002,
+        "layoutMs": 1.0999999999999985,
+        "styleMs": 1.8669999999999998,
+        "elapsedMs": 57.77037500000006,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10.900000005960464,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.9000000059604645,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-CfZqmNQL.js",
+            "ms": 4.5,
+            "bytes": 4383
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.199999988079071,
+            "bytes": 983
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-DRs1eB-_.js",
+            "ms": 4.9000000059604645,
+            "bytes": 2479
+          },
+          {
+            "name": "useReminders-DXPuD1YW.js",
+            "ms": 4.300000011920929,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 4.299999982118607,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-Drxca-ua.js",
+            "ms": 4.699999988079071,
+            "bytes": 2742
+          },
+          {
+            "name": "LecturerDirectory-CYPbJ49P.js",
+            "ms": 1.9000000059604645,
+            "bytes": 2228
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Reports & Exports",
+        "jsMs": 2.585000000000004,
+        "layoutMs": 2.1379999999999995,
+        "styleMs": 3.3120000000000007,
+        "elapsedMs": 63.18679099999986,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10.900000005960464,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.9000000059604645,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-CfZqmNQL.js",
+            "ms": 4.5,
+            "bytes": 4383
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.199999988079071,
+            "bytes": 983
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-DRs1eB-_.js",
+            "ms": 4.9000000059604645,
+            "bytes": 2479
+          },
+          {
+            "name": "useReminders-DXPuD1YW.js",
+            "ms": 4.300000011920929,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 4.299999982118607,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-Drxca-ua.js",
+            "ms": 4.699999988079071,
+            "bytes": 2742
+          },
+          {
+            "name": "LecturerDirectory-CYPbJ49P.js",
+            "ms": 1.9000000059604645,
+            "bytes": 2228
+          },
+          {
+            "name": "ComplianceReports-DFnrivfg.js",
+            "ms": 2.7000000178813934,
+            "bytes": 2574
+          },
+          {
+            "name": "csv-D2cqs0th.js",
+            "ms": 2.199999988079071,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Past Semesters",
+        "jsMs": 4.820999999999999,
+        "layoutMs": 4.916,
+        "styleMs": 8.067000000000002,
+        "elapsedMs": 267.2241670000001,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/rpc/get_admin_semester_history",
+            "ms": 204.15666699999997,
+            "bytes": 240,
+            "startMs": 49.34750000000008,
+            "endMs": 253.5128749999999
+          }
+        ],
+        "afterLastResponseMs": 13.711292000000185,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10.900000005960464,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.9000000059604645,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-CfZqmNQL.js",
+            "ms": 4.5,
+            "bytes": 4383
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.199999988079071,
+            "bytes": 983
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-DRs1eB-_.js",
+            "ms": 4.9000000059604645,
+            "bytes": 2479
+          },
+          {
+            "name": "useReminders-DXPuD1YW.js",
+            "ms": 4.300000011920929,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 4.299999982118607,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-Drxca-ua.js",
+            "ms": 4.699999988079071,
+            "bytes": 2742
+          },
+          {
+            "name": "LecturerDirectory-CYPbJ49P.js",
+            "ms": 1.9000000059604645,
+            "bytes": 2228
+          },
+          {
+            "name": "ComplianceReports-DFnrivfg.js",
+            "ms": 2.7000000178813934,
+            "bytes": 2574
+          },
+          {
+            "name": "csv-D2cqs0th.js",
+            "ms": 2.199999988079071,
+            "bytes": 1080
+          },
+          {
+            "name": "SessionHistory-DrrrSbtu.js",
+            "ms": 4.399999976158142,
+            "bytes": 1200
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.5,
+            "bytes": 4056
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Admin Dashboard revisit",
+        "jsMs": 1.7010000000000012,
+        "layoutMs": 1.1140000000000003,
+        "styleMs": 2.109,
+        "elapsedMs": 17.73199999999997,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10.900000005960464,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.9000000059604645,
+            "bytes": 3031
+          },
+          {
+            "name": "AdminWebPortal-CfZqmNQL.js",
+            "ms": 4.5,
+            "bytes": 4383
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.199999988079071,
+            "bytes": 983
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-DRs1eB-_.js",
+            "ms": 4.9000000059604645,
+            "bytes": 2479
+          },
+          {
+            "name": "useReminders-DXPuD1YW.js",
+            "ms": 4.300000011920929,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 4.299999982118607,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-Drxca-ua.js",
+            "ms": 4.699999988079071,
+            "bytes": 2742
+          },
+          {
+            "name": "LecturerDirectory-CYPbJ49P.js",
+            "ms": 1.9000000059604645,
+            "bytes": 2228
+          },
+          {
+            "name": "ComplianceReports-DFnrivfg.js",
+            "ms": 2.7000000178813934,
+            "bytes": 2574
+          },
+          {
+            "name": "csv-D2cqs0th.js",
+            "ms": 2.199999988079071,
+            "bytes": 1080
+          },
+          {
+            "name": "SessionHistory-DrrrSbtu.js",
+            "ms": 4.399999976158142,
+            "bytes": 1200
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.5,
+            "bytes": 4056
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "lecturer initial restore",
+        "jsMs": 29.738,
+        "layoutMs": 10.355,
+        "styleMs": 2.8310000000000004,
+        "elapsedMs": 835.5619580000002,
+        "requests": [
+          {
+            "endpoint": "/auth/v1/user",
+            "ms": 203.40595799999983,
+            "bytes": 181,
+            "startMs": 23.337667000000238,
+            "endMs": 226.75162499999988
+          },
+          {
+            "endpoint": "/rest/v1/profiles",
+            "ms": 203.38649999999961,
+            "bytes": 139,
+            "startMs": 229.96054200000026,
+            "endMs": 433.356667
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_my_lecturer_subject_dashboard",
+            "ms": 204.94145900000012,
+            "bytes": 1762,
+            "startMs": 464.47845800000005,
+            "endMs": 669.425917
+          }
+        ],
+        "afterLastResponseMs": 166.1360410000002,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.699999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-D9j4yaXq.js",
+            "ms": 3.4000000059604645,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-1gory9Hp.js",
+            "ms": 5.0999999940395355,
+            "bytes": 6042
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.700000017881393,
+            "bytes": 4056
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "x-DySR1vnD.js",
+            "ms": 5.5,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 5.899999976158142,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-N0O6XUcw.js",
+            "ms": 6,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-C6jUsatH.js",
+            "ms": 5.9000000059604645,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-CRmKmCBa.js",
+            "ms": 6,
+            "bytes": 603
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Subject Hub Assessments",
+        "jsMs": 18.211,
+        "layoutMs": 1.8460000000000005,
+        "styleMs": 9.74,
+        "elapsedMs": 293.419042,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 203.12287500000002,
+            "bytes": 966,
+            "startMs": 62.88499999999976,
+            "endMs": 266.1441249999998
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 203.2767920000001,
+            "bytes": 59,
+            "startMs": 63.15387499999997,
+            "endMs": 266.43716700000004
+          }
+        ],
+        "afterLastResponseMs": 26.981874999999945,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.699999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-D9j4yaXq.js",
+            "ms": 3.4000000059604645,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-1gory9Hp.js",
+            "ms": 5.0999999940395355,
+            "bytes": 6042
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.700000017881393,
+            "bytes": 4056
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "x-DySR1vnD.js",
+            "ms": 5.5,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 5.899999976158142,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-N0O6XUcw.js",
+            "ms": 6,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-C6jUsatH.js",
+            "ms": 5.9000000059604645,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-CRmKmCBa.js",
+            "ms": 6,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-CUm_Y_Wh.js",
+            "ms": 4.600000023841858,
+            "bytes": 3958
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Marks Entry class selector",
+        "jsMs": 6.253000000000002,
+        "layoutMs": 1.6970000000000005,
+        "styleMs": 2.182,
+        "elapsedMs": 336.131625,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/class_sections",
+            "ms": 204.01325000000043,
+            "bytes": 1286,
+            "startMs": 55.89045799999985,
+            "endMs": 259.91354200000023
+          }
+        ],
+        "afterLastResponseMs": 76.21808299999975,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.699999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-D9j4yaXq.js",
+            "ms": 3.4000000059604645,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-1gory9Hp.js",
+            "ms": 5.0999999940395355,
+            "bytes": 6042
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.700000017881393,
+            "bytes": 4056
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "x-DySR1vnD.js",
+            "ms": 5.5,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 5.899999976158142,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-N0O6XUcw.js",
+            "ms": 6,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-C6jUsatH.js",
+            "ms": 5.9000000059604645,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-CRmKmCBa.js",
+            "ms": 6,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-CUm_Y_Wh.js",
+            "ms": 4.600000023841858,
+            "bytes": 3958
+          },
+          {
+            "name": "MarksEntryTab-BAz1cgaD.js",
+            "ms": 5.199999988079071,
+            "bytes": 6460
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.4000000059604645,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-BnknPQ-0.js",
+            "ms": 4.5,
+            "bytes": 1428
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Marks Entry chosen class",
+        "jsMs": 5.894999999999998,
+        "layoutMs": 2.020000000000001,
+        "styleMs": 2.2409999999999983,
+        "elapsedMs": 313.9176669999997,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 205.68662500000028,
+            "bytes": 966,
+            "startMs": 21.735499999999774,
+            "endMs": 227.4248749999997
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 205.3033330000003,
+            "bytes": 59,
+            "startMs": 22.156666999999743,
+            "endMs": 227.460959
+          },
+          {
+            "endpoint": "/rest/v1/enrolments",
+            "ms": 205.227167,
+            "bytes": 1321,
+            "startMs": 22.25237500000003,
+            "endMs": 227.48083399999996
+          },
+          {
+            "endpoint": "/rest/v1/submissions",
+            "ms": 204.97108300000036,
+            "bytes": 76,
+            "startMs": 22.525041999999758,
+            "endMs": 227.496709
+          },
+          {
+            "endpoint": "/rest/v1/marks",
+            "ms": 205.29025000000001,
+            "bytes": 3661,
+            "startMs": 22.893666999999823,
+            "endMs": 228.1872089999997
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_offering_student_totals",
+            "ms": 205.0969170000003,
+            "bytes": 541,
+            "startMs": 23.201666999999816,
+            "endMs": 228.2997919999998
+          }
+        ],
+        "afterLastResponseMs": 85.61787499999991,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.699999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-D9j4yaXq.js",
+            "ms": 3.4000000059604645,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-1gory9Hp.js",
+            "ms": 5.0999999940395355,
+            "bytes": 6042
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.700000017881393,
+            "bytes": 4056
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "x-DySR1vnD.js",
+            "ms": 5.5,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 5.899999976158142,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-N0O6XUcw.js",
+            "ms": 6,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-C6jUsatH.js",
+            "ms": 5.9000000059604645,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-CRmKmCBa.js",
+            "ms": 6,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-CUm_Y_Wh.js",
+            "ms": 4.600000023841858,
+            "bytes": 3958
+          },
+          {
+            "name": "MarksEntryTab-BAz1cgaD.js",
+            "ms": 5.199999988079071,
+            "bytes": 6460
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.4000000059604645,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-BnknPQ-0.js",
+            "ms": 4.5,
+            "bytes": 1428
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Export class selector",
+        "jsMs": 4.625000000000004,
+        "layoutMs": 1.2619999999999991,
+        "styleMs": 1.739000000000001,
+        "elapsedMs": 306.0233750000002,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/class_sections",
+            "ms": 203.47787500000004,
+            "bytes": 1286,
+            "startMs": 30.792124999999942,
+            "endMs": 234.27391599999964
+          }
+        ],
+        "afterLastResponseMs": 71.74945900000057,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.699999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-D9j4yaXq.js",
+            "ms": 3.4000000059604645,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-1gory9Hp.js",
+            "ms": 5.0999999940395355,
+            "bytes": 6042
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.700000017881393,
+            "bytes": 4056
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "x-DySR1vnD.js",
+            "ms": 5.5,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 5.899999976158142,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-N0O6XUcw.js",
+            "ms": 6,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-C6jUsatH.js",
+            "ms": 5.9000000059604645,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-CRmKmCBa.js",
+            "ms": 6,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-CUm_Y_Wh.js",
+            "ms": 4.600000023841858,
+            "bytes": 3958
+          },
+          {
+            "name": "MarksEntryTab-BAz1cgaD.js",
+            "ms": 5.199999988079071,
+            "bytes": 6460
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.4000000059604645,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-BnknPQ-0.js",
+            "ms": 4.5,
+            "bytes": 1428
+          },
+          {
+            "name": "ExportTab-DAMuSp-E.js",
+            "ms": 4.399999976158142,
+            "bytes": 2905
+          },
+          {
+            "name": "csv-D2cqs0th.js",
+            "ms": 4,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Export chosen class",
+        "jsMs": 3.7809999999999926,
+        "layoutMs": 1.3360000000000003,
+        "styleMs": 1.5650000000000004,
+        "elapsedMs": 311.20170899999994,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 208.1929999999993,
+            "bytes": 966,
+            "startMs": 23.04150000000027,
+            "endMs": 231.23691700000018
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 207.88695800000005,
+            "bytes": 59,
+            "startMs": 23.373459000000366,
+            "endMs": 231.2610420000001
+          },
+          {
+            "endpoint": "/rest/v1/enrolments",
+            "ms": 207.49079099999926,
+            "bytes": 1321,
+            "startMs": 23.786334000000352,
+            "endMs": 231.2784590000001
+          },
+          {
+            "endpoint": "/rest/v1/submissions",
+            "ms": 207.37254100000064,
+            "bytes": 76,
+            "startMs": 23.921833999999762,
+            "endMs": 231.29512499999964
+          },
+          {
+            "endpoint": "/rest/v1/marks",
+            "ms": 207.3092919999999,
+            "bytes": 3661,
+            "startMs": 24.001500000000306,
+            "endMs": 231.3127089999998
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_offering_student_totals",
+            "ms": 207.14891700000044,
+            "bytes": 541,
+            "startMs": 24.330791999999747,
+            "endMs": 231.4806669999998
+          }
+        ],
+        "afterLastResponseMs": 79.72104200000012,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.699999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-D9j4yaXq.js",
+            "ms": 3.4000000059604645,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-1gory9Hp.js",
+            "ms": 5.0999999940395355,
+            "bytes": 6042
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.700000017881393,
+            "bytes": 4056
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "x-DySR1vnD.js",
+            "ms": 5.5,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 5.899999976158142,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-N0O6XUcw.js",
+            "ms": 6,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-C6jUsatH.js",
+            "ms": 5.9000000059604645,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-CRmKmCBa.js",
+            "ms": 6,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-CUm_Y_Wh.js",
+            "ms": 4.600000023841858,
+            "bytes": 3958
+          },
+          {
+            "name": "MarksEntryTab-BAz1cgaD.js",
+            "ms": 5.199999988079071,
+            "bytes": 6460
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.4000000059604645,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-BnknPQ-0.js",
+            "ms": 4.5,
+            "bytes": 1428
+          },
+          {
+            "name": "ExportTab-DAMuSp-E.js",
+            "ms": 4.399999976158142,
+            "bytes": 2905
+          },
+          {
+            "name": "csv-D2cqs0th.js",
+            "ms": 4,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "My Subjects revisit",
+        "jsMs": 3.8500000000000063,
+        "layoutMs": 1.2619999999999991,
+        "styleMs": 1.9920000000000007,
+        "elapsedMs": 314.52649999999994,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/rpc/get_my_lecturer_subject_dashboard",
+            "ms": 202.49641599999995,
+            "bytes": 1762,
+            "startMs": 25.969750000000204,
+            "endMs": 228.4704160000001
+          }
+        ],
+        "afterLastResponseMs": 86.05608399999983,
+        "chunks": [
+          {
+            "name": "index-Cb0TyNyy.js",
+            "ms": 10,
+            "bytes": 123377
+          },
+          {
+            "name": "PortalLayout-C3F_xQ1N.js",
+            "ms": 2.699999988079071,
+            "bytes": 3031
+          },
+          {
+            "name": "LecturerWebPortal-D9j4yaXq.js",
+            "ms": 3.4000000059604645,
+            "bytes": 2444
+          },
+          {
+            "name": "LecturerDashboard-1gory9Hp.js",
+            "ms": 5.0999999940395355,
+            "bytes": 6042
+          },
+          {
+            "name": "carryMarkApi-BYhyCM3q.js",
+            "ms": 4.700000017881393,
+            "bytes": 4056
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 3.9000000059604645,
+            "bytes": 983
+          },
+          {
+            "name": "x-DySR1vnD.js",
+            "ms": 5.5,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-BsQGCcFP.js",
+            "ms": 5.899999976158142,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-N0O6XUcw.js",
+            "ms": 6,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-C6jUsatH.js",
+            "ms": 5.9000000059604645,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-CRmKmCBa.js",
+            "ms": 6,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-CUm_Y_Wh.js",
+            "ms": 4.600000023841858,
+            "bytes": 3958
+          },
+          {
+            "name": "MarksEntryTab-BAz1cgaD.js",
+            "ms": 5.199999988079071,
+            "bytes": 6460
+          },
+          {
+            "name": "users-vLMrCiCj.js",
+            "ms": 4.4000000059604645,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-BnknPQ-0.js",
+            "ms": 4.5,
+            "bytes": 1428
+          },
+          {
+            "name": "ExportTab-DAMuSp-E.js",
+            "ms": 4.399999976158142,
+            "bytes": 2905
+          },
+          {
+            "name": "csv-D2cqs0th.js",
+            "ms": 4,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      }
+    ]
+  },
+  "reactProfiling": {
+    "latencyMs": 200,
+    "scenarios": [
+      {
+        "name": "admin initial restore",
+        "stages": [
+          {
+            "label": "auth.session-restore",
+            "ms": 0.09999999403953552
+          },
+          {
+            "label": "auth.server-validation",
+            "ms": 206.59999999403954
+          },
+          {
+            "label": "auth.staff-profile",
+            "ms": 207.2000000178814
+          },
+          {
+            "label": "admin.transform",
+            "ms": 12.400000005960464
+          }
+        ],
+        "reactRenderMs": 6.300000041723251,
+        "reactCommits": 4,
+        "jsMs": 18.853,
+        "layoutMs": 9.315,
+        "styleMs": 2.274,
+        "elapsedMs": 834.6476670000001,
+        "requests": [
+          {
+            "endpoint": "/auth/v1/user",
+            "ms": 204.09366699999998,
+            "bytes": 181,
+            "startMs": 22.48400000000001,
+            "endMs": 226.59429200000002
+          },
+          {
+            "endpoint": "/rest/v1/profiles",
+            "ms": 203.66649999999998,
+            "bytes": 132,
+            "startMs": 229.65537500000002,
+            "endMs": 433.3275
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_admin_current_overview",
+            "ms": 205.34349999999995,
+            "bytes": 9769,
+            "startMs": 454.112042,
+            "endMs": 659.464417
+          }
+        ],
+        "afterLastResponseMs": 175.18325000000004,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 8.400000005960464,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 2.7999999821186066,
+            "bytes": 3032
+          },
+          {
+            "name": "AdminWebPortal-Ui8sK-1m.js",
+            "ms": 3.5,
+            "bytes": 4455
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.800000011920929,
+            "bytes": 983
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 3.5,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-B2GimMg0.js",
+            "ms": 4.5,
+            "bytes": 2482
+          },
+          {
+            "name": "useReminders-jKbt_Rz8.js",
+            "ms": 3.7000000178813934,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 3.7000000178813934,
+            "bytes": 662
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Submission Monitor",
+        "stages": [],
+        "reactRenderMs": 2.899999976158142,
+        "reactCommits": 2,
+        "jsMs": 4.7379999999999995,
+        "layoutMs": 1.6129999999999998,
+        "styleMs": 2.77,
+        "elapsedMs": 104.91104099999984,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 8.400000005960464,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 2.7999999821186066,
+            "bytes": 3032
+          },
+          {
+            "name": "AdminWebPortal-Ui8sK-1m.js",
+            "ms": 3.5,
+            "bytes": 4455
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.800000011920929,
+            "bytes": 983
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 3.5,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-B2GimMg0.js",
+            "ms": 4.5,
+            "bytes": 2482
+          },
+          {
+            "name": "useReminders-jKbt_Rz8.js",
+            "ms": 3.7000000178813934,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 3.7000000178813934,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-ZJdvOKjM.js",
+            "ms": 7,
+            "bytes": 2744
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Lecturer Directory",
+        "stages": [],
+        "reactRenderMs": 2.4000000059604645,
+        "reactCommits": 2,
+        "jsMs": 3.525999999999998,
+        "layoutMs": 1.209,
+        "styleMs": 2.9639999999999995,
+        "elapsedMs": 70.813625,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 8.400000005960464,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 2.7999999821186066,
+            "bytes": 3032
+          },
+          {
+            "name": "AdminWebPortal-Ui8sK-1m.js",
+            "ms": 3.5,
+            "bytes": 4455
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.800000011920929,
+            "bytes": 983
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 3.5,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-B2GimMg0.js",
+            "ms": 4.5,
+            "bytes": 2482
+          },
+          {
+            "name": "useReminders-jKbt_Rz8.js",
+            "ms": 3.7000000178813934,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 3.7000000178813934,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-ZJdvOKjM.js",
+            "ms": 7,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-U0-lXxJT.js",
+            "ms": 3.0999999940395355,
+            "bytes": 2230
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Reports & Exports",
+        "stages": [],
+        "reactRenderMs": 2.800000011920929,
+        "reactCommits": 3,
+        "jsMs": 4.2650000000000015,
+        "layoutMs": 2.5839999999999996,
+        "styleMs": 5.561,
+        "elapsedMs": 70.73641599999996,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 8.400000005960464,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 2.7999999821186066,
+            "bytes": 3032
+          },
+          {
+            "name": "AdminWebPortal-Ui8sK-1m.js",
+            "ms": 3.5,
+            "bytes": 4455
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.800000011920929,
+            "bytes": 983
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 3.5,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-B2GimMg0.js",
+            "ms": 4.5,
+            "bytes": 2482
+          },
+          {
+            "name": "useReminders-jKbt_Rz8.js",
+            "ms": 3.7000000178813934,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 3.7000000178813934,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-ZJdvOKjM.js",
+            "ms": 7,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-U0-lXxJT.js",
+            "ms": 3.0999999940395355,
+            "bytes": 2230
+          },
+          {
+            "name": "ComplianceReports-DkOHEwZI.js",
+            "ms": 4.700000017881393,
+            "bytes": 2574
+          },
+          {
+            "name": "csv-COxoeAZn.js",
+            "ms": 4.199999988079071,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Past Semesters",
+        "stages": [],
+        "reactRenderMs": 1.8000000417232513,
+        "reactCommits": 3,
+        "jsMs": 3.818000000000002,
+        "layoutMs": 3.3279999999999994,
+        "styleMs": 6.490000000000001,
+        "elapsedMs": 274.0752500000001,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/rpc/get_admin_semester_history",
+            "ms": 203.68841599999996,
+            "bytes": 240,
+            "startMs": 55.80320900000015,
+            "endMs": 259.50070900000014
+          }
+        ],
+        "afterLastResponseMs": 14.574540999999954,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 8.400000005960464,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 2.7999999821186066,
+            "bytes": 3032
+          },
+          {
+            "name": "AdminWebPortal-Ui8sK-1m.js",
+            "ms": 3.5,
+            "bytes": 4455
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.800000011920929,
+            "bytes": 983
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 3.5,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-B2GimMg0.js",
+            "ms": 4.5,
+            "bytes": 2482
+          },
+          {
+            "name": "useReminders-jKbt_Rz8.js",
+            "ms": 3.7000000178813934,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 3.7000000178813934,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-ZJdvOKjM.js",
+            "ms": 7,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-U0-lXxJT.js",
+            "ms": 3.0999999940395355,
+            "bytes": 2230
+          },
+          {
+            "name": "ComplianceReports-DkOHEwZI.js",
+            "ms": 4.700000017881393,
+            "bytes": 2574
+          },
+          {
+            "name": "csv-COxoeAZn.js",
+            "ms": 4.199999988079071,
+            "bytes": 1080
+          },
+          {
+            "name": "SessionHistory-BsQSfypY.js",
+            "ms": 4.0999999940395355,
+            "bytes": 1199
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 4.200000017881393,
+            "bytes": 4056
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Admin Dashboard revisit",
+        "stages": [],
+        "reactRenderMs": 1.300000011920929,
+        "reactCommits": 1,
+        "jsMs": 2.0629999999999953,
+        "layoutMs": 0.9750000000000002,
+        "styleMs": 1.8819999999999983,
+        "elapsedMs": 35.959292000000005,
+        "requests": [],
+        "afterLastResponseMs": null,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 8.400000005960464,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 2.7999999821186066,
+            "bytes": 3032
+          },
+          {
+            "name": "AdminWebPortal-Ui8sK-1m.js",
+            "ms": 3.5,
+            "bytes": 4455
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 2.800000011920929,
+            "bytes": 983
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 3.5,
+            "bytes": 777
+          },
+          {
+            "name": "AdminDashboard-B2GimMg0.js",
+            "ms": 4.5,
+            "bytes": 2482
+          },
+          {
+            "name": "useReminders-jKbt_Rz8.js",
+            "ms": 3.7000000178813934,
+            "bytes": 1202
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 3.7000000178813934,
+            "bytes": 662
+          },
+          {
+            "name": "SubmissionMonitor-ZJdvOKjM.js",
+            "ms": 7,
+            "bytes": 2744
+          },
+          {
+            "name": "LecturerDirectory-U0-lXxJT.js",
+            "ms": 3.0999999940395355,
+            "bytes": 2230
+          },
+          {
+            "name": "ComplianceReports-DkOHEwZI.js",
+            "ms": 4.700000017881393,
+            "bytes": 2574
+          },
+          {
+            "name": "csv-COxoeAZn.js",
+            "ms": 4.199999988079071,
+            "bytes": 1080
+          },
+          {
+            "name": "SessionHistory-BsQSfypY.js",
+            "ms": 4.0999999940395355,
+            "bytes": 1199
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 4.200000017881393,
+            "bytes": 4056
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "lecturer initial restore",
+        "stages": [
+          {
+            "label": "auth.session-restore",
+            "ms": 0.09999999403953552
+          },
+          {
+            "label": "auth.server-validation",
+            "ms": 204.7999999821186
+          },
+          {
+            "label": "auth.staff-profile",
+            "ms": 207.80000001192093
+          }
+        ],
+        "reactRenderMs": 18.600000023841858,
+        "reactCommits": 4,
+        "jsMs": 31.241999999999997,
+        "layoutMs": 10.166,
+        "styleMs": 3.019,
+        "elapsedMs": 833.0409579999998,
+        "requests": [
+          {
+            "endpoint": "/auth/v1/user",
+            "ms": 203.06562500000018,
+            "bytes": 181,
+            "startMs": 22.527249999999867,
+            "endMs": 225.60074999999983
+          },
+          {
+            "endpoint": "/rest/v1/profiles",
+            "ms": 203.80720800000017,
+            "bytes": 139,
+            "startMs": 229.2936669999997,
+            "endMs": 433.11358300000006
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_my_lecturer_subject_dashboard",
+            "ms": 202.8323330000003,
+            "bytes": 1762,
+            "startMs": 466.5129999999997,
+            "endMs": 669.3524169999998
+          }
+        ],
+        "afterLastResponseMs": 163.688541,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 9.300000011920929,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 3,
+            "bytes": 3032
+          },
+          {
+            "name": "LecturerWebPortal-BW8-qro2.js",
+            "ms": 3.5,
+            "bytes": 2449
+          },
+          {
+            "name": "LecturerDashboard-V6hywAvq.js",
+            "ms": 6.300000011920929,
+            "bytes": 6042
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.899999976158142,
+            "bytes": 983
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 5.399999976158142,
+            "bytes": 4056
+          },
+          {
+            "name": "x-MsvEFLDa.js",
+            "ms": 6.4000000059604645,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 6.800000011920929,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-BmftDHc1.js",
+            "ms": 7,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-DLS_iPg9.js",
+            "ms": 6.800000011920929,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-C_x5GB1X.js",
+            "ms": 7.300000011920929,
+            "bytes": 603
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Subject Hub Assessments",
+        "stages": [],
+        "reactRenderMs": 4.699999958276749,
+        "reactCommits": 3,
+        "jsMs": 18.724999999999998,
+        "layoutMs": 1.8650000000000004,
+        "styleMs": 2.361,
+        "elapsedMs": 288.63766699999996,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 205.08350000000019,
+            "bytes": 966,
+            "startMs": 61.031375000000025,
+            "endMs": 266.14437499999985
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 205.1367909999999,
+            "bytes": 59,
+            "startMs": 61.35820899999999,
+            "endMs": 266.4983750000001
+          }
+        ],
+        "afterLastResponseMs": 22.13929199999984,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 9.300000011920929,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 3,
+            "bytes": 3032
+          },
+          {
+            "name": "LecturerWebPortal-BW8-qro2.js",
+            "ms": 3.5,
+            "bytes": 2449
+          },
+          {
+            "name": "LecturerDashboard-V6hywAvq.js",
+            "ms": 6.300000011920929,
+            "bytes": 6042
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.899999976158142,
+            "bytes": 983
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 5.399999976158142,
+            "bytes": 4056
+          },
+          {
+            "name": "x-MsvEFLDa.js",
+            "ms": 6.4000000059604645,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 6.800000011920929,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-BmftDHc1.js",
+            "ms": 7,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-DLS_iPg9.js",
+            "ms": 6.800000011920929,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-C_x5GB1X.js",
+            "ms": 7.300000011920929,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-C_u8-ofG.js",
+            "ms": 3.699999988079071,
+            "bytes": 3959
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Marks Entry class selector",
+        "stages": [],
+        "reactRenderMs": 4.5999999940395355,
+        "reactCommits": 3,
+        "jsMs": 6.7989999999999995,
+        "layoutMs": 1.7260000000000002,
+        "styleMs": 2.2379999999999995,
+        "elapsedMs": 339.70445800000016,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/class_sections",
+            "ms": 204.56795799999963,
+            "bytes": 1286,
+            "startMs": 59.102792000000136,
+            "endMs": 263.68054200000006
+          }
+        ],
+        "afterLastResponseMs": 76.0239160000001,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 9.300000011920929,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 3,
+            "bytes": 3032
+          },
+          {
+            "name": "LecturerWebPortal-BW8-qro2.js",
+            "ms": 3.5,
+            "bytes": 2449
+          },
+          {
+            "name": "LecturerDashboard-V6hywAvq.js",
+            "ms": 6.300000011920929,
+            "bytes": 6042
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.899999976158142,
+            "bytes": 983
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 5.399999976158142,
+            "bytes": 4056
+          },
+          {
+            "name": "x-MsvEFLDa.js",
+            "ms": 6.4000000059604645,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 6.800000011920929,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-BmftDHc1.js",
+            "ms": 7,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-DLS_iPg9.js",
+            "ms": 6.800000011920929,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-C_x5GB1X.js",
+            "ms": 7.300000011920929,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-C_u8-ofG.js",
+            "ms": 3.699999988079071,
+            "bytes": 3959
+          },
+          {
+            "name": "MarksEntryTab-8bSc9lCN.js",
+            "ms": 5.399999976158142,
+            "bytes": 6458
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-DlbzRW5P.js",
+            "ms": 5,
+            "bytes": 1427
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Marks Entry chosen class",
+        "stages": [],
+        "reactRenderMs": 3.5000000298023224,
+        "reactCommits": 3,
+        "jsMs": 5.886000000000003,
+        "layoutMs": 1.8989999999999996,
+        "styleMs": 2.1100000000000008,
+        "elapsedMs": 305.2897499999999,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 205.9670000000001,
+            "bytes": 966,
+            "startMs": 15.62237499999992,
+            "endMs": 221.59204200000022
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 205.58266600000024,
+            "bytes": 59,
+            "startMs": 16.04145900000003,
+            "endMs": 221.62487499999997
+          },
+          {
+            "endpoint": "/rest/v1/enrolments",
+            "ms": 205.507834,
+            "bytes": 1321,
+            "startMs": 16.13912500000015,
+            "endMs": 221.64816700000029
+          },
+          {
+            "endpoint": "/rest/v1/submissions",
+            "ms": 205.24262499999986,
+            "bytes": 76,
+            "startMs": 16.422292000000198,
+            "endMs": 221.6655840000003
+          },
+          {
+            "endpoint": "/rest/v1/marks",
+            "ms": 205.40479199999982,
+            "bytes": 3661,
+            "startMs": 16.81600000000026,
+            "endMs": 222.22350000000006
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_offering_student_totals",
+            "ms": 205.22116700000015,
+            "bytes": 541,
+            "startMs": 17.12504200000012,
+            "endMs": 222.34733400000005
+          }
+        ],
+        "afterLastResponseMs": 82.94241599999987,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 9.300000011920929,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 3,
+            "bytes": 3032
+          },
+          {
+            "name": "LecturerWebPortal-BW8-qro2.js",
+            "ms": 3.5,
+            "bytes": 2449
+          },
+          {
+            "name": "LecturerDashboard-V6hywAvq.js",
+            "ms": 6.300000011920929,
+            "bytes": 6042
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.899999976158142,
+            "bytes": 983
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 5.399999976158142,
+            "bytes": 4056
+          },
+          {
+            "name": "x-MsvEFLDa.js",
+            "ms": 6.4000000059604645,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 6.800000011920929,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-BmftDHc1.js",
+            "ms": 7,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-DLS_iPg9.js",
+            "ms": 6.800000011920929,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-C_x5GB1X.js",
+            "ms": 7.300000011920929,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-C_u8-ofG.js",
+            "ms": 3.699999988079071,
+            "bytes": 3959
+          },
+          {
+            "name": "MarksEntryTab-8bSc9lCN.js",
+            "ms": 5.399999976158142,
+            "bytes": 6458
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-DlbzRW5P.js",
+            "ms": 5,
+            "bytes": 1427
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Export class selector",
+        "stages": [],
+        "reactRenderMs": 2.5,
+        "reactCommits": 3,
+        "jsMs": 4.505999999999996,
+        "layoutMs": 1.3060000000000016,
+        "styleMs": 1.8110000000000002,
+        "elapsedMs": 310.1357089999997,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/class_sections",
+            "ms": 204.44237499999963,
+            "bytes": 1286,
+            "startMs": 36.44570900000008,
+            "endMs": 240.89233399999966
+          }
+        ],
+        "afterLastResponseMs": 69.24337500000001,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 9.300000011920929,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 3,
+            "bytes": 3032
+          },
+          {
+            "name": "LecturerWebPortal-BW8-qro2.js",
+            "ms": 3.5,
+            "bytes": 2449
+          },
+          {
+            "name": "LecturerDashboard-V6hywAvq.js",
+            "ms": 6.300000011920929,
+            "bytes": 6042
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.899999976158142,
+            "bytes": 983
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 5.399999976158142,
+            "bytes": 4056
+          },
+          {
+            "name": "x-MsvEFLDa.js",
+            "ms": 6.4000000059604645,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 6.800000011920929,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-BmftDHc1.js",
+            "ms": 7,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-DLS_iPg9.js",
+            "ms": 6.800000011920929,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-C_x5GB1X.js",
+            "ms": 7.300000011920929,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-C_u8-ofG.js",
+            "ms": 3.699999988079071,
+            "bytes": 3959
+          },
+          {
+            "name": "MarksEntryTab-8bSc9lCN.js",
+            "ms": 5.399999976158142,
+            "bytes": 6458
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-DlbzRW5P.js",
+            "ms": 5,
+            "bytes": 1427
+          },
+          {
+            "name": "ExportTab-rWKbgMfO.js",
+            "ms": 4.300000011920929,
+            "bytes": 2905
+          },
+          {
+            "name": "csv-COxoeAZn.js",
+            "ms": 4,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "Export chosen class",
+        "stages": [],
+        "reactRenderMs": 2.100000023841858,
+        "reactCommits": 3,
+        "jsMs": 3.9669999999999983,
+        "layoutMs": 1.4780000000000002,
+        "styleMs": 1.6480000000000001,
+        "elapsedMs": 314.2074589999993,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/assessments",
+            "ms": 206.6940829999994,
+            "bytes": 966,
+            "startMs": 23.059792000000016,
+            "endMs": 229.75604199999998
+          },
+          {
+            "endpoint": "/rest/v1/subject_offerings",
+            "ms": 206.3866250000001,
+            "bytes": 59,
+            "startMs": 23.399249999999483,
+            "endMs": 229.78683399999954
+          },
+          {
+            "endpoint": "/rest/v1/enrolments",
+            "ms": 206.34908299999915,
+            "bytes": 1321,
+            "startMs": 23.456709000000046,
+            "endMs": 229.80754199999956
+          },
+          {
+            "endpoint": "/rest/v1/submissions",
+            "ms": 205.93612500000017,
+            "bytes": 76,
+            "startMs": 23.88854199999969,
+            "endMs": 229.82520899999963
+          },
+          {
+            "endpoint": "/rest/v1/marks",
+            "ms": 206.0640000000003,
+            "bytes": 3661,
+            "startMs": 23.946333999999297,
+            "endMs": 230.0128339999992
+          },
+          {
+            "endpoint": "/rest/v1/rpc/get_offering_student_totals",
+            "ms": 206.27008399999977,
+            "bytes": 541,
+            "startMs": 24.098374999999578,
+            "endMs": 230.36945899999955
+          }
+        ],
+        "afterLastResponseMs": 83.83799999999974,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 9.300000011920929,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 3,
+            "bytes": 3032
+          },
+          {
+            "name": "LecturerWebPortal-BW8-qro2.js",
+            "ms": 3.5,
+            "bytes": 2449
+          },
+          {
+            "name": "LecturerDashboard-V6hywAvq.js",
+            "ms": 6.300000011920929,
+            "bytes": 6042
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.899999976158142,
+            "bytes": 983
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 5.399999976158142,
+            "bytes": 4056
+          },
+          {
+            "name": "x-MsvEFLDa.js",
+            "ms": 6.4000000059604645,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 6.800000011920929,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-BmftDHc1.js",
+            "ms": 7,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-DLS_iPg9.js",
+            "ms": 6.800000011920929,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-C_x5GB1X.js",
+            "ms": 7.300000011920929,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-C_u8-ofG.js",
+            "ms": 3.699999988079071,
+            "bytes": 3959
+          },
+          {
+            "name": "MarksEntryTab-8bSc9lCN.js",
+            "ms": 5.399999976158142,
+            "bytes": 6458
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-DlbzRW5P.js",
+            "ms": 5,
+            "bytes": 1427
+          },
+          {
+            "name": "ExportTab-rWKbgMfO.js",
+            "ms": 4.300000011920929,
+            "bytes": 2905
+          },
+          {
+            "name": "csv-COxoeAZn.js",
+            "ms": 4,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      },
+      {
+        "name": "My Subjects revisit",
+        "stages": [],
+        "reactRenderMs": 2.699999988079071,
+        "reactCommits": 2,
+        "jsMs": 4.269000000000009,
+        "layoutMs": 1.4359999999999997,
+        "styleMs": 2.012999999999999,
+        "elapsedMs": 309.10170800000014,
+        "requests": [
+          {
+            "endpoint": "/rest/v1/rpc/get_my_lecturer_subject_dashboard",
+            "ms": 203.39824999999928,
+            "bytes": 1762,
+            "startMs": 20.186792000000423,
+            "endMs": 223.58849999999984
+          }
+        ],
+        "afterLastResponseMs": 85.5132080000003,
+        "chunks": [
+          {
+            "name": "index-B1TJhtlV.js",
+            "ms": 9.300000011920929,
+            "bytes": 125844
+          },
+          {
+            "name": "PortalLayout-CzM8nvBt.js",
+            "ms": 3,
+            "bytes": 3032
+          },
+          {
+            "name": "LecturerWebPortal-BW8-qro2.js",
+            "ms": 3.5,
+            "bytes": 2449
+          },
+          {
+            "name": "LecturerDashboard-V6hywAvq.js",
+            "ms": 6.300000011920929,
+            "bytes": 6042
+          },
+          {
+            "name": "errors-D6QADHFF.js",
+            "ms": 4.899999976158142,
+            "bytes": 983
+          },
+          {
+            "name": "carryMarkApi-DQIXsej0.js",
+            "ms": 5.399999976158142,
+            "bytes": 4056
+          },
+          {
+            "name": "x-MsvEFLDa.js",
+            "ms": 6.4000000059604645,
+            "bytes": 904
+          },
+          {
+            "name": "circle-check-big-DRS4aXYl.js",
+            "ms": 6.800000011920929,
+            "bytes": 662
+          },
+          {
+            "name": "ellipsis-vertical-BmftDHc1.js",
+            "ms": 7,
+            "bytes": 703
+          },
+          {
+            "name": "trash-2-DLS_iPg9.js",
+            "ms": 6.800000011920929,
+            "bytes": 831
+          },
+          {
+            "name": "chevron-right-C_x5GB1X.js",
+            "ms": 7.300000011920929,
+            "bytes": 603
+          },
+          {
+            "name": "AssessmentsTab-C_u8-ofG.js",
+            "ms": 3.699999988079071,
+            "bytes": 3959
+          },
+          {
+            "name": "MarksEntryTab-8bSc9lCN.js",
+            "ms": 5.399999976158142,
+            "bytes": 6458
+          },
+          {
+            "name": "users-CBAYEZxD.js",
+            "ms": 4.699999988079071,
+            "bytes": 777
+          },
+          {
+            "name": "useSubjectClassData-DlbzRW5P.js",
+            "ms": 5,
+            "bytes": 1427
+          },
+          {
+            "name": "ExportTab-rWKbgMfO.js",
+            "ms": 4.300000011920929,
+            "bytes": 2905
+          },
+          {
+            "name": "csv-COxoeAZn.js",
+            "ms": 4,
+            "bytes": 1080
+          }
+        ],
+        "errors": []
+      }
+    ]
+  },
+  "databaseRlsBefore": [
+    {
+      "bytes": 11821,
+      "duration_ms": 15.195,
+      "iteration": 1,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.792,
+      "iteration": 2,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.717,
+      "iteration": 3,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.59,
+      "iteration": 4,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.721,
+      "iteration": 5,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.389,
+      "iteration": 6,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 2.654,
+      "iteration": 1,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.729,
+      "iteration": 2,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.699,
+      "iteration": 3,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.696,
+      "iteration": 4,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.678,
+      "iteration": 5,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.685,
+      "iteration": 6,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 1.316,
+      "iteration": 1,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.61,
+      "iteration": 2,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.6,
+      "iteration": 3,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.572,
+      "iteration": 4,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.594,
+      "iteration": 5,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.611,
+      "iteration": 6,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.608,
+      "iteration": 1,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.604,
+      "iteration": 2,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.627,
+      "iteration": 3,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.574,
+      "iteration": 4,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.599,
+      "iteration": 5,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.593,
+      "iteration": 6,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.66,
+      "iteration": 1,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.606,
+      "iteration": 2,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.609,
+      "iteration": 3,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.579,
+      "iteration": 4,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.611,
+      "iteration": 5,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.625,
+      "iteration": 6,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.645,
+      "iteration": 1,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.633,
+      "iteration": 2,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.576,
+      "iteration": 3,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.597,
+      "iteration": 4,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.571,
+      "iteration": 5,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.571,
+      "iteration": 6,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.845,
+      "iteration": 1,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.689,
+      "iteration": 2,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.661,
+      "iteration": 3,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.679,
+      "iteration": 4,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.705,
+      "iteration": 5,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.669,
+      "iteration": 6,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.709,
+      "iteration": 1,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.687,
+      "iteration": 2,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.681,
+      "iteration": 3,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.684,
+      "iteration": 4,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.656,
+      "iteration": 5,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.675,
+      "iteration": 6,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.746,
+      "iteration": 1,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.693,
+      "iteration": 2,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.662,
+      "iteration": 3,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.682,
+      "iteration": 4,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.702,
+      "iteration": 5,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.657,
+      "iteration": 6,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.774,
+      "iteration": 1,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.752,
+      "iteration": 2,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.732,
+      "iteration": 3,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.702,
+      "iteration": 4,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.721,
+      "iteration": 5,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.724,
+      "iteration": 6,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 9.013,
+      "iteration": 1,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.436,
+      "iteration": 2,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.381,
+      "iteration": 3,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.51,
+      "iteration": 4,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.373,
+      "iteration": 5,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.366,
+      "iteration": 6,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.5,
+      "iteration": 1,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.458,
+      "iteration": 2,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.466,
+      "iteration": 3,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.407,
+      "iteration": 4,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.514,
+      "iteration": 5,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.468,
+      "iteration": 6,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.48,
+      "iteration": 1,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.568,
+      "iteration": 2,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.49,
+      "iteration": 3,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.438,
+      "iteration": 4,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.4,
+      "iteration": 5,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.468,
+      "iteration": 6,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.633,
+      "iteration": 1,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.569,
+      "iteration": 2,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.526,
+      "iteration": 3,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.485,
+      "iteration": 4,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.556,
+      "iteration": 5,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.853,
+      "iteration": 6,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 6.095,
+      "iteration": 1,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 4.121,
+      "iteration": 2,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 4.004,
+      "iteration": 3,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 4,
+      "iteration": 4,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 3.993,
+      "iteration": 5,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 4.053,
+      "iteration": 6,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.956,
+      "iteration": 1,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.872,
+      "iteration": 2,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 2.005,
+      "iteration": 3,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.906,
+      "iteration": 4,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.875,
+      "iteration": 5,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.883,
+      "iteration": 6,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 29.696,
+      "iteration": 1,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.833,
+      "iteration": 2,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.786,
+      "iteration": 3,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.096,
+      "iteration": 4,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.863,
+      "iteration": 5,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.177,
+      "iteration": 6,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.924,
+      "iteration": 1,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.141,
+      "iteration": 2,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.028,
+      "iteration": 3,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.857,
+      "iteration": 4,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.157,
+      "iteration": 5,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.709,
+      "iteration": 6,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.853,
+      "iteration": 1,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.86,
+      "iteration": 2,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.057,
+      "iteration": 3,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.036,
+      "iteration": 4,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.963,
+      "iteration": 5,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.894,
+      "iteration": 6,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.841,
+      "iteration": 1,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.926,
+      "iteration": 2,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.848,
+      "iteration": 3,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.038,
+      "iteration": 4,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.03,
+      "iteration": 5,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.87,
+      "iteration": 6,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.171,
+      "iteration": 1,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.15,
+      "iteration": 2,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.194,
+      "iteration": 3,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.15,
+      "iteration": 4,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.144,
+      "iteration": 5,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.142,
+      "iteration": 6,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.763,
+      "iteration": 1,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.102,
+      "iteration": 2,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.107,
+      "iteration": 3,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.082,
+      "iteration": 4,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.088,
+      "iteration": 5,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.061,
+      "iteration": 6,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.496,
+      "iteration": 1,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.306,
+      "iteration": 2,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.323,
+      "iteration": 3,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.284,
+      "iteration": 4,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.288,
+      "iteration": 5,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.332,
+      "iteration": 6,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.38,
+      "iteration": 1,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.367,
+      "iteration": 2,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.365,
+      "iteration": 3,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.293,
+      "iteration": 4,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.304,
+      "iteration": 5,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.306,
+      "iteration": 6,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.38,
+      "iteration": 1,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.373,
+      "iteration": 2,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.319,
+      "iteration": 3,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.324,
+      "iteration": 4,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.315,
+      "iteration": 5,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.315,
+      "iteration": 6,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.404,
+      "iteration": 1,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.318,
+      "iteration": 2,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.303,
+      "iteration": 3,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.362,
+      "iteration": 4,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.291,
+      "iteration": 5,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.307,
+      "iteration": 6,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.81,
+      "iteration": 1,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.738,
+      "iteration": 2,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.75,
+      "iteration": 3,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.73,
+      "iteration": 4,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.885,
+      "iteration": 5,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.762,
+      "iteration": 6,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.781,
+      "iteration": 1,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.82,
+      "iteration": 2,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.711,
+      "iteration": 3,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.737,
+      "iteration": 4,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.722,
+      "iteration": 5,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.74,
+      "iteration": 6,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.762,
+      "iteration": 1,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.79,
+      "iteration": 2,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.811,
+      "iteration": 3,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.732,
+      "iteration": 4,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.743,
+      "iteration": 5,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.697,
+      "iteration": 6,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.911,
+      "iteration": 1,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.787,
+      "iteration": 2,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.75,
+      "iteration": 3,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.748,
+      "iteration": 4,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.798,
+      "iteration": 5,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.793,
+      "iteration": 6,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 3.564,
+      "iteration": 1,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.333,
+      "iteration": 2,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.319,
+      "iteration": 3,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.318,
+      "iteration": 4,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.256,
+      "iteration": 5,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.24,
+      "iteration": 6,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.378,
+      "iteration": 1,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.284,
+      "iteration": 2,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.321,
+      "iteration": 3,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.251,
+      "iteration": 4,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.25,
+      "iteration": 5,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.259,
+      "iteration": 6,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.451,
+      "iteration": 1,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.314,
+      "iteration": 2,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.251,
+      "iteration": 3,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.265,
+      "iteration": 4,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.255,
+      "iteration": 5,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.298,
+      "iteration": 6,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.506,
+      "iteration": 1,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.327,
+      "iteration": 2,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.279,
+      "iteration": 3,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.273,
+      "iteration": 4,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.275,
+      "iteration": 5,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.286,
+      "iteration": 6,
+      "label": "totals_4",
+      "row_count": 6
+    }
+  ],
+  "databaseRlsAfter": [
+    {
+      "bytes": 11821,
+      "duration_ms": 17.732,
+      "iteration": 1,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.997,
+      "iteration": 2,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 8.463,
+      "iteration": 3,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 8.425,
+      "iteration": 4,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.626,
+      "iteration": 5,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 11821,
+      "duration_ms": 7.519,
+      "iteration": 6,
+      "label": "admin_overview",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 2.425,
+      "iteration": 1,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.733,
+      "iteration": 2,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.707,
+      "iteration": 3,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.721,
+      "iteration": 4,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.77,
+      "iteration": 5,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.723,
+      "iteration": 6,
+      "label": "admin_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 1.029,
+      "iteration": 1,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.618,
+      "iteration": 2,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.594,
+      "iteration": 3,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.571,
+      "iteration": 4,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.59,
+      "iteration": 5,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.616,
+      "iteration": 6,
+      "label": "assessments_1",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.641,
+      "iteration": 1,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.606,
+      "iteration": 2,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.571,
+      "iteration": 3,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.591,
+      "iteration": 4,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.567,
+      "iteration": 5,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.593,
+      "iteration": 6,
+      "label": "assessments_2",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.624,
+      "iteration": 1,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.619,
+      "iteration": 2,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.605,
+      "iteration": 3,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.571,
+      "iteration": 4,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.596,
+      "iteration": 5,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.598,
+      "iteration": 6,
+      "label": "assessments_3",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.629,
+      "iteration": 1,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.582,
+      "iteration": 2,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.603,
+      "iteration": 3,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.627,
+      "iteration": 4,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.614,
+      "iteration": 5,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 765,
+      "duration_ms": 0.601,
+      "iteration": 6,
+      "label": "assessments_4",
+      "row_count": 5
+    },
+    {
+      "bytes": 1377,
+      "duration_ms": 5.982,
+      "iteration": 1,
+      "label": "class_selector_summary",
+      "row_count": 3
+    },
+    {
+      "bytes": 1377,
+      "duration_ms": 5.858,
+      "iteration": 2,
+      "label": "class_selector_summary",
+      "row_count": 3
+    },
+    {
+      "bytes": 1377,
+      "duration_ms": 5.872,
+      "iteration": 3,
+      "label": "class_selector_summary",
+      "row_count": 3
+    },
+    {
+      "bytes": 1377,
+      "duration_ms": 5.829,
+      "iteration": 4,
+      "label": "class_selector_summary",
+      "row_count": 3
+    },
+    {
+      "bytes": 1377,
+      "duration_ms": 5.962,
+      "iteration": 5,
+      "label": "class_selector_summary",
+      "row_count": 3
+    },
+    {
+      "bytes": 1377,
+      "duration_ms": 5.824,
+      "iteration": 6,
+      "label": "class_selector_summary",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.761,
+      "iteration": 1,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.699,
+      "iteration": 2,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.687,
+      "iteration": 3,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.678,
+      "iteration": 4,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.725,
+      "iteration": 5,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.653,
+      "iteration": 6,
+      "label": "classes_1",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.726,
+      "iteration": 1,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.703,
+      "iteration": 2,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.661,
+      "iteration": 3,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.69,
+      "iteration": 4,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.68,
+      "iteration": 5,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1038,
+      "duration_ms": 0.697,
+      "iteration": 6,
+      "label": "classes_2",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.713,
+      "iteration": 1,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.684,
+      "iteration": 2,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.684,
+      "iteration": 3,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.688,
+      "iteration": 4,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.66,
+      "iteration": 5,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1036,
+      "duration_ms": 0.653,
+      "iteration": 6,
+      "label": "classes_3",
+      "row_count": 3
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.773,
+      "iteration": 1,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.732,
+      "iteration": 2,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.702,
+      "iteration": 3,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.823,
+      "iteration": 4,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.745,
+      "iteration": 5,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1381,
+      "duration_ms": 0.786,
+      "iteration": 6,
+      "label": "classes_4",
+      "row_count": 4
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 9.23,
+      "iteration": 1,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.584,
+      "iteration": 2,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.543,
+      "iteration": 3,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.638,
+      "iteration": 4,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.542,
+      "iteration": 5,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.491,
+      "iteration": 6,
+      "label": "enrolments_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.585,
+      "iteration": 1,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.55,
+      "iteration": 2,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.448,
+      "iteration": 3,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.446,
+      "iteration": 4,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.376,
+      "iteration": 5,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.515,
+      "iteration": 6,
+      "label": "enrolments_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.692,
+      "iteration": 1,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.484,
+      "iteration": 2,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.431,
+      "iteration": 3,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.462,
+      "iteration": 4,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.531,
+      "iteration": 5,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.489,
+      "iteration": 6,
+      "label": "enrolments_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.595,
+      "iteration": 1,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.448,
+      "iteration": 2,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.466,
+      "iteration": 3,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.732,
+      "iteration": 4,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.561,
+      "iteration": 5,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 1428,
+      "duration_ms": 8.53,
+      "iteration": 6,
+      "label": "enrolments_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 6.159,
+      "iteration": 1,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 4.106,
+      "iteration": 2,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 3.984,
+      "iteration": 3,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 3.978,
+      "iteration": 4,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 4.04,
+      "iteration": 5,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 2033,
+      "duration_ms": 4.449,
+      "iteration": 6,
+      "label": "lecturer_dashboard",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 2.008,
+      "iteration": 1,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.906,
+      "iteration": 2,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.901,
+      "iteration": 3,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.86,
+      "iteration": 4,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.854,
+      "iteration": 5,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 266,
+      "duration_ms": 1.888,
+      "iteration": 6,
+      "label": "lecturer_profile",
+      "row_count": null
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 34.855,
+      "iteration": 1,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 27.623,
+      "iteration": 2,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.19,
+      "iteration": 3,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.989,
+      "iteration": 4,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.894,
+      "iteration": 5,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.839,
+      "iteration": 6,
+      "label": "marks_1",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.985,
+      "iteration": 1,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.442,
+      "iteration": 2,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.132,
+      "iteration": 3,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.783,
+      "iteration": 4,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.86,
+      "iteration": 5,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.897,
+      "iteration": 6,
+      "label": "marks_2",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.847,
+      "iteration": 1,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.714,
+      "iteration": 2,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.804,
+      "iteration": 3,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.187,
+      "iteration": 4,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.15,
+      "iteration": 5,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.854,
+      "iteration": 6,
+      "label": "marks_3",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.728,
+      "iteration": 1,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.116,
+      "iteration": 2,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.94,
+      "iteration": 3,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.177,
+      "iteration": 4,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.032,
+      "iteration": 5,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 25.191,
+      "iteration": 6,
+      "label": "marks_4",
+      "row_count": 30
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.174,
+      "iteration": 1,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.182,
+      "iteration": 2,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.147,
+      "iteration": 3,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.144,
+      "iteration": 4,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.144,
+      "iteration": 5,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 511,
+      "duration_ms": 0.143,
+      "iteration": 6,
+      "label": "programmes",
+      "row_count": 4
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.536,
+      "iteration": 1,
+      "label": "selected_class_marks_join",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.52,
+      "iteration": 2,
+      "label": "selected_class_marks_join",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.544,
+      "iteration": 3,
+      "label": "selected_class_marks_join",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.502,
+      "iteration": 4,
+      "label": "selected_class_marks_join",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.488,
+      "iteration": 5,
+      "label": "selected_class_marks_join",
+      "row_count": 30
+    },
+    {
+      "bytes": 3918,
+      "duration_ms": 24.647,
+      "iteration": 6,
+      "label": "selected_class_marks_join",
+      "row_count": 30
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.776,
+      "iteration": 1,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.116,
+      "iteration": 2,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.126,
+      "iteration": 3,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.086,
+      "iteration": 4,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.108,
+      "iteration": 5,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 257,
+      "duration_ms": 1.155,
+      "iteration": 6,
+      "label": "semester_history",
+      "row_count": 1
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.503,
+      "iteration": 1,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.326,
+      "iteration": 2,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.335,
+      "iteration": 3,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.316,
+      "iteration": 4,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.307,
+      "iteration": 5,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.282,
+      "iteration": 6,
+      "label": "settings_1",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.374,
+      "iteration": 1,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.356,
+      "iteration": 2,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.315,
+      "iteration": 3,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.344,
+      "iteration": 4,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.327,
+      "iteration": 5,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.306,
+      "iteration": 6,
+      "label": "settings_2",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.361,
+      "iteration": 1,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.301,
+      "iteration": 2,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.328,
+      "iteration": 3,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.319,
+      "iteration": 4,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.313,
+      "iteration": 5,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.286,
+      "iteration": 6,
+      "label": "settings_3",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.381,
+      "iteration": 1,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.328,
+      "iteration": 2,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.31,
+      "iteration": 3,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.291,
+      "iteration": 4,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.315,
+      "iteration": 5,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 69,
+      "duration_ms": 1.319,
+      "iteration": 6,
+      "label": "settings_4",
+      "row_count": null
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.831,
+      "iteration": 1,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.706,
+      "iteration": 2,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.778,
+      "iteration": 3,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.717,
+      "iteration": 4,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.789,
+      "iteration": 5,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.702,
+      "iteration": 6,
+      "label": "submissions_1",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.824,
+      "iteration": 1,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.71,
+      "iteration": 2,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.739,
+      "iteration": 3,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.722,
+      "iteration": 4,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.793,
+      "iteration": 5,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.691,
+      "iteration": 6,
+      "label": "submissions_2",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.765,
+      "iteration": 1,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.73,
+      "iteration": 2,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.725,
+      "iteration": 3,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.744,
+      "iteration": 4,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.708,
+      "iteration": 5,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.752,
+      "iteration": 6,
+      "label": "submissions_3",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.808,
+      "iteration": 1,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.778,
+      "iteration": 2,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.753,
+      "iteration": 3,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.775,
+      "iteration": 4,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.737,
+      "iteration": 5,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 79,
+      "duration_ms": 1.982,
+      "iteration": 6,
+      "label": "submissions_4",
+      "row_count": 1
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 3.316,
+      "iteration": 1,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.279,
+      "iteration": 2,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.263,
+      "iteration": 3,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.333,
+      "iteration": 4,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.287,
+      "iteration": 5,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.338,
+      "iteration": 6,
+      "label": "totals_1",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.416,
+      "iteration": 1,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.359,
+      "iteration": 2,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.285,
+      "iteration": 3,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.244,
+      "iteration": 4,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.313,
+      "iteration": 5,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.234,
+      "iteration": 6,
+      "label": "totals_2",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.409,
+      "iteration": 1,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.276,
+      "iteration": 2,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.267,
+      "iteration": 3,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.29,
+      "iteration": 4,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.289,
+      "iteration": 5,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 590,
+      "duration_ms": 2.262,
+      "iteration": 6,
+      "label": "totals_3",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.407,
+      "iteration": 1,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.277,
+      "iteration": 2,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.269,
+      "iteration": 3,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.341,
+      "iteration": 4,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.333,
+      "iteration": 5,
+      "label": "totals_4",
+      "row_count": 6
+    },
+    {
+      "bytes": 591,
+      "duration_ms": 2.334,
+      "iteration": 6,
+      "label": "totals_4",
+      "row_count": 6
+    }
+  ],
+  "publicSettingsNetwork": [
+    {
+      "iteration": 1,
+      "status": 200,
+      "headersMs": 526.4183750000001,
+      "totalMs": 529.182084,
+      "bytes": 610,
+      "parseMs": 0.03795800000000327
+    },
+    {
+      "iteration": 2,
+      "status": 200,
+      "headersMs": 170.50079200000005,
+      "totalMs": 171.64479200000005,
+      "bytes": 610,
+      "parseMs": 0.030250000000023647
+    },
+    {
+      "iteration": 3,
+      "status": 200,
+      "headersMs": 158.40549999999996,
+      "totalMs": 159.18287499999997,
+      "bytes": 610,
+      "parseMs": 0.01675000000000182
+    },
+    {
+      "iteration": 4,
+      "status": 200,
+      "headersMs": 172.27158300000008,
+      "totalMs": 173.38641700000005,
+      "bytes": 610,
+      "parseMs": 0.020082999999885942
+    },
+    {
+      "iteration": 5,
+      "status": 200,
+      "headersMs": 162.29674999999997,
+      "totalMs": 162.636708,
+      "bytes": 610,
+      "parseMs": 0.00891700000011042
+    },
+    {
+      "iteration": 6,
+      "status": 200,
+      "headersMs": 167.31391700000017,
+      "totalMs": 169.2616250000001,
+      "bytes": 610,
+      "parseMs": 0.01937499999985448
+    }
+  ]
+}

@@ -21,6 +21,7 @@ export default function DisputeScreen() {
       router.back();
     }
   };
+
   return <Screen><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
     <Pressable onPress={() => router.back()}><Text style={[typography.bodyStrong, { color: colors.primary }]}>‹ Cancel</Text></Pressable>
     <View><Heading>Report a mark issue</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>{subject.code} · {subject.name}</Text></View>

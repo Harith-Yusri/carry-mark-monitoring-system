@@ -1,33 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { CheckCircle, ChevronLeft, ChevronRight, Download, Users } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { loadOfferingWeightage, AssessmentRecord, loadOfferingData, SectionRecord } from "../../services/carryMarkApi";
 import { downloadText } from "../../utils/download";
 import { classSelectorActionStyle, classSelectorCardStyle, classSelectorGridStyle, classSelectorIconStyle, classSelectorMetaStyle, classSelectorTitleStyle } from "./classSelectorStyles";
 import { escapeCsv } from "../../utils/csv";
+import { useSubjectClassData } from "../../hooks/useSubjectClassData";
 
-type StudentRecord = SectionRecord["students"][number] & { id: string };
-type ExportClassSection = Omit<SectionRecord, "students"> & { students: StudentRecord[] };
-
-export function ExportTab({ offeringId, subjectCode, subjectName, academicYear, programmeSemester }: { offeringId: string; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
+export function ExportTab({ offeringId, offeringIds, subjectCode, subjectName, academicYear, programmeSemester }: { offeringId: string; offeringIds?: string[]; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
   const C = useColors();
-  const [sections, setSections] = useState<ExportClassSection[]>([]);
-  const [carryMax, setCarryMax] = useState<number | null>(null);
-  const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { sections, selectedId, setSelectedId, selected, assessments, carryMax, loading, error, reload } = useSubjectClassData(offeringId, offeringIds);
   const [downloaded, setDownloaded] = useState(false);
-  const selected = sections.find(section => section.id === selectedId) ?? null;
-  useEffect(() => { loadOfferingData(offeringId).then(data => {
-    setAssessments(data.assessments);
-    void loadOfferingWeightage(offeringId).then(settings => setCarryMax(settings.carryMax));
-    setSections(data.sections.map(section => ({ ...section, students: section.students.map(student => ({ ...student, id: student.enrolmentId })) })));
-  }).catch(console.error); }, [offeringId]);
+
+  if (selectedId && !selected) return <div style={{ padding: "20px", color: C.textMuted }}>
+    <button onClick={() => setSelectedId(null)} style={{ color: C.maroon, background: "transparent", border: 0, cursor: "pointer", marginBottom: "14px" }}>‹ Choose another class</button>
+    {error ? <p role="alert" style={{ color: C.red }}>{error}</p> : <p role="status">Loading this class's export data…</p>}
+    {error && <button onClick={() => void reload().catch(() => undefined)}>Try again</button>}
+  </div>;
 
   if (!selected) return <div>
+    {loading && <p role="status" style={{ color: C.textMuted }}>Loading class sections…</p>}
+    {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
     <div style={{ marginBottom: "20px" }}><h2 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.25rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>Select a Class to Export</h2><p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Choose a {subjectCode} class to preview its carry marks before exporting.</p></div>
     <div style={classSelectorGridStyle}>{sections.map(section => <button key={section.id} onClick={() => setSelectedId(section.id)} style={{ ...classSelectorCardStyle, background: C.surface, border: `1px solid ${C.borderMid}`, color: C.text }} onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={event => { event.currentTarget.style.borderColor = C.borderMid; event.currentTarget.style.transform = "none"; }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}><div style={{ ...classSelectorIconStyle, background: C.maroonLight, border: `1px solid ${C.maroon}55`, color: C.maroon }}><Users size={21} /></div><span style={{ padding: "5px 8px", borderRadius: "5px", background: section.finalised ? C.greenLight : C.amberLight, color: section.finalised ? C.green : C.amber, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700 }}>{section.finalised ? "FINALISED" : "DRAFT"}</span></div>
-      <h3 style={{ ...classSelectorTitleStyle, color: C.text, fontFamily: C.display }}>{section.label}</h3><div style={{ ...classSelectorMetaStyle, color: C.textMuted }}>{section.programmeCode} · {section.students.length} students synced · capacity {section.capacity}</div><div style={{ ...classSelectorActionStyle, color: C.maroon }}>Open e-Res Preview <ChevronRight size={14} /></div>
+      <h3 style={{ ...classSelectorTitleStyle, color: C.text, fontFamily: C.display }}>{section.label}</h3><div style={{ ...classSelectorMetaStyle, color: C.textMuted }}><strong style={{ fontWeight: 700, color: C.text }}>{section.programmeCode}</strong> · {section.studentCount} students synced · capacity {section.capacity}</div><div style={{ ...classSelectorActionStyle, color: C.maroon }}>Open e-Res Preview <ChevronRight size={14} /></div>
     </button>)}</div>
   </div>;
 
@@ -52,7 +48,7 @@ export function ExportTab({ offeringId, subjectCode, subjectName, academicYear, 
         <button disabled={!selected.students.length} onClick={exportClass} style={{ marginTop: "18px", width: "100%", height: "48px", border: "none", borderRadius: "7px", background: selected.students.length ? C.maroon : C.elevated, color: selected.students.length ? "#fff" : C.textMuted, cursor: selected.students.length ? "pointer" : "not-allowed", fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>{downloaded ? <CheckCircle size={17} /> : <Download size={17} />}{downloaded ? "Class Exported" : `Export ${selected.label} to e-Res`}</button>
       </section>
 
-      <section><div style={{ marginBottom: "10px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", letterSpacing: ".06em" }}>ASSESSMENT MARKS PREVIEW — {selected.label.toUpperCase()}</div><div style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "9px", overflowX: "auto" }}><table style={{ width: "100%", minWidth: "850px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}><thead><tr style={{ background: C.elevated, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}><th style={{ padding: "11px 10px" }}>STUDENT ID</th><th style={{ padding: "11px 10px" }}>NAME</th>{assessments.map(item => <th key={item.id} style={{ padding: "11px 10px" }}>{item.name.toUpperCase()} /{item.maxMarks}</th>)}<th style={{ padding: "11px 10px" }}>CARRY MARK /{carryMax ?? "Not set"}</th></tr></thead><tbody>{selected.students.map(student => { const mark = student.totalCarry; return <tr key={student.id} style={{ borderTop: `1px solid ${C.borderMid}` }}><td style={{ padding: "12px 10px", color: C.textMuted, fontFamily: C.mono }}>{student.matrixNo}</td><td style={{ padding: "12px 10px", color: C.text, fontWeight: 600, whiteSpace: "nowrap" }}>{student.name}</td>{assessments.map(item => <td key={item.id} style={{ padding: "12px 10px", color: C.textSub, fontFamily: C.mono }}>{student.scores[item.id] ?? "—"}</td>)}<td style={{ padding: "12px 10px", color: student.eligible ? C.green : C.amber, fontFamily: C.mono, fontWeight: 700 }}>{mark}</td></tr>; })}</tbody></table>{!selected.students.length && <div style={{ padding: "30px", textAlign: "center", color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>No synced assessment marks to preview.</div>}</div><div style={{ marginTop: "10px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{selected.students.length} of {selected.capacity} students · all assessment components</div></section>
+      <section><div style={{ marginBottom: "10px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", letterSpacing: ".06em" }}>ASSESSMENT MARKS PREVIEW — {selected.label.toUpperCase()}</div><div style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "9px", overflowX: "auto" }}><table style={{ width: "100%", minWidth: "850px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}><thead><tr style={{ background: C.elevated, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}><th style={{ padding: "11px 10px" }}>STUDENT ID</th><th style={{ padding: "11px 10px" }}>NAME</th>{assessments.map(item => <th key={item.id} style={{ padding: "11px 10px" }}>{item.name.toUpperCase()} /{item.maxMarks}</th>)}<th style={{ padding: "11px 10px" }}>CARRY MARK /{carryMax ?? "Not set"}</th></tr></thead><tbody>{selected.students.map(student => { const mark = student.totalCarry; return <tr key={student.enrolmentId} style={{ borderTop: `1px solid ${C.borderMid}` }}><td style={{ padding: "12px 10px", color: C.textMuted, fontFamily: C.mono }}>{student.matrixNo}</td><td style={{ padding: "12px 10px", color: C.text, fontWeight: 600, whiteSpace: "nowrap" }}>{student.name}</td>{assessments.map(item => <td key={item.id} style={{ padding: "12px 10px", color: C.textSub, fontFamily: C.mono }}>{student.scores[item.id] ?? "—"}</td>)}<td style={{ padding: "12px 10px", color: student.eligible ? C.green : C.amber, fontFamily: C.mono, fontWeight: 700 }}>{mark}</td></tr>; })}</tbody></table>{!selected.students.length && <div style={{ padding: "30px", textAlign: "center", color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>No synced assessment marks to preview.</div>}</div><div style={{ marginTop: "10px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{selected.students.length} of {selected.capacity} students · all assessment components</div></section>
     </div>
   </div>;
 }

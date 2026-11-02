@@ -35,6 +35,54 @@ textarea {
   line-height: 1.35;
 }
 
+.staff-portal button,
+.staff-portal input,
+.staff-portal select,
+.staff-portal textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, background-color 0.15s ease;
+}
+
+.staff-portal button:not(:disabled):hover {
+  filter: brightness(1.04);
+}
+
+.staff-portal input:hover,
+.staff-portal select:hover,
+.staff-portal textarea:hover {
+  border-color: var(--staff-border-strong) !important;
+}
+
+.staff-portal input:focus,
+.staff-portal select:focus,
+.staff-portal textarea:focus {
+  border-color: var(--staff-focus-ring) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--staff-focus-ring) 20%, transparent);
+}
+
+.staff-portal button:focus-visible,
+.staff-portal input:focus-visible,
+.staff-portal select:focus-visible,
+.staff-portal textarea:focus-visible,
+.staff-portal [tabindex]:focus-visible {
+  outline-color: var(--staff-focus-ring);
+}
+
+.staff-portal tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.staff-portal tbody tr:hover {
+  background: var(--staff-row-hover);
+}
+
+.staff-portal .directory-table,
+.staff-portal .report-catalogue {
+  background: var(--staff-surface);
+  border: 1px solid var(--staff-border);
+  border-radius: 10px;
+  box-shadow: var(--staff-panel-shadow);
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,

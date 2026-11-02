@@ -9,9 +9,10 @@ import { fonts } from "@/theme/fonts";
 const icons: Record<string, LucideIcon> = { index: BookOpen, progress: BarChart3, settings: Settings };
 
 export default function TabsLayout() {
-  const { initializing, student } = useStudent();
+  const { initializing, student, onboarding } = useStudent();
   const { colors } = useTheme();
   if (initializing) return <LoadingView />;
+  if (onboarding) return <Redirect href="/onboarding" />;
   if (!student) return <Redirect href="/login" />;
   return <Tabs screenOptions={({ route }) => ({
     headerShown: false,

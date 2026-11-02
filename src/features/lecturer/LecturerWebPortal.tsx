@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
-import { LecturerDashboard, LecturerSubject } from "./LecturerDashboard";
-import { AssessmentsTab } from "./AssessmentsTab";
-import { MarksEntryTab } from "./MarksEntryTab";
-import { ExportTab } from "./ExportTab";
+import type { LecturerSubject } from "./LecturerDashboard";
 import { LecturerTab, LecturerScreen } from "../../types";
 import { useAuth } from "../../context/AuthContext";
+
+const LecturerDashboard = lazy(() => import("./LecturerDashboard").then((module) => ({ default: module.LecturerDashboard })));
+const AssessmentsTab = lazy(() => import("./AssessmentsTab").then((module) => ({ default: module.AssessmentsTab })));
+const MarksEntryTab = lazy(() => import("./MarksEntryTab").then((module) => ({ default: module.MarksEntryTab })));
+const ExportTab = lazy(() => import("./ExportTab").then((module) => ({ default: module.ExportTab })));
 
 export function LecturerWebPortal() {
   const C = useColors();
@@ -16,18 +18,21 @@ export function LecturerWebPortal() {
   const [activeTab, setActiveTab] = useState<LecturerTab>("assessments");
 
   const currentSubj = selectedSubj;
+  const [assessmentOfferingId, setAssessmentOfferingId] = useState<string | null>(null);
 
   return (
     <div style={{ width: "100%", boxSizing: "border-box", padding: "0 clamp(20px, 3vw, 48px) 48px" }}>
-      {screen === "dashboard" ? (
-        <LecturerDashboard
-          onSelectSubject={(subj) => {
-            setSelectedSubj(subj);
-            setScreen("subject-hub");
-            setActiveTab("assessments");
-          }}
-        />
-      ) : currentSubj ? (
+      <Suspense fallback={<div role="status" aria-live="polite" style={{ color: C.textMuted, padding: "24px" }}>Loading section…</div>}>
+        {screen === "dashboard" ? (
+          <LecturerDashboard
+            onSelectSubject={(subj) => {
+              setSelectedSubj(subj);
+              setAssessmentOfferingId(subj.offeringId);
+              setScreen("subject-hub");
+              setActiveTab("assessments");
+            }}
+          />
+        ) : currentSubj ? (
         <div>
           {/* Top Back Navigation Bar */}
           <div className="subject-hub-top" style={{ alignItems: "center", marginBottom: "16px" }}>
@@ -88,11 +93,15 @@ export function LecturerWebPortal() {
           </div>
 
           {/* Tab Content */}
-          {activeTab === "assessments" && <AssessmentsTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
-          {activeTab === "marks" && <MarksEntryTab offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
-          {activeTab === "export" && <ExportTab offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
+          {activeTab === "assessments" && <>
+            {currentSubj.offerings && <label style={{ display: "block", color: C.textSub, marginBottom: "14px" }}>Assessment structure for classes in <select aria-label="Assessment allocation" value={assessmentOfferingId ?? currentSubj.offeringId} onChange={event => setAssessmentOfferingId(event.target.value)} style={{ background: C.elevated, color: C.text, border: `1px solid ${C.borderMid}`, padding: "8px", borderRadius: "6px" }}>{currentSubj.offerings.map(offering => <option key={offering.offeringId} value={offering.offeringId}>{offering.programmeCode || "Unassigned classes"}</option>)}</select></label>}
+            <AssessmentsTab key={assessmentOfferingId ?? currentSubj.offeringId} offeringId={assessmentOfferingId ?? currentSubj.offeringId} subjectCode={currentSubj.code} />
+          </>}
+          {activeTab === "marks" && <MarksEntryTab offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
+          {activeTab === "export" && <ExportTab offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
         </div>
-      ) : null}
+        ) : null}
+      </Suspense>
     </div>
   );
 }

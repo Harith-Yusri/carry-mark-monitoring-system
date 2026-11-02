@@ -48,9 +48,9 @@ export function PortalLayout() {
   };
 
   return (
-    <div className="staff-portal" data-text-scale={textScale} style={{ "--staff-text-scale": textScale, fontFamily: C.sans, background: C.bg, color: C.text, minHeight: "100vh", transition: "background 0.2s, color 0.2s" } as React.CSSProperties}>
+    <div className="staff-portal" data-text-scale={textScale} style={{ "--staff-text-scale": textScale, "--staff-surface": C.surface, "--staff-input": C.input, "--staff-border": C.border, "--staff-border-strong": C.borderMid, "--staff-focus-ring": C.focusRing, "--staff-row-hover": C.rowHover, "--staff-panel-shadow": C.panelShadow, fontFamily: C.sans, background: C.bg, color: C.text, minHeight: "100vh", transition: "background 0.2s, color 0.2s" } as React.CSSProperties}>
       {/* Top Application Bar */}
-      <div style={{ borderBottom: `1px solid ${C.border}`, background: C.surface, position: "sticky", top: 0, zIndex: 40, transition: "background 0.2s" }}>
+      <div style={{ borderBottom: `1px solid ${C.borderMid}`, background: C.chrome, position: "sticky", top: 0, zIndex: 40, transition: "background 0.2s" }}>
         <div className="portal-header-inner">
           
           {/* Logo & System Title */}

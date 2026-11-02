@@ -49,47 +49,48 @@ export function useAdminRecords() {
     setLoading(true);
     setError("");
     const db = requireSupabase();
-    const [{ data: term, error: termError }, { data: programmes, error: programmeError }] = await Promise.all([
-      db.from("academic_terms").select("id,academic_year,semester_code,semester_no,default_deadline").eq("is_current", true).eq("status", "active").maybeSingle(),
-      db.from("programmes").select("id,code,name").eq("is_active", true).order("code"),
-    ]);
-    if (termError) throw termError;
-    if (programmeError) throw programmeError;
+    const { data, error: overviewError } = await db.rpc("get_admin_current_overview");
+    if (overviewError) throw overviewError;
+    const overview = data as any;
+    const term = overview?.term;
+    const programmes = overview?.programmes ?? [];
     if (!term) throw new Error("No active academic semester is configured.");
-
-    const [
-      { data: deadlines, error: deadlineError },
-      { data: profiles, error: profileError },
-      { data: currentOfferings, error: offeringError },
-    ] = await Promise.all([
-      db.from("programme_deadlines").select("programme_id,deadline_at").eq("term_id", term.id),
-      db.from("profiles").select("id,staff_no,full_name").eq("role", "lecturer").eq("is_active", true),
-      db.from("subject_offerings").select(`
-        id, lecturer_id, status, term_id, deadline_at, updated_at, subject_name_override,
-        subjects!subject_offerings_subject_id_fkey(code,name),
-        academic_terms!inner(is_current,status),
-        class_sections(id,label,programme_id,updated_at,programmes!class_sections_programme_id_fkey(id,code,name),enrolments(count),submissions(status,updated_at))
-      `).eq("academic_terms.is_current", true).eq("academic_terms.status", "active"),
-    ]);
-    if (deadlineError) throw deadlineError;
-    if (profileError) throw profileError;
-    if (offeringError) throw offeringError;
-
-    const programmeDeadlines = new Map(deadlines.map(row => [row.programme_id, row.deadline_at]));
-    const offeringsByLecturer = new Map<string, any[]>();
-    for (const offering of currentOfferings as any[]) {
-      const lecturerOfferings = offeringsByLecturer.get(offering.lecturer_id) ?? [];
-      lecturerOfferings.push(offering);
-      offeringsByLecturer.set(offering.lecturer_id, lecturerOfferings);
-    }
+    const profiles = (overview?.lecturers ?? []).map((lecturer: any) => ({
+      id: lecturer.auth_id,
+      staff_no: lecturer.staff_no,
+      full_name: lecturer.full_name,
+      offerings: [...new Map((lecturer.allocations ?? []).map((allocation: any) => [allocation.offering_id, allocation.offering_id])).keys()].map(offeringId => {
+        const rows = (lecturer.allocations ?? []).filter((allocation: any) => allocation.offering_id === offeringId);
+        const first = rows[0];
+        return {
+          id: first.offering_id,
+          status: first.offering_status,
+          deadline_at: first.deadline_at,
+          updated_at: first.offering_updated_at,
+          subject_name_override: null,
+          subjects: { code: first.subject_code, name: first.subject_name },
+          class_sections: rows.filter((row: any) => row.section_id).map((row: any) => ({
+            id: row.section_id,
+            label: row.class_label,
+            programme_id: row.programme_id,
+            updated_at: row.section_updated_at,
+            deadline_at: row.deadline_at,
+            programmes: { id: row.programme_id, code: row.programme_code, name: row.programme_name },
+            enrolments: [{ count: row.student_count }],
+            submissions: row.submission_status ? [{ status: row.submission_status, updated_at: row.submission_updated_at }] : [],
+          })),
+        };
+      }),
+    }));
+    const programmeDeadlines = new Map<string, string>();
     const result = (profiles as any[]).map(profile => {
-      const offerings = offeringsByLecturer.get(profile.id) ?? [];
+      const offerings = profile.offerings;
       const sections = offerings.flatMap(offering => relationRows<any>(offering.class_sections));
       const finalised = sections.filter(section => relationRows<any>(section.submissions).some((submission: any) => submission.status === "finalised")).length;
       const deadline = offerings.flatMap(offering => {
         const offeringSections = relationRows<any>(offering.class_sections);
         return offeringSections.length
-          ? offeringSections.map(section => offering.deadline_at ?? programmeDeadlines.get(section.programme_id) ?? term.default_deadline)
+          ? offeringSections.map(section => section.deadline_at ?? offering.deadline_at ?? programmeDeadlines.get(section.programme_id) ?? term.default_deadline)
           : [offering.deadline_at ?? term.default_deadline];
       }).sort()[0] ?? term.default_deadline;
       const overdue = sections.length > finalised && new Date(deadline) < new Date();
@@ -104,7 +105,7 @@ export function useAdminRecords() {
       const classAllocations = offerings.flatMap(offering => relationRows<any>(offering.class_sections).map(section => {
         const sectionSubmissions = relationRows<any>(section.submissions);
         const isFinalised = sectionSubmissions.some((submission: any) => submission.status === "finalised");
-        const sectionDeadline = offering.deadline_at ?? programmeDeadlines.get(section.programme_id) ?? term.default_deadline;
+        const sectionDeadline = section.deadline_at ?? offering.deadline_at ?? programmeDeadlines.get(section.programme_id) ?? term.default_deadline;
         const isOverdue = !isFinalised && new Date(sectionDeadline) < new Date();
         const activityDates = [offering.updated_at, section.updated_at, ...sectionSubmissions.map((submission: any) => submission.updated_at)].filter(Boolean).sort();
         return {
@@ -130,7 +131,7 @@ export function useAdminRecords() {
         });
         const programmeSections = programmeOfferings.flatMap(offering => relationRows<any>(offering.class_sections).filter(section => section.programme_id === programme.id));
         const programmeFinalised = programmeSections.filter(section => relationRows<any>(section.submissions).some((submission: any) => submission.status === "finalised")).length;
-        const programmeDeadline = programmeOfferings.map(offering => offering.deadline_at ?? programmeDeadlines.get(programme.id) ?? term.default_deadline).sort()[0] ?? term.default_deadline;
+        const programmeDeadline = programmeSections.map(section => section.deadline_at ?? programmeDeadlines.get(programme.id) ?? term.default_deadline).sort()[0] ?? term.default_deadline;
         const programmeOverdue = programmeSections.length > programmeFinalised && new Date(programmeDeadline) < new Date();
         const programmeDates = programmeOfferings.flatMap(offering => [
           offering.updated_at,

@@ -9,7 +9,8 @@ declare
   offering_id uuid := gen_random_uuid(); section_id uuid := gen_random_uuid();
   enrolment_id uuid := gen_random_uuid(); assessment_id uuid := gen_random_uuid();
   test_code text := 'MR' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 12));
-  portal jsonb; visible_marks bigint;
+  test_semester_code text := to_char(floor(random() * 9000 + 1000), 'FM0000') || '1';
+  portal jsonb; visible_marks bigint; release_notifications bigint;
 begin
   insert into auth.users(id) values (lecturer_id), (student_auth_id);
   insert into public.profiles(id, staff_no, full_name, role)
@@ -18,7 +19,7 @@ begin
     values (programme_id, test_code, 'Release Test Programme');
   update public.academic_terms set is_current = false where is_current;
   insert into public.academic_terms(id, academic_year, semester_code, semester_no, starts_on, ends_on, default_deadline, carry_max, eligible_threshold, status, is_current)
-    values (term_id, test_code, '20261', 1, '2026-01-01', '2026-12-31', '2026-12-01', 50, 40, 'active', true);
+    values (term_id, test_code, test_semester_code, 1, '2026-01-01', '2026-12-31', '2026-12-01', 50, 40, 'active', true);
   insert into public.subjects(id, code, name) values (subject_id, test_code, 'Release Test Subject');
   insert into public.subject_offerings(id, subject_id, term_id, lecturer_id, programme_id, programme_semester, carry_max, status)
     values (offering_id, subject_id, term_id, lecturer_id, programme_id, 1, 50, 'active');
@@ -50,6 +51,26 @@ begin
   perform set_config('request.jwt.claim.sub', lecturer_id::text, true);
   execute 'set local role authenticated';
   perform public.finalise_section(section_id);
+  execute 'reset role';
+  select count(*) into release_notifications
+  from public.notifications notification
+  where notification.student_id = student_mark_release.student_id
+    and notification.type = 'marks_released'
+    and notification.related_entity_id = section_id;
+  if release_notifications <> 1 then
+    raise exception 'FAIL: finalisation did not create exactly one student release notification';
+  end if;
+  execute 'set local role authenticated';
+  perform public.finalise_section(section_id);
+  execute 'reset role';
+  select count(*) into release_notifications
+  from public.notifications notification
+  where notification.student_id = student_mark_release.student_id
+    and notification.type = 'marks_released'
+    and notification.related_entity_id = section_id;
+  if release_notifications <> 1 then
+    raise exception 'FAIL: repeated finalisation created a duplicate notification';
+  end if;
   execute 'reset role';
 
   perform set_config('request.jwt.claim.sub', student_auth_id::text, true);
@@ -88,10 +109,10 @@ begin
   end if;
 
   execute 'set local role authenticated';
-  select count(*) into visible_marks from public.marks where enrolment_id = student_mark_release.enrolment_id;
+  select count(*) into visible_marks from public.marks mark where mark.enrolment_id = student_mark_release.enrolment_id;
   execute 'reset role';
   if visible_marks <> 1 then raise exception 'FAIL: finalised mark is not readable through RLS'; end if;
 end;
 $$;
 rollback;
-select 'Passed: draft assessment visibility, draft mark/total privacy, finalised release, direct RLS, and per-student notification preference.' as result;
+select 'Passed: draft privacy, finalised release, idempotent release notifications, direct RLS, and per-student notification preference.' as result;

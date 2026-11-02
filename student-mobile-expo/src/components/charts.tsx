@@ -12,7 +12,7 @@ const PLOT_HEIGHT = 140;
 export function SubjectBarChart({ subjects }: { subjects: SubjectResult[] }) {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
-  const chartWidth = Math.max(width - 68, subjects.length * 78 + 48);
+  const chartWidth = Math.max(width - 68, subjects.length * 92 + 48);
 
   if (!subjects.length) return <Card><Text style={[typography.body, { color: colors.muted }]}>No subject progress is available.</Text></Card>;
 
@@ -39,18 +39,23 @@ export function SubjectBarChart({ subjects }: { subjects: SubjectResult[] }) {
           })}
           {subjects.map((subject, index) => {
             const released = subject.is_finalised && subject.carry_mark !== null;
+            const ineligible = released && subject.eligible === false;
+            const eligible = released && subject.eligible === true;
+            const barColor = ineligible ? colors.danger : eligible ? colors.success : colors.muted;
+            const eligibilityLabel = ineligible ? "Not Eligible" : eligible ? "Eligible" : released ? "Not determined" : "Pending";
             const percentage = released && subject.carry_maximum > 0
               ? Math.max(0, Math.min(100, subject.carry_mark! / subject.carry_maximum * 100))
               : 0;
-            const x = 49 + index * 78;
+            const x = 55 + index * 92;
             const height = percentage === 0 ? 4 : percentage / 100 * PLOT_HEIGHT;
 
-            return <G key={subject.offering_id}>
-              <Rect x={x} y={PLOT_BOTTOM - height} width={34} height={height} rx={7} fill={released ? colors.accent : colors.border} />
-              <SvgText x={x + 17} y={Math.max(22, PLOT_BOTTOM - height - 8)} textAnchor="middle" fill={released ? colors.text : colors.muted} fontSize={11} fontWeight="700">
+            return <G key={subject.offering_id} accessibilityLabel={`${subject.code}: ${released ? `${percentage.toFixed(0)} percent` : "Not released yet"}, ${eligibilityLabel}`}>
+              <Rect x={x} y={PLOT_BOTTOM - height} width={34} height={height} rx={7} fill={released ? barColor : colors.border} />
+              <SvgText x={x + 17} y={Math.max(22, PLOT_BOTTOM - height - 8)} textAnchor="middle" fill={released ? barColor : colors.muted} fontSize={11} fontWeight="700">
                 {released ? `${percentage.toFixed(0)}%` : "—"}
               </SvgText>
               <SvgText x={x + 17} y={215} textAnchor="middle" fill={colors.textSecondary} fontSize={11} fontWeight="700">{subject.code}</SvgText>
+              <SvgText x={x + 17} y={232} textAnchor="middle" fill={barColor} fontSize={10} fontWeight="600">{eligibilityLabel}</SvgText>
             </G>;
           })}
         </Svg>
@@ -58,8 +63,9 @@ export function SubjectBarChart({ subjects }: { subjects: SubjectResult[] }) {
     </View>
 
     <View style={styles.legend}>
-      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.accent }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Released</Text></View>
-      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.border }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Not released</Text></View>
+      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.success }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Eligible</Text></View>
+      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.danger }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Not Eligible</Text></View>
+      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.muted }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Pending / undetermined</Text></View>
       <Text style={[styles.zeroNote, { color: colors.muted }]}>0% is shown as a visible baseline</Text>
     </View>
   </Card>;

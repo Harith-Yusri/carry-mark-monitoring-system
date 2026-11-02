@@ -16,6 +16,8 @@ function nodes(tree) {
 function setup({ reject = false, subjects = [] } = {}) {
   const states = []; let cursor = 0; const calls = [];
   states[3] = subjects;
+  states[5] = subjects[0]?.academicYear ?? '';
+  states[6] = subjects[0]?.semesterNo ?? null;
   let serverSubjects = subjects;
   const useState = initial => { const i = cursor++; if (!(i in states)) states[i] = initial; return [states[i], value => { states[i] = typeof value === 'function' ? value(states[i]) : value; }]; };
   const useRef = initial => { const i = cursor++; if (!(i in states)) states[i] = { current: initial }; return states[i]; };
@@ -33,7 +35,7 @@ function setup({ reject = false, subjects = [] } = {}) {
       programmeId: savedProgrammeId,
     } : subject);
   };
-  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','Archive','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','listArchivedLecturerSubjects','listProgrammes','loadCurrentTermLabel','loadOfferingData','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject','userError',code+'; return LecturerDashboard;')(
+  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','Trash2','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','listArchivedLecturerSubjects','listProgrammes','loadCurrentTermLabel','loadOfferingData','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject','userError',code+'; return LecturerDashboard;')(
     React,useState,useRef,()=>{},()=>({}),()=>({ user: { name: 'Test', id: 'TS004' } }),icon,icon,icon,icon,icon,icon,icon,
     async()=>serverSubjects,async()=>[],async()=>programmes,async()=>'Session 2, 2025/2026',async()=>({ assessments: [], sections: [] }),
     async()=>({ catalogue, termLabel: 'Session 2, 2025/2026' }),create,update,(reason, fallback)=>reason?.message ?? fallback,
@@ -73,7 +75,7 @@ test('duplicate rejection stays visible in the open form', async () => {
   assert.match(html, /role="dialog"/);
 });
 test('edit subject pre-fills details, saves the owned offering and updates the card', async () => {
-  const subject = { offeringId: 'offering-1', programmeId: 'programme-1', programmeCode: 'CS240', programmeName: 'Bachelor Of Information Technology (Hons.)', programmeIds: ['programme-1'], programmeCodes: ['CS240'], programmeNames: ['Bachelor Of Information Technology (Hons.)'], code: 'ITT593', name: 'Database Systems', progSem: 5, students: 20, lastSync: null, status: 'active', termLabel: 'Semester 2, 2025/2026' };
+  const subject = { offeringId: 'offering-1', programmeId: 'programme-1', programmeCode: 'CS240', programmeName: 'Bachelor Of Information Technology (Hons.)', programmeIds: ['programme-1'], programmeCodes: ['CS240'], programmeNames: ['Bachelor Of Information Technology (Hons.)'], code: 'ITT593', name: 'Database Systems', progSem: 5, students: 20, lastSync: null, status: 'active', termLabel: 'Semester 2 · 2025/2026', academicYear: '2025/2026', semesterNo: 2 };
   const ui = setup({ subjects: [subject] });
   nodes(ui.render()).find(node => node.props?.['aria-label'] === 'Manage ITT593').props.onClick({ stopPropagation() {} });
   await nodes(ui.render()).find(node => node.type === 'button' && React.Children.toArray(node.props.children).includes('Edit subject')).props.onClick();

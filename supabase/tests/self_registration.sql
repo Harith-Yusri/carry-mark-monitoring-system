@@ -1,4 +1,4 @@
--- Run after 202610250001. Registration fixtures roll back.
+-- Run after 202610280001. Registration fixtures roll back.
 begin;
 do $$
 declare
@@ -16,29 +16,22 @@ begin
   insert into public.programmes(id, code, name)
   values (programme_id, code_prefix, 'Registration Test Programme');
 
-  insert into auth.users(id, email, raw_user_meta_data)
-  values (
-    student_auth_id,
-    lower(code_prefix) || '@student.uitm.edu.my',
-    jsonb_build_object(
-      'registration_source', 'cams-student-registration',
-      'registration_role', 'lecturer',
-      'full_name', 'Registration Student',
-      'identifier', code_prefix || 'S',
-      'programme_id', programme_id,
-      'current_semester', 4
-    )
-  );
-
-  if not exists (
-    select 1 from public.students
-    where auth_user_id = student_auth_id
-      and matrix_no = code_prefix || 'S'
-      and current_semester = 4
-      and not is_active
-  ) then
-    raise exception 'FAIL: pending student profile was not created correctly';
-  end if;
+  begin
+    insert into auth.users(id, email, raw_user_meta_data)
+    values (
+      student_auth_id,
+      lower(code_prefix) || '@student.uitm.edu.my',
+      jsonb_build_object(
+        'registration_source', 'cams-student-registration',
+        'full_name', 'Retired Password Registration',
+        'identifier', code_prefix || 'S',
+        'programme_id', programme_id,
+        'current_semester', 4
+      )
+    );
+  exception when others then rejected := true;
+  end;
+  if not rejected then raise exception 'FAIL: retired student password registration was accepted'; end if;
 
   insert into auth.users(id, email, raw_user_meta_data)
   values (
@@ -153,18 +146,16 @@ begin
   if not rejected then raise exception 'FAIL: duplicate registration ID was accepted'; end if;
 
   update auth.users set email_confirmed_at = now()
-  where id in (student_auth_id, lecturer_auth_id);
+  where id = lecturer_auth_id;
 
-  if not exists (select 1 from public.students where auth_user_id = student_auth_id and is_active)
-     or not exists (select 1 from public.profiles where id = lecturer_auth_id and is_active) then
+  if not exists (select 1 from public.profiles where id = lecturer_auth_id and is_active) then
     raise exception 'FAIL: confirmed registration was not activated';
   end if;
 
-  if public.resolve_student_login_email(code_prefix || 'S') is null
-     or public.resolve_staff_login_email(code_prefix || 'L') is null then
+  if public.resolve_staff_login_email(code_prefix || 'L') is null then
     raise exception 'FAIL: confirmed ID could not resolve to its Auth email';
   end if;
 end;
 $$;
 rollback;
-select 'Passed: role-scoped email domains, legacy-source rejection, metadata tamper resistance, duplicate checks, confirmation activation, and Auth linkage.' as result;
+select 'Passed: retired student password signup rejection, lecturer domain enforcement, legacy-source rejection, confirmation activation, and staff Auth linkage.' as result;

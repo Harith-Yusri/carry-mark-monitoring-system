@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useColors } from "../../context/DarkModeContext";
-import { requireSupabase } from "../../lib/supabase";
+import { listArchivedSemesterSummaries } from "../../services/carryMarkApi";
 import { userError } from "../../utils/errors";
 
 interface SemesterSummary {
@@ -21,26 +21,7 @@ export function SemesterHistory() {
 
   useEffect(() => {
     const load = async () => {
-      const db = requireSupabase();
-      const [{ data: terms, error: termError }, { data: offerings, error: offeringError }] = await Promise.all([
-        db.from("academic_terms").select("id,academic_year,semester_code,semester_no,starts_on,ends_on").eq("status", "closed").order("starts_on", { ascending: false }),
-        db.from("subject_offerings").select("id,term_id,class_sections(id,enrolments(count),submissions(status))"),
-      ]);
-      if (termError) throw termError;
-      if (offeringError) throw offeringError;
-      setSemesters(terms.map(term => {
-        const termOfferings = (offerings as any[]).filter(offering => offering.term_id === term.id);
-        const classes = termOfferings.flatMap(offering => offering.class_sections ?? []);
-        return {
-          id: term.id,
-          label: `Semester ${term.semester_no} · ${term.academic_year} · ${term.semester_code}`,
-          dates: `${term.starts_on} – ${term.ends_on}`,
-          offerings: termOfferings.length,
-          classes: classes.length,
-          enrolments: classes.reduce((total, section) => total + Number(section.enrolments?.[0]?.count ?? 0), 0),
-          finalised: classes.filter(section => section.submissions?.some((submission: any) => submission.status === "finalised")).length,
-        };
-      }));
+      setSemesters(await listArchivedSemesterSummaries());
     };
     load().catch(reason => setError(userError(reason, "Unable to load semester history."))).finally(() => setLoading(false));
   }, []);
