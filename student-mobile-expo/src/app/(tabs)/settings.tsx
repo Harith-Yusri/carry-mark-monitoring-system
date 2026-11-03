@@ -108,8 +108,8 @@ export default function SettingsScreen() {
           icon={<BellRing size={20} color={notifications_enabled === false ? colors.muted : colors.success} />}
           title="Notification alerts"
           detail={notifications_enabled === false
-            ? "Alerts are off. Your finalised marks remain available in the app."
-            : "Receive an alert when a lecturer finalises your carry marks."}
+            ? "Alerts are off. Your released marks remain available in the app."
+            : "Receive an alert when a lecturer releases your carry marks."}
           trailing={<Switch
             accessibilityLabel="Push notification alerts"
             value={notifications_enabled !== false}

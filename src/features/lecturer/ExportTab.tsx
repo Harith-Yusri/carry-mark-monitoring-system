@@ -1,36 +1,34 @@
 import React, { useState } from "react";
 import { CheckCircle, ChevronLeft, ChevronRight, Download, Users } from "lucide-react";
-import { useColors } from "../../context/DarkModeContext";
+import { workspace as W } from "./workspaceStyles";
 import { downloadText } from "../../utils/download";
-import { classSelectorActionStyle, classSelectorCardStyle, classSelectorGridStyle, classSelectorIconStyle, classSelectorMetaStyle, classSelectorTitleStyle } from "./classSelectorStyles";
 import { escapeCsv } from "../../utils/csv";
 import { useSubjectClassData } from "../../hooks/useSubjectClassData";
 
 export function ExportTab({ offeringId, offeringIds, subjectCode, subjectName, academicYear, programmeSemester }: { offeringId: string; offeringIds?: string[]; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
-  const C = useColors();
   const { sections, selectedId, setSelectedId, selected, assessments, carryMax, loading, error, reload } = useSubjectClassData(offeringId, offeringIds);
   const [downloaded, setDownloaded] = useState(false);
 
-  if (selectedId && !selected) return <div style={{ padding: "20px", color: C.textMuted }}>
-    <button onClick={() => setSelectedId(null)} style={{ color: C.maroon, background: "transparent", border: 0, cursor: "pointer", marginBottom: "14px" }}>‹ Choose another class</button>
-    {error ? <p role="alert" style={{ color: C.red }}>{error}</p> : <p role="status">Loading this class's export data…</p>}
-    {error && <button onClick={() => void reload().catch(() => undefined)}>Try again</button>}
+  if (selectedId && !selected) return <div className="space-y-4 p-5">
+    <button onClick={() => setSelectedId(null)} className={W.secondary}>‹ Choose another class</button>
+    {error ? <p role="alert" className={W.error}>{error}</p> : <p role="status" className={W.muted}>Loading this class's export data…</p>}
+    {error && <button onClick={() => void reload().catch(() => undefined)} className={W.primary}>Try again</button>}
   </div>;
 
-  if (!selected) return <div>
-    {loading && <p role="status" style={{ color: C.textMuted }}>Loading class sections…</p>}
-    {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
-    <div style={{ marginBottom: "20px" }}><h2 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.25rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>Select a Class to Export</h2><p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Choose a {subjectCode} class to preview its carry marks before exporting.</p></div>
-    <div style={classSelectorGridStyle}>{sections.map(section => <button key={section.id} onClick={() => setSelectedId(section.id)} style={{ ...classSelectorCardStyle, background: C.surface, border: `1px solid ${C.borderMid}`, color: C.text }} onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={event => { event.currentTarget.style.borderColor = C.borderMid; event.currentTarget.style.transform = "none"; }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}><div style={{ ...classSelectorIconStyle, background: C.maroonLight, border: `1px solid ${C.maroon}55`, color: C.maroon }}><Users size={21} /></div><span style={{ padding: "5px 8px", borderRadius: "5px", background: section.finalised ? C.greenLight : C.amberLight, color: section.finalised ? C.green : C.amber, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700 }}>{section.finalised ? "FINALISED" : "DRAFT"}</span></div>
-      <h3 style={{ ...classSelectorTitleStyle, color: C.text, fontFamily: C.display }}>{section.label}</h3><div style={{ ...classSelectorMetaStyle, color: C.textMuted }}><strong style={{ fontWeight: 700, color: C.text }}>{section.programmeCode}</strong> · {section.studentCount} students synced · capacity {section.capacity}</div><div style={{ ...classSelectorActionStyle, color: C.maroon }}>Open e-Res Preview <ChevronRight size={14} /></div>
+  if (!selected) return <div className="space-y-6">
+    {loading && <p role="status" className={W.muted}>Loading class sections…</p>}
+    {error && <p role="alert" className={W.error}>{error}</p>}
+    <div><h2 className={W.title}>Select a Class to Export</h2><p className={W.muted}>Choose a {subjectCode} class to preview its carry marks before exporting.</p></div>
+    <div className={W.grid}>{sections.map(section => <button key={section.id} onClick={() => setSelectedId(section.id)} className={W.classCard + " flex flex-col " + (section.finalised ? "staff-card-success" : "staff-card-pending")}>
+      <div className="mb-5 flex items-start justify-between gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-lg bg-purple-50 text-purple-800"><Users size={21} /></div><span className={section.finalised ? W.success : W.pending}>{section.finalised ? "RELEASED" : "PENDING"}</span></div>
+      <h3 className={W.title + " mb-2"}>{section.label}</h3><div className={W.muted}><strong className="staff-card-primary font-bold text-slate-800 dark:text-slate-50">{section.programmeCode}</strong> · {section.studentCount} students synced · capacity {section.capacity}</div><div className={W.primary + " mt-5 w-full text-xs"}>Open e-Res Preview <ChevronRight size={16} /></div>
     </button>)}</div>
   </div>;
 
   const classSlug = selected.label.replace(/\s+/g, "");
   const termSlug = `Sem${programmeSemester}_${academicYear.replace(/\D/g, "")}`;
   const filename = `${subjectCode}_${selected.programmeCode}_${classSlug}_CarryMark_${termSlug}.csv`;
-  const assessmentStatus = selected.finalised ? `${assessments.length} components · class finalised` : `${assessments.length} components · draft`;
+  const assessmentStatus = selected.finalised ? `${assessments.length} components · class released` : `${assessments.length} components · pending`;
   const detailRows = [
     ["Subject Code", subjectCode], ["Subject Name", subjectName], ["Programme", `${selected.programmeCode} — ${selected.programmeName}`], ["Class Section", selected.label], ["Programme Semester", programmeSemester], ["Academic Year", academicYear], ["Students", `${selected.students.length} enrolled (capacity ${selected.capacity})`], ["Submission Status", assessmentStatus], ["Export Format", "CSV (.csv)"], ["Output Filename", filename],
   ];
@@ -41,14 +39,20 @@ export function ExportTab({ offeringId, offeringIds, subjectCode, subjectName, a
   };
 
   return <div>
-    <button onClick={() => setSelectedId(null)} style={{ marginBottom: "14px", padding: 0, border: "none", background: "transparent", color: C.maroon, fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}><ChevronLeft size={14} /> Choose another class</button>
-    <div className="export-layout">
-      <section><h2 style={{ margin: "0 0 5px", color: C.text, fontFamily: C.display, fontSize: "calc(1.25rem * var(--staff-text-scale))", fontWeight: 700 }}>e-Res Export</h2><p style={{ margin: "0 0 20px", color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{selected.label} · {selected.students.length} enrolled students</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>{detailRows.map(([label, value]) => <div key={label} style={{ minHeight: "42px", boxSizing: "border-box", padding: "10px 13px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "15px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}><span style={{ color: C.textMuted }}>{label}</span><strong style={{ color: C.text, textAlign: "right", overflowWrap: "anywhere" }}>{value}</strong></div>)}</div>
-        <button disabled={!selected.students.length} onClick={exportClass} style={{ marginTop: "18px", width: "100%", height: "48px", border: "none", borderRadius: "7px", background: selected.students.length ? C.maroon : C.elevated, color: selected.students.length ? "#fff" : C.textMuted, cursor: selected.students.length ? "pointer" : "not-allowed", fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>{downloaded ? <CheckCircle size={17} /> : <Download size={17} />}{downloaded ? "Class Exported" : `Export ${selected.label} to e-Res`}</button>
+    <button onClick={() => setSelectedId(null)} className={W.secondary + " mb-6"}><ChevronLeft size={16} /> Choose another class</button>
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <section className={W.panel + " min-w-0 lg:col-span-4"}>
+        <h2 className={W.title}>e-Res Export</h2><p className={W.muted + " mb-5"}>{selected.label} · {selected.students.length} enrolled students</p>
+        <dl className="divide-y divide-slate-200 dark:divide-slate-700">{detailRows.map(([label, value]) => <div key={label} className="flex items-start justify-between gap-4 py-3"><dt className="staff-card-muted text-xs font-medium text-slate-500 dark:text-slate-300">{label}</dt><dd className="staff-card-primary min-w-0 max-w-[65%] text-right text-xs font-semibold break-words text-slate-800 [overflow-wrap:anywhere] dark:text-slate-50">{value}</dd></div>)}</dl>
+        <button disabled={!selected.students.length} onClick={exportClass} className={W.primary + " mt-5 w-full"}>{downloaded ? <CheckCircle size={17} /> : <Download size={17} />}{downloaded ? "Class Exported" : `Export ${selected.label} to e-Res`}</button>
       </section>
-
-      <section><div style={{ marginBottom: "10px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", letterSpacing: ".06em" }}>ASSESSMENT MARKS PREVIEW — {selected.label.toUpperCase()}</div><div style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "9px", overflowX: "auto" }}><table style={{ width: "100%", minWidth: "850px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}><thead><tr style={{ background: C.elevated, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}><th style={{ padding: "11px 10px" }}>STUDENT ID</th><th style={{ padding: "11px 10px" }}>NAME</th>{assessments.map(item => <th key={item.id} style={{ padding: "11px 10px" }}>{item.name.toUpperCase()} /{item.maxMarks}</th>)}<th style={{ padding: "11px 10px" }}>CARRY MARK /{carryMax ?? "Not set"}</th></tr></thead><tbody>{selected.students.map(student => { const mark = student.totalCarry; return <tr key={student.enrolmentId} style={{ borderTop: `1px solid ${C.borderMid}` }}><td style={{ padding: "12px 10px", color: C.textMuted, fontFamily: C.mono }}>{student.matrixNo}</td><td style={{ padding: "12px 10px", color: C.text, fontWeight: 600, whiteSpace: "nowrap" }}>{student.name}</td>{assessments.map(item => <td key={item.id} style={{ padding: "12px 10px", color: C.textSub, fontFamily: C.mono }}>{student.scores[item.id] ?? "—"}</td>)}<td style={{ padding: "12px 10px", color: student.eligible ? C.green : C.amber, fontFamily: C.mono, fontWeight: 700 }}>{mark}</td></tr>; })}</tbody></table>{!selected.students.length && <div style={{ padding: "30px", textAlign: "center", color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>No synced assessment marks to preview.</div>}</div><div style={{ marginTop: "10px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{selected.students.length} of {selected.capacity} students · all assessment components</div></section>
+      <section className={W.panel + " min-w-0 lg:col-span-8"}>
+        <h2 className="staff-card-primary mb-4 text-base font-bold text-slate-800 dark:text-slate-50">Assessment Marks Preview — {selected.label}</h2>
+        <div className="overflow-x-auto"><table className={W.table + " min-w-[850px]"}><thead className={W.tableHead}><tr><th scope="col">Student ID</th><th scope="col">Name</th>{assessments.map(item => <th scope="col" key={item.id}>{item.name} /{item.maxMarks}</th>)}<th scope="col">Carry Mark /{carryMax ?? "Not set"}</th></tr></thead>
+          <tbody>{selected.students.map(student => { const mark = student.totalCarry; return <tr key={student.enrolmentId} className={W.tableRow}><td className="staff-card-muted font-mono text-xs text-slate-500 dark:text-slate-300">{student.matrixNo}</td><td className="staff-card-primary whitespace-nowrap font-semibold text-slate-800 dark:text-slate-50">{student.name}</td>{assessments.map(item => <td key={item.id}>{student.scores[item.id] ?? "—"}</td>)}<td className="staff-card-primary font-bold text-slate-800 dark:text-slate-50">{mark}</td></tr>; })}</tbody>
+        </table>{!selected.students.length && <div className="py-10 text-center text-sm text-slate-500">No synced assessment marks to preview.</div>}</div>
+        <p className={W.muted + " mt-4"}>{selected.students.length} of {selected.capacity} students · all assessment components</p>
+      </section>
     </div>
   </div>;
 }

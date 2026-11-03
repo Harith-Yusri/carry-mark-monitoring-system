@@ -1,3 +1,5 @@
+import { releaseTerminology } from "./releaseTerminology";
+
 const safeMessages = [
   /already has an offering/i,
   /already enrolled/i,
@@ -22,8 +24,8 @@ const safeMessages = [
 export function userError(reason: unknown, fallback: string): string {
   const message = reason instanceof Error ? reason.message : (reason as { message?: unknown } | null)?.message;
   if (typeof message === "string" && safeMessages.some(pattern => pattern.test(message))) {
-    return message.split(" URL:", 1)[0].split(" Headers:", 1)[0];
+    return releaseTerminology(message.split(" URL:", 1)[0].split(" Headers:", 1)[0]);
   }
   if (import.meta.env.DEV) console.error(reason);
-  return fallback;
+  return releaseTerminology(fallback);
 }

@@ -123,6 +123,10 @@ export async function loadLecturerSubjectDashboard() {
   return {
     current: groupLecturerSubjects((dashboard.current ?? []).map(mapSubjectSummary)),
     archived: groupLecturerSubjects((dashboard.archived ?? []).map(mapSubjectSummary)),
+    activeTerm: {
+      academicYear: dashboard.term.academic_year as string,
+      semesterNo: Number(dashboard.term.semester_no),
+    },
     termLabel: formatAcademicSemester(dashboard.term.semester_no, dashboard.term.academic_year),
   };
 }

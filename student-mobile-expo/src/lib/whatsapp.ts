@@ -11,7 +11,7 @@ export function normalizeMalaysianPhone(value: string) {
 export function consultationMessage(studentName: string, studentId: string, className: string, subjectCode: string, subjectName: string) {
   const subject = subjectName ? `${subjectCode} (${subjectName})` : subjectCode;
   const classAndSubject = [className.trim(), subject].filter(Boolean).join(" / ");
-  return `Assalamualaikum Dr./Sir/Madam, I am ${studentName} (${studentId}) from ${classAndSubject}. I would like to consult regarding my continuous assessment status and my eligibility to sit for the final examination. Thank you.`;
+  return `Assalamualaikum Dr./Sir/Madam, I am ${studentName} (${studentId}) from ${classAndSubject}. I would like to consult regarding my continuous assessment status and my eligibility to sit for the Final Assessment. Thank you.`;
 }
 
 export function whatsappClickToChatUrl(phone: string, message: string) {

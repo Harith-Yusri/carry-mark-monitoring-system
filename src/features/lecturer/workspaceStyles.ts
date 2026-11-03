@@ -1,0 +1,27 @@
+// Shared Tailwind recipes for the lecturer workspace. Keep sizing and states
+// here so assessments, class selection, marks and exports remain consistent.
+export const workspace = {
+  panel: "staff-content-card rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm sm:p-6",
+  grid: "mt-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3",
+  classCard: "staff-content-card staff-class-card relative min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-5 text-left shadow-sm transition-all hover:border-slate-300 hover:shadow-md",
+  primary: "staff-primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors",
+  secondary: "staff-card-secondary inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-purple-900 bg-transparent px-4 py-2.5 text-sm font-semibold text-purple-900 transition-colors hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-purple-300 dark:text-purple-200 dark:hover:bg-[var(--staff-row-hover)]",
+  iconButton: "staff-card-control inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-purple-900 dark:text-slate-300 dark:hover:bg-[var(--staff-row-hover)]",
+  field: "staff-card-field min-h-11 w-full min-w-0 rounded-lg border border-slate-400 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 disabled:border-slate-200 disabled:bg-slate-100 disabled:opacity-60 dark:disabled:border-slate-700 dark:disabled:bg-slate-700 dark:border-slate-500 dark:bg-[var(--staff-input)] dark:text-slate-50",
+  label: "staff-card-muted mb-2 block text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-300",
+  title: "staff-card-title text-xl font-bold tracking-tight text-slate-800 dark:text-slate-50",
+  muted: "staff-card-muted text-sm leading-relaxed text-slate-500 dark:text-[var(--staff-text-muted)]",
+  error: "my-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800",
+  success: "inline-flex items-center gap-1 rounded-full border border-emerald-200/60 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700",
+  pending: "inline-flex items-center gap-1 rounded-full border border-amber-200/60 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700",
+  danger: "inline-flex items-center gap-1 rounded-full border border-rose-200/60 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700",
+  neutral: "staff-card-chip inline-flex items-center rounded-md bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-300",
+  code: "inline-flex items-center rounded-md bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-800",
+  table: "staff-card-table w-full border-collapse text-left text-sm text-slate-800 dark:text-slate-50 [&_th]:px-4 [&_th]:py-3 [&_th]:text-xs [&_th]:font-semibold [&_th]:tracking-wider [&_th]:text-slate-500 dark:[&_th]:text-slate-300 [&_td]:px-4 [&_td]:py-3",
+  tableHead: "staff-card-table-head border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-[var(--staff-surface)]",
+  tableRow: "staff-card-row border-b border-slate-200 last:border-0 hover:bg-slate-50/80 dark:border-slate-700 dark:hover:bg-[var(--staff-row-hover)]/40",
+  overlay: "fixed inset-0 z-80 flex items-center justify-center overflow-y-auto bg-slate-950/50 p-4 sm:p-6",
+  modal: "my-auto max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-xl dark:border-slate-700 dark:bg-[var(--staff-surface)] sm:p-6",
+  menu: "absolute right-5 top-16 z-10 min-w-44 rounded-xl border border-slate-200 bg-slate-50 p-1.5 shadow-lg dark:border-slate-700 dark:bg-[var(--staff-surface)]",
+  menuItem: "flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-800 hover:bg-purple-50 dark:text-slate-50 dark:hover:bg-[var(--staff-row-hover)]",
+};

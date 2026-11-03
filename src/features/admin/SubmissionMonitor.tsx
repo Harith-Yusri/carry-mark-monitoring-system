@@ -1,16 +1,19 @@
 import React, { useMemo, useState } from "react";
-import { CheckCircle, Clock, Send } from "lucide-react";
-import { useColors } from "../../context/DarkModeContext";
+import { CheckCircle, ChevronDown, Clock, Send } from "lucide-react";
+import { AdminStatus, useCardColors, useColors } from "./adminStyles";
 import { useReminders } from "../../hooks/useReminders";
 import { AdminAcademicContext, requiresSubmissionAction, submissionAllocations } from "../../hooks/useAdminRecords";
+import { groupSubmissionRows } from "./submissionGroups";
 import { LecturerInfo } from "../../types";
 
 type StatusFilter = "All" | "Pending" | "Finalised" | "Overdue";
 
 export function SubmissionMonitor({ records, context, loading, error }: { records: LecturerInfo[]; context: AdminAcademicContext | null; loading: boolean; error: string }) {
   const C = useColors();
+  const CC = useCardColors();
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [programmeCode, setProgrammeCode] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { sendReminder, sentReminders, sendingReminders, reminderError } = useReminders();
 
   const allocations = useMemo(() => submissionAllocations(records), [records]);
@@ -25,6 +28,14 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
     return item.submissionStatus === filter;
   }), [filter, programmeAllocations]);
 
+  const lecturerGroups = useMemo(() => groupSubmissionRows(filtered), [filtered]);
+  const toggleLecturer = (staffId: string) => setExpandedGroups(previous => {
+    const next = new Set(previous);
+    if (next.has(staffId)) next.delete(staffId);
+    else next.add(staffId);
+    return next;
+  });
+
   const programmeOptions = [{ code: "", name: "All Programmes" }, ...(context?.programmes ?? [])];
   const programmeCount = (code: string) => !code
     ? allocations.length
@@ -38,13 +49,11 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>Submission Monitor</h1>
           <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted }}>Track continuous assessment submission status for each class allocation and send reminders for incomplete work.</p>
         </div>
-        <div style={{ fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.amber, background: C.amberLight, border: `1px solid ${C.amber}44`, borderRadius: "6px", padding: "7px 10px" }}>
-          {pendingCount} REQUIRE ACTION
-        </div>
+        <AdminStatus status="Action required">{pendingCount} </AdminStatus>
       </div>
 
       <label style={{ display: "block", width: "100%", maxWidth: "460px", marginBottom: "14px" }}>
-        <span style={{ display: "block", marginBottom: "6px", color: C.textSub, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em" }}>PROGRAMME</span>
+        <span style={{ display: "block", marginBottom: "6px", color: C.textSub, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em" }}>Programme</span>
         <select
           aria-label="Filter submissions by programme"
           value={programmeCode}
@@ -62,8 +71,8 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
         {(["All", "Pending", "Finalised", "Overdue"] as StatusFilter[]).map(item => (
-          <button key={item} onClick={() => setFilter(item)} style={{ padding: "7px 12px", borderRadius: "6px", border: `1px solid ${filter === item ? C.maroon : C.border}`, background: filter === item ? C.maroonLight : C.surface, color: filter === item ? C.maroon : C.textSub, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: filter === item ? 700 : 500, cursor: "pointer" }}>
-            {item}{item === "Pending" ? ` (${pendingCount})` : ""}
+          <button key={item} className="submission-status-filter" data-status={item} aria-pressed={filter === item} onClick={() => setFilter(item)} style={{ padding: "7px 12px", borderRadius: "6px", border: `1px solid ${filter === item ? `var(--submission-tab-border, ${C.brandBorder})` : C.border}`, background: filter === item ? `var(--submission-tab-background, ${C.brandSurface})` : C.surface, color: filter === item ? `var(--submission-tab-text, ${C.brandText})` : C.textSub, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: filter === item ? 700 : 500, cursor: "pointer" }}>
+            {item === "Finalised" ? "Released" : item}{item === "Pending" ? ` (${pendingCount})` : ""}
           </button>
         ))}
       </div>
@@ -71,50 +80,64 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
       {error && <p style={{ color: C.red }}>{error}</p>}
       {reminderError && <p role="alert" style={{ color: C.red }}>{reminderError}</p>}
 
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "10px", overflowX: "auto" }}>
-        <table style={{ width: "100%", minWidth: "980px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>
+      <p className="submission-summary-note">Lecturer summaries reflect the classes matching the current filters.</p>
+      <div className="submission-lecturer-groups">
+      {lecturerGroups.map(group => {
+        const expanded = expandedGroups.has(group.staffId);
+        const contentId = `submission-classes-${encodeURIComponent(group.staffId)}`;
+        return <section key={group.staffId} className="admin-table-panel submission-lecturer-group" aria-label={`Classes for ${group.lecturerName} (${group.staffId})`}>
+          <h2 className="submission-lecturer-heading">
+            <button type="button" className="submission-lecturer-toggle" aria-expanded={expanded} aria-controls={contentId} onClick={() => toggleLecturer(group.staffId)}>
+              <ChevronDown size={18} aria-hidden="true" className={expanded ? "submission-chevron" : "submission-chevron is-collapsed"} />
+              <span className="submission-lecturer-identity"><span className="submission-lecturer-name">{group.lecturerName}</span><span className="admin-identifier">{group.staffId}</span></span>
+              <span className="submission-lecturer-summary"><span>{group.finalised} of {group.classes.length} classes released</span><span>{group.attention} require attention</span></span>
+              <AdminStatus status={group.status} />
+            </button>
+          </h2>
+          <div id={contentId} hidden={!expanded}>
+          <div className="admin-table-scroll">
+        <table aria-label={`Class submissions for ${group.lecturerName} (${group.staffId})`} className="admin-data-table" style={{ width: "100%", minWidth: "800px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>
           <thead>
-            <tr style={{ background: C.elevated, borderBottom: `1px solid ${C.border}`, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>
-              <th style={{ padding: "11px 12px" }}>STAFF ID</th>
-              <th style={{ padding: "11px 12px" }}>LECTURER</th>
-              <th style={{ padding: "11px 12px" }}>PROGRAMME</th>
-              <th style={{ padding: "11px 12px" }}>SUBJECT</th>
-              <th style={{ padding: "11px 12px" }}>CLASS</th>
-              <th style={{ padding: "11px 12px" }}>SUBMISSION STATUS</th>
-              <th style={{ padding: "11px 12px" }}>PROGRESS</th>
-              <th style={{ padding: "11px 12px" }}>LAST UPDATED</th>
-              <th style={{ padding: "11px 12px" }}>ACTION</th>
+            <tr>
+              <th scope="col">Programme</th>
+              <th scope="col">Subject</th>
+              <th scope="col">Class</th>
+              <th scope="col">Submission Status</th>
+              <th scope="col">Progress</th>
+              <th scope="col">Last Updated</th>
+              <th scope="col">Action</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(allocation => {
+            {group.classes.map(allocation => {
               const finalised = allocation.submissionStatus === "Finalised";
-              const overdue = allocation.submissionStatus === "Overdue";
               const sent = sentReminders.has(allocation.staffId);
               return (
-                <tr key={allocation.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                  <td style={{ padding: "13px 12px", fontFamily: C.mono, color: C.textMuted }}>{allocation.staffId}</td>
-                  <td style={{ padding: "13px 12px", fontWeight: 600, color: C.text }}>{allocation.lecturerName}</td>
-                  <td style={{ padding: "13px 12px", color: C.textSub }}><span style={{ color: C.code, fontFamily: C.mono, fontWeight: 700 }}>{allocation.programmeCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}>{allocation.programmeName}</span></td>
-                  <td style={{ padding: "13px 12px", color: C.textSub }}><span style={{ fontFamily: C.mono, color: C.code, fontWeight: 600 }}>{allocation.subjectCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}>{allocation.subjectName}</span></td>
-                  <td style={{ padding: "13px 12px", color: C.text, fontWeight: 600 }}>{allocation.classLabel}</td>
-                  <td style={{ padding: "13px 12px" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, padding: "4px 7px", borderRadius: "4px", background: finalised ? C.greenLight : overdue ? C.redLight : C.amberLight, color: finalised ? C.green : overdue ? C.red : C.amber }}>
-                      {finalised ? <CheckCircle size={11} /> : <Clock size={11} />}{allocation.submissionStatus.toUpperCase()}
-                    </span>
+                <tr key={allocation.id}>
+                  <td><span style={{ color: CC.code, fontWeight: 700 }}>{allocation.programmeCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: CC.textMuted }}>{allocation.programmeName}</span></td>
+                  <td><span style={{ color: CC.code, fontWeight: 600 }}>{allocation.subjectCode}</span><br /><span style={{ fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: CC.textMuted }}>{allocation.subjectName}</span></td>
+                  <td>{allocation.classLabel}</td>
+                  <td>
+                    <AdminStatus status={allocation.submissionStatus}>
+                      {finalised ? <CheckCircle size={12} aria-hidden="true" /> : <Clock size={12} aria-hidden="true" />}
+                    </AdminStatus>
                   </td>
-                  <td style={{ padding: "13px 12px", fontFamily: C.mono }}>{allocation.completionRate}%</td>
-                  <td style={{ padding: "13px 12px", fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}>{allocation.lastUpdated}</td>
-                  <td style={{ padding: "13px 12px" }}>
-                    {!finalised ? <button disabled={sent || sendingReminders.has(allocation.staffId)} onClick={() => sendReminder(allocation.staffId)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "6px 9px", border: "none", borderRadius: "5px", background: sent ? C.greenLight : C.maroon, color: sent ? C.green : "#fff", fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, cursor: sent ? "default" : "pointer", whiteSpace: "nowrap" }}>{sent ? <CheckCircle size={11} /> : <Send size={11} />}{sent ? "EMAIL QUEUED" : sendingReminders.has(allocation.staffId) ? "SENDING…" : "SEND REMINDER"}</button> : <span style={{ color: C.textMuted }}>—</span>}
+                  <td>{allocation.completionRate}%</td>
+                  <td>{allocation.lastUpdated}</td>
+                  <td>
+                    {!finalised ? <button className={sent ? "admin-status admin-status-success" : "staff-primary-action admin-table-action"} disabled={sent || sendingReminders.has(allocation.staffId)} onClick={() => sendReminder(allocation.staffId)}>{sent ? <CheckCircle size={11} aria-hidden="true" /> : <Send size={11} aria-hidden="true" />}{sent ? "Email Queued" : sendingReminders.has(allocation.staffId) ? "Sending…" : "Send Reminder"}</button> : <span style={{ color: CC.textMuted }}>—</span>}
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        {filtered.length === 0 && <div style={{ padding: "28px", textAlign: "center", color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No submissions match the selected programme and status filters.</div>}
+          </div>
+          </div>
+        </section>;
+      })}
       </div>
+      {filtered.length === 0 && <div className="admin-table-panel submission-empty-state" role="status">No submissions match the selected programme and status filters.</div>}
     </div>
   );
 }

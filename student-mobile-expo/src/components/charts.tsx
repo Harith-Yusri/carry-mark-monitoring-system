@@ -42,7 +42,7 @@ export function SubjectBarChart({ subjects }: { subjects: SubjectResult[] }) {
             const ineligible = released && subject.eligible === false;
             const eligible = released && subject.eligible === true;
             const barColor = ineligible ? colors.danger : eligible ? colors.success : colors.muted;
-            const eligibilityLabel = ineligible ? "Not Eligible" : eligible ? "Eligible" : released ? "Not determined" : "Pending";
+            const eligibilityLabel = ineligible ? "NOT ELIGIBLE" : eligible ? "ELIGIBLE" : released ? "Not determined" : "Pending";
             const percentage = released && subject.carry_maximum > 0
               ? Math.max(0, Math.min(100, subject.carry_mark! / subject.carry_maximum * 100))
               : 0;

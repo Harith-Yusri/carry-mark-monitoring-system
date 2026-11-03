@@ -9,6 +9,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const source = (await readFile(new URL('../src/features/lecturer/LecturerDashboard.tsx', import.meta.url), 'utf8'))
   .replace(/^import .*;\n/gm, '').replace('export function LecturerDashboard', 'function LecturerDashboard');
 const { code } = await transform(source, { loader: 'tsx', jsx: 'transform' });
+const { code: styleCode } = await transform(await readFile('src/features/lecturer/workspaceStyles.ts', 'utf8'), { loader: 'ts', format: 'cjs' });
+const { workspace: W } = new Function('module', styleCode + ';return module.exports;')({ exports: {} });
 function nodes(tree) {
   if (!tree || typeof tree !== 'object') return [];
   return [tree, ...React.Children.toArray(tree.props?.children).flatMap(nodes)];
@@ -35,10 +37,10 @@ function setup({ reject = false, subjects = [] } = {}) {
       programmeId: savedProgrammeId,
     } : subject);
   };
-  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','Trash2','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','listArchivedLecturerSubjects','listProgrammes','loadCurrentTermLabel','loadOfferingData','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject','userError',code+'; return LecturerDashboard;')(
+  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','Trash2','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','listArchivedLecturerSubjects','listProgrammes','loadCurrentTermLabel','loadOfferingData','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject','userError','W','Users','Clock',code+'; return LecturerDashboard;')(
     React,useState,useRef,()=>{},()=>({}),()=>({ user: { name: 'Test', id: 'TS004' } }),icon,icon,icon,icon,icon,icon,icon,
     async()=>serverSubjects,async()=>[],async()=>programmes,async()=>'Session 2, 2025/2026',async()=>({ assessments: [], sections: [] }),
-    async()=>({ catalogue, termLabel: 'Session 2, 2025/2026' }),create,update,(reason, fallback)=>reason?.message ?? fallback,
+    async()=>({ catalogue, termLabel: 'Session 2, 2025/2026' }),create,update,(reason, fallback)=>reason?.message ?? fallback,W,icon,icon,
   );
   const render = () => { cursor = 0; return Component({ onSelectSubject() {} }); };
   const field = label => nodes(render()).find(node => node.props?.['aria-label'] === label);

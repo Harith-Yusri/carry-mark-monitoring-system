@@ -8,5 +8,5 @@ export function pendingSections(offerings) {
 }
 
 export function reminderText(name, sections) {
-  return `Dear ${name},\n\nPlease complete and finalise the outstanding continuous assessment submissions for the following classes:\n\n${sections.map(section => `• ${section}`).join('\n')}\n\nPlease sign in to UiTM CAMS — Continuous Assessment Monitoring System to complete your submission. If you need assistance, contact your faculty administrator.\n\nThank you,\nFaculty Administration`;
+  return `Dear ${name},\n\nPlease complete and release the outstanding continuous assessment submissions for the following classes:\n\n${sections.map(section => `• ${section}`).join('\n')}\n\nPlease sign in to UiTM CAMS — Continuous Assessment Monitoring System to complete your submission. If you need assistance, contact your faculty administrator.\n\nThank you,\nFaculty Administration`;
 }

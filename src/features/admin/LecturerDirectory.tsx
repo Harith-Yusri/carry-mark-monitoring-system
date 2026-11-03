@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useColors } from "../../context/DarkModeContext";
+import { AdminStatus, useCardColors, useColors } from "./adminStyles";
 import type { AdminRecordsViewProps } from "../../hooks/useAdminRecords";
 import type { ClassTeachingAllocation } from "../../types";
 
@@ -13,6 +13,7 @@ function groupSubjects(allocations: ClassTeachingAllocation[], programmeId: stri
 
 export function LecturerDirectory({ records, context, loading, error }: AdminRecordsViewProps) {
   const C = useColors();
+  const CC = useCardColors();
   const [searchTerm, setSearchTerm] = useState("");
   const [programmeId, setProgrammeId] = useState("");
   const query = searchTerm.trim().toLowerCase();
@@ -27,16 +28,16 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "20px", alignItems: "flex-end" }}>
         <div>
-          <div style={{ color: C.maroon, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>ACADEMIC STAFF</div>
+          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>Academic Staff</div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>Lecturer Directory</h1>
           <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Teaching allocation, workload and submission activity in one faculty register.</p>
         </div>
-        <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{filtered.length} OF {records.length} RECORDS</div>
+        <div style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{filtered.length} of {records.length} Records</div>
       </div>
 
       <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", flexWrap: "wrap", marginBottom: "18px" }}>
         <label style={{ display: "block", flex: "1 1 320px", maxWidth: "560px" }}>
-          <span style={{ display: "block", color: C.textSub, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>SEARCH STAFF OR TEACHING ALLOCATION</span>
+          <span style={{ display: "block", color: C.textSub, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>Search Staff or Teaching Allocation</span>
           <input
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
@@ -45,7 +46,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
           />
         </label>
         <label style={{ display: "block", flex: "0 1 300px", minWidth: "220px" }}>
-          <span style={{ display: "block", color: C.textSub, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>PROGRAMME</span>
+          <span style={{ display: "block", color: C.textSub, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>Programme</span>
           <select
             aria-label="Filter lecturers by programme"
             value={programmeId}
@@ -64,8 +65,8 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
       {loading && <p style={{ color: C.textMuted }}>Loading lecturers…</p>}
       {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
 
-      <div className="directory-table">
-        <table style={{ width: "100%", minWidth: "850px", borderCollapse: "collapse", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>
+      <div className="admin-table-panel"><div className="admin-table-scroll">
+        <table className="admin-data-table" style={{ width: "100%", minWidth: "850px", borderCollapse: "collapse", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>
           <colgroup>
             <col style={{ width: "19%" }} />
             <col style={{ width: "13%" }} />
@@ -75,54 +76,54 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
             <col style={{ width: "12%" }} />
           </colgroup>
           <thead>
-            <tr style={{ borderTop: `2px solid ${C.maroon}`, borderBottom: `1px solid ${C.borderMid}` }}>
-              {["Lecturer", "Programmes Taught", "Teaching allocations", "Workload", "Submission", "Last activity"].map(label => (
-                <th key={label} style={{ padding: "10px", textAlign: "left", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", letterSpacing: ".06em", fontWeight: 700 }}>{label.toUpperCase()}</th>
+            <tr>
+              {["Lecturer", "Programmes Taught", "Teaching Allocations", "Workload", "Submission", "Last Activity"].map(label => (
+                <th scope="col" key={label}>{label}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.map(lecturer => {
-              const statusColor = lecturer.submissionStatus === "Finalised" ? C.green : lecturer.submissionStatus === "Overdue" ? C.red : C.amber;
               return (
-                <tr key={lecturer.id} style={{ borderBottom: `1px solid ${C.borderMid}` }}>
-                  <td style={{ padding: "14px 10px" }}>
-                    <div style={{ color: C.text, fontWeight: 700, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{lecturer.name}</div>
-                    <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{lecturer.id}</div>
+                <tr key={lecturer.id}>
+                  <td>
+                    <div style={{ color: CC.text, fontWeight: 700, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{lecturer.name}</div>
+                    <div className="admin-identifier" style={{ color: CC.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))", marginTop: "4px" }}>{lecturer.id}</div>
                   </td>
-                  <td style={{ padding: "14px 10px" }}>
+                  <td>
                     <div
                       title={lecturer.programmeAssignments.map(assignment => `${assignment.code} — ${assignment.name}`).join("\n") || "No current teaching allocation"}
-                      style={{ color: C.code, fontFamily: C.mono, fontWeight: 700 }}
+                      style={{ color: CC.code, fontWeight: 700 }}
                     >
                       {lecturer.programmeCodes.join(", ") || "—"}
                     </div>
                   </td>
-                  <td style={{ padding: "14px 10px", color: C.textSub }}>
+                  <td>
                     {lecturer.programmeAssignments.length ? lecturer.programmeAssignments.map(assignment => (
                       <div key={assignment.id} style={{ marginBottom: "6px" }}>
-                        <div style={{ color: C.code, fontFamily: C.mono, fontWeight: 700, marginBottom: "2px" }}>{assignment.code}</div>
+                        <div style={{ color: CC.code, fontWeight: 700, marginBottom: "2px" }}>{assignment.code}</div>
                         {groupSubjects(lecturer.classAllocations, assignment.id).map(subject => (
-                          <div key={subject.code} style={{ color: C.text, lineHeight: 1.45 }}>
-                            <span style={{ fontFamily: C.mono, fontWeight: 600 }}>{subject.code}</span>
-                            <span style={{ color: C.textMuted }}> ({subject.classes.join(", ")})</span>
+                          <div key={subject.code} style={{ color: CC.text, lineHeight: 1.45 }}>
+                            <span style={{ fontWeight: 600 }}>{subject.code}</span>
+                            <span style={{ color: CC.textMuted }}> ({subject.classes.join(", ")})</span>
                           </div>
                         ))}
                       </div>
-                    )) : <span style={{ color: C.textMuted }}>No current teaching allocation</span>}
+                    )) : <span style={{ color: CC.textMuted }}>No current teaching allocation</span>}
                   </td>
-                  <td style={{ padding: "14px 10px", color: C.textSub }}><span style={{ color: C.text, fontFamily: C.mono, fontWeight: 700 }}>{lecturer.studentCount}</span> students</td>
-                  <td style={{ padding: "14px 10px" }}>
-                    <div style={{ color: statusColor, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".03em" }}>{lecturer.submissionStatus.toUpperCase()}</div>
-                    <div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{lecturer.completionRate}% complete</div>
+                  <td><span style={{ color: CC.text, fontWeight: 700 }}>{lecturer.studentCount}</span> students</td>
+                  <td>
+                    <AdminStatus status={lecturer.submissionStatus} />
+                    <div style={{ color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{lecturer.completionRate}% complete</div>
                   </td>
-                  <td style={{ padding: "14px 10px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{lecturer.lastUpdated}</td>
+                  <td>{lecturer.lastUpdated}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        {!loading && filtered.length === 0 && <div style={{ padding: "24px 10px", borderBottom: `1px solid ${C.borderMid}`, color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No lecturer records match the selected search and programme filters.</div>}
+        {!loading && filtered.length === 0 && <div style={{ padding: "24px 10px", borderBottom: `1px solid ${CC.borderMid}`, color: CC.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No lecturer records match the selected search and programme filters.</div>}
+      </div>
       </div>
     </div>
   );

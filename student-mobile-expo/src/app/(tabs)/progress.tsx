@@ -65,7 +65,7 @@ export default function ProgressScreen() {
               <View style={styles.subjectHeadingRow}>
                 <Text style={[styles.subjectCode, { color: colors.accent }]}>{subject.code}</Text>
                 <View style={[styles.statusChip, { backgroundColor: isReleased ? `${resultColor}18` : `${colors.warning}18` }]}>
-                  <Text style={[styles.statusText, { color: isReleased ? resultColor : colors.warning }]}>{isIneligible ? "INELIGIBLE" : isReleased ? "RELEASED" : "PENDING"}</Text>
+                  <Text style={[styles.statusText, { color: isReleased ? resultColor : colors.warning }]}>{isIneligible ? "NOT ELIGIBLE" : isReleased ? "RELEASED" : "PENDING"}</Text>
                 </View>
               </View>
               <Text style={[styles.subjectName, { color: colors.textSecondary }]} numberOfLines={2}>{subject.name}</Text>

@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useMemo, useState } from "react";
 import { Archive, LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
-import { useColors } from "../../context/DarkModeContext";
+import { useColors } from "./adminStyles";
 import { AdminTab } from "../../types";
 import { requiresSubmissionAction, submissionAllocations, useAdminRecords } from "../../hooks/useAdminRecords";
 
@@ -21,14 +21,14 @@ export function AdminWebPortal() {
   );
 
   return (
-    <div className="admin-portal">
+    <div className="admin-portal portal-typography">
       {/* Admin Sidebar Navigation */}
       <div className="admin-sidebar">
-        <nav aria-label="Faculty administration" style={{ background: C.chrome, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.maroon}`, padding: "14px 10px 12px" }}>
+        <nav aria-label="Faculty administration" className="admin-sidebar-panel">
           <div style={{ padding: "0 8px 12px", borderBottom: `1px solid ${C.border}`, marginBottom: "10px" }}>
             <div>
               <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text }}>Faculty Administration</div>
-              <div style={{ marginTop: "3px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontFamily: C.mono, color: C.textMuted, letterSpacing: ".06em" }}>FSKM · CONTINUOUS ASSESSMENT</div>
+              <div style={{ marginTop: "3px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted, letterSpacing: ".06em" }}>FSKM · Continuous Assessment</div>
             </div>
           </div>
 
@@ -49,8 +49,8 @@ export function AdminWebPortal() {
                   padding: "9px 12px",
                   borderRadius: "6px",
                   border: "none",
-                  background: activeTab === item.key ? C.maroonLight : "transparent",
-                  color: activeTab === item.key ? C.maroon : C.textSub,
+                  background: activeTab === item.key ? C.brandSurface : "transparent",
+                  color: activeTab === item.key ? C.brandText : C.textSub,
                   fontWeight: activeTab === item.key ? 700 : 500,
                   fontSize: "calc(0.8125rem * var(--staff-text-scale))",
                   cursor: "pointer",
@@ -78,7 +78,6 @@ export function AdminWebPortal() {
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontFamily: C.mono,
                       fontSize: "calc(0.6875rem * var(--staff-text-scale))",
                       fontWeight: 700,
                     }}

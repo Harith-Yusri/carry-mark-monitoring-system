@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CheckCircle, Edit3, Plus, Trash2, X } from "lucide-react";
-import { useColors } from "../../context/DarkModeContext";
+import { workspace as W } from "./workspaceStyles";
 import { userError } from "../../utils/errors";
 import { loadOfferingWeightage, saveOfferingWeightage, AssessmentRecord as Assessment, deleteAssessment, listAssessments, saveAssessment as persistAssessment } from "../../services/carryMarkApi";
 
@@ -8,7 +8,6 @@ const emptyForm = { name: "", type: "", maxMarks: "", weightage: "" };
 type AssessmentForm = typeof emptyForm;
 
 export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string; subjectCode: string }) {
-  const C = useColors();
   const [carryMax, setCarryMax] = useState<number | null>(null);
   const [weightInput, setWeightInput] = useState("");
   const [savingWeight, setSavingWeight] = useState(false);
@@ -65,49 +64,38 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
 
   const weightSaveDisabled = loading || savingWeight || !weightInput || Number(weightInput) === carryMax;
 
-  const inputStyle: React.CSSProperties = { width: "100%", height: "43px", boxSizing: "border-box", padding: "0 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none" };
-  const labelStyle: React.CSSProperties = { display: "block", marginBottom: "7px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", letterSpacing: ".06em" };
-
   return (
-    <div style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px", padding: "24px" }}>
-      <div className="responsive-action-header" style={{ marginBottom: "20px" }}>
-        <div>
-          <h2 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.25rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>Continuous Assessment Components</h2>
-          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Set the total carry-mark weightage for this subject, then allocate it across assessments.</p>
-        </div>
-        <button disabled={loading || carryMax === null || savingWeight} onClick={openAdd} style={{ flexShrink: 0, padding: "9px 14px", background: C.accentSolid, color: "#fff", border: "none", borderRadius: "7px", fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}><Plus size={15} /> Add Assessment</button>
+    <div className={W.panel}>
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div><h2 className={W.title}>Continuous Assessment Components</h2><p className={W.muted}>Set the total carry-mark weightage for this subject, then allocate it across assessments.</p></div>
+        <button disabled={loading || carryMax === null || savingWeight} onClick={openAdd} className={W.primary + " shrink-0"}><Plus size={16} /> Add Assessment</button>
       </div>
-
-      <form onSubmit={saveTotalWeight} style={{ marginBottom: "20px" }}>
-        <label htmlFor="subject-carry-max" style={labelStyle}>TOTAL CARRY-MARK WEIGHTAGE (%)</label>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-          <input id="subject-carry-max" type="number" min="0.01" max="100" step="0.01" required value={weightInput} disabled={loading || savingWeight} onChange={event => setWeightInput(event.target.value)} placeholder="e.g. 60" style={{ ...inputStyle, width: "120px", height: "36px", padding: "0 10px", borderRadius: "6px", fontFamily: C.mono, fontSize: "calc(0.8125rem * var(--staff-text-scale))", opacity: loading || savingWeight ? .6 : 1 }} />
-          <button type="submit" disabled={weightSaveDisabled} style={{ height: "36px", boxSizing: "border-box", padding: "0 14px", border: `1px solid ${weightSaveDisabled ? C.borderMid : C.maroon}`, borderRadius: "6px", background: weightSaveDisabled ? C.elevated : C.maroon, color: weightSaveDisabled ? C.textMuted : "#fff", fontFamily: C.sans, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, lineHeight: 1, cursor: savingWeight ? "wait" : weightSaveDisabled ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap" }}>{savingWeight ? "Saving…" : "Save Weightage"}</button>
-        </div>
+      <form onSubmit={saveTotalWeight} className="mb-6">
+        <label htmlFor="subject-carry-max" className={W.label}>Total Carry-Mark Weightage (%)</label>
+        <div className="flex flex-wrap items-center gap-3"><input id="subject-carry-max" type="number" min="0.01" max="100" step="0.01" required value={weightInput} disabled={loading || savingWeight} onChange={event => setWeightInput(event.target.value)} placeholder="e.g. 60" className={W.field + " max-w-32"} /><button type="submit" disabled={weightSaveDisabled} className={W.primary}>{savingWeight ? "Saving…" : "Save Weightage"}</button></div>
       </form>
-      {!loading && carryMax === null && <p style={{ color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>Enter and save the subject’s total weightage before adding assessments.</p>}
-      {!modal && error && <p role="alert" style={{ color: C.red }}>{error}</p>}
-      <div style={{ height: "6px", background: C.elevated, borderRadius: "4px", overflow: "hidden" }}><div style={{ width: `${carryMax ? Math.min(totalWeight / carryMax * 100, 100) : 0}%`, height: "100%", background: totalWeight === carryMax ? C.green : totalWeight > (carryMax ?? 0) ? C.red : C.maroon, transition: "width .2s" }} /></div>
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "8px 0 20px", color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}><span>Total weightage allocated</span><strong style={{ color: totalWeight === carryMax ? C.green : totalWeight > (carryMax ?? 0) ? C.red : C.textSub }}>{totalWeight}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
-
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", minWidth: "680px", borderCollapse: "collapse", textAlign: "left", fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>
-          <thead><tr style={{ borderBottom: `1px solid ${C.borderMid}`, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}><th style={{ padding: "11px 12px" }}>ASSESSMENT COMPONENT</th><th style={{ padding: "11px 12px" }}>TYPE</th><th style={{ padding: "11px 12px" }}>MAX SCORE</th><th style={{ padding: "11px 12px" }}>WEIGHTAGE</th><th style={{ padding: "11px 12px", textAlign: "right" }}>ACTIONS</th></tr></thead>
-          <tbody>{items.map(item => <tr key={item.id} style={{ borderBottom: `1px solid ${C.border}` }}><td style={{ padding: "13px 12px", color: C.text, fontWeight: 600 }}>{item.name}</td><td style={{ padding: "13px 12px", color: C.textSub }}>{item.type}</td><td style={{ padding: "13px 12px", color: C.textSub, fontFamily: C.mono }}>{item.maxMarks}</td><td style={{ padding: "13px 12px", color: C.text, fontFamily: C.mono, fontWeight: 700 }}>{item.weightage}%</td><td style={{ padding: "13px 12px" }}><div style={{ display: "flex", justifyContent: "flex-end", gap: "7px" }}><button onClick={() => openEdit(item)} style={{ padding: "6px 9px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "5px", color: C.textSub, cursor: "pointer", fontSize: "calc(0.6875rem * var(--staff-text-scale))", display: "flex", alignItems: "center", gap: "4px" }}><Edit3 size={11} /> Edit</button><button onClick={() => removeAssessment(item)} style={{ padding: "6px 9px", background: C.redLight, border: `1px solid ${C.red}44`, borderRadius: "5px", color: C.red, cursor: "pointer", fontSize: "calc(0.6875rem * var(--staff-text-scale))", display: "flex", alignItems: "center", gap: "4px" }}><Trash2 size={11} /> Remove</button></div></td></tr>)}</tbody>
+      {!loading && carryMax === null && <p className={W.muted + " mb-4"}>Enter and save the subject’s total weightage before adding assessments.</p>}
+      {!modal && error && <p role="alert" className={W.error}>{error}</p>}
+      <progress aria-label="Total weightage allocated" max={100} value={carryMax ? Math.min(totalWeight / carryMax * 100, 100) : 0} className={"block h-2 w-full overflow-hidden rounded-full border-0 bg-slate-100 [&::-webkit-progress-bar]:bg-slate-100 " + (totalWeight === carryMax ? "accent-emerald-600 [&::-moz-progress-bar]:bg-emerald-600 [&::-webkit-progress-value]:bg-emerald-600" : totalWeight > (carryMax ?? 0) ? "accent-rose-600 [&::-moz-progress-bar]:bg-rose-600 [&::-webkit-progress-value]:bg-rose-600" : "accent-purple-900 [&::-moz-progress-bar]:bg-purple-900 [&::-webkit-progress-value]:bg-purple-900")} />
+      <div className="staff-card-muted mb-6 mt-3 flex flex-wrap justify-between gap-2 text-sm text-slate-500 dark:text-slate-300"><span>Total weightage allocated</span><strong className={totalWeight === carryMax ? "text-emerald-700" : totalWeight > (carryMax ?? 0) ? "text-rose-700" : "staff-card-primary text-slate-700 dark:text-slate-200"}>{totalWeight}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
+      <div className="overflow-x-auto">
+        <table className={W.table + " min-w-[680px]"}><thead className={W.tableHead}><tr><th scope="col">Assessment Component</th><th scope="col">Type</th><th scope="col">Max Score</th><th scope="col">Weightage</th><th scope="col" className="text-right">Actions</th></tr></thead>
+          <tbody>{items.map(item => <tr key={item.id} className={W.tableRow}><td className="staff-card-primary font-semibold text-slate-800 dark:text-slate-50">{item.name}</td><td>{item.type}</td><td>{item.maxMarks}</td><td className="font-semibold">{item.weightage}%</td><td><div className="flex justify-end gap-2"><button onClick={() => openEdit(item)} className={W.secondary + " px-3 text-xs"}><Edit3 size={15} /> Edit</button><button onClick={() => removeAssessment(item)} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100"><Trash2 size={15} /> Remove</button></div></td></tr>)}</tbody>
         </table>
-        {items.length === 0 && <div style={{ padding: "28px", textAlign: "center", color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No assessment components yet. Select Add Assessment to create one.</div>}
+        {items.length === 0 && <div className="py-10 text-center text-sm text-slate-500">No assessment components yet. Select Add Assessment to create one.</div>}
       </div>
-
-      {modal && <div role="dialog" aria-modal="true" style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", background: "rgba(0,0,0,.72)" }} onMouseDown={event => { if (event.target === event.currentTarget) closeModal(); }}>
-        <div style={{ width: "100%", maxWidth: "500px", boxSizing: "border-box", padding: "28px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "11px", boxShadow: "0 24px 70px rgba(0,0,0,.4)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "22px" }}><div><h3 style={{ margin: "0 0 5px", color: C.text, fontFamily: C.display, fontSize: "calc(1.3125rem * var(--staff-text-scale))", fontWeight: 700 }}>{modal === "add" ? "Add Assessment Component" : "Edit Assessment"}</h3><div style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{subjectCode}</div></div><button aria-label="Close" onClick={closeModal} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", padding: "2px" }}><X size={21} /></button></div>
-          <div style={{ marginBottom: "16px" }}><label style={labelStyle}>COMPONENT NAME</label><input autoFocus value={form.name} onChange={event => setForm(previous => ({ ...previous, name: event.target.value }))} placeholder="e.g. Quiz 3" style={inputStyle} /></div>
-          <div style={{ marginBottom: "16px" }}><label style={labelStyle}>COMPONENT TYPE</label><input list="assessment-types" value={form.type} onChange={event => setForm(previous => ({ ...previous, type: event.target.value }))} placeholder="Enter a component type" style={inputStyle} /><datalist id="assessment-types">{knownTypes.map(type => <option key={type} value={type} />)}</datalist></div>
-          <div className="form-two-column" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}><div><label style={labelStyle}>MAX SCORE</label><input type="number" min="1" value={form.maxMarks} onChange={event => setForm(previous => ({ ...previous, maxMarks: event.target.value }))} placeholder="e.g. 20" style={inputStyle} /></div><div><label style={labelStyle}>WEIGHTAGE (%) — {remaining}% LEFT</label><input type="number" min="0.01" step="0.01" max={remaining} value={form.weightage} onChange={event => setForm(previous => ({ ...previous, weightage: event.target.value }))} placeholder={`Max ${remaining}`} style={inputStyle} /></div></div>
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px", marginBottom: "20px", borderRadius: "7px", background: C.elevated, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}><span>Total after save</span><strong style={{ color: prospectiveTotal > (carryMax ?? 0) ? C.red : prospectiveTotal === carryMax ? C.green : C.amber }}>{prospectiveTotal}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
-          {error && <div style={{ color: C.red, fontSize: "calc(0.75rem * var(--staff-text-scale))", margin: "-10px 0 14px" }}>{error}</div>}
-          {prospectiveTotal > (carryMax ?? 0) && <div style={{ color: C.red, fontSize: "calc(0.75rem * var(--staff-text-scale))", margin: "-10px 0 14px" }}>Weightage cannot exceed the remaining {remaining}%.</div>}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}><button onClick={closeModal} style={{ height: "44px", borderRadius: "7px", background: C.elevated, border: `1px solid ${C.borderMid}`, color: C.textSub, cursor: "pointer", fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>Cancel</button><button disabled={!formValid} onClick={saveAssessment} style={{ height: "44px", borderRadius: "7px", border: "none", background: formValid ? C.maroon : C.elevated, color: formValid ? "#fff" : C.textMuted, cursor: formValid ? "pointer" : "not-allowed", fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", transition: "all .15s" }}>{modal === "add" ? <Plus size={15} /> : <CheckCircle size={15} />}{modal === "add" ? "Add Assessment" : "Save Changes"}</button></div>
+      {modal && <div role="dialog" aria-modal="true" aria-labelledby="assessment-modal-title" className={W.overlay} onMouseDown={event => { if (event.target === event.currentTarget) closeModal(); }}>
+        <div className={W.modal}>
+          <div className="mb-6 flex items-start justify-between gap-4"><div><h3 id="assessment-modal-title" className={W.title}>{modal === "add" ? "Add Assessment Component" : "Edit Assessment"}</h3><div className={W.muted}>{subjectCode}</div></div><button aria-label="Close" onClick={closeModal} className={W.iconButton}><X size={21} /></button></div>
+          <div className="space-y-4">
+            <div><label htmlFor="component-name" className={W.label}>Component Name</label><input id="component-name" autoFocus value={form.name} onChange={event => setForm(previous => ({ ...previous, name: event.target.value }))} placeholder="e.g. Quiz 3" className={W.field} /></div>
+            <div><label htmlFor="component-type" className={W.label}>Component Type</label><input id="component-type" list="assessment-types" value={form.type} onChange={event => setForm(previous => ({ ...previous, type: event.target.value }))} placeholder="Enter a component type" className={W.field} /><datalist id="assessment-types">{knownTypes.map(type => <option key={type} value={type} />)}</datalist></div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><label htmlFor="component-max-score" className={W.label}>Max Score</label><input id="component-max-score" type="number" min="1" value={form.maxMarks} onChange={event => setForm(previous => ({ ...previous, maxMarks: event.target.value }))} placeholder="e.g. 20" className={W.field} /></div><div><label htmlFor="component-weightage" className={W.label}>Weightage (%) — {remaining}% Left</label><input id="component-weightage" type="number" min="0.01" step="0.01" max={remaining} value={form.weightage} onChange={event => setForm(previous => ({ ...previous, weightage: event.target.value }))} placeholder={`Max ${remaining}`} className={W.field} /></div></div>
+            <div className="flex justify-between gap-3 rounded-lg bg-purple-50 p-4 text-sm text-purple-900"><span>Total after save</span><strong className={prospectiveTotal > (carryMax ?? 0) ? "text-rose-700" : prospectiveTotal === carryMax ? "text-emerald-700" : "text-amber-800"}>{prospectiveTotal}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
+          </div>
+          {error && <div role="alert" className={W.error}>{error}</div>}
+          {prospectiveTotal > (carryMax ?? 0) && <div role="alert" className={W.error}>Weightage cannot exceed the remaining {remaining}%.</div>}
+          <div className="mt-6 grid grid-cols-2 gap-3"><button onClick={closeModal} className={W.secondary}>Cancel</button><button disabled={!formValid} onClick={saveAssessment} className={W.primary}>{modal === "add" ? <Plus size={16} /> : <CheckCircle size={16} />}{modal === "add" ? "Add Assessment" : "Save Changes"}</button></div>
         </div>
       </div>}
     </div>

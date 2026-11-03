@@ -7,6 +7,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 const { code } = await transform(await readFile('src/services/lecturerSubjectGroups.ts', 'utf8'), { loader: 'ts', format: 'cjs' });
 const { groupLecturerSubjects } = new Function('module', code + '; return module.exports;')({ exports: {} });
+const { code: styleCode } = await transform(await readFile('src/features/lecturer/workspaceStyles.ts', 'utf8'), { loader: 'ts', format: 'cjs' });
+const { workspace: W } = new Function('module', styleCode + ';return module.exports;')({ exports: {} });
 const row = (id, programme, changes = {}) => ({ offeringId: id, code: 'ITT550', name: 'Network Design and Management',
   programmeId: programme, programmeIds: [programme], programmeCode: programme, programmeCodes: [programme], programmeNames: [programme],
   progSem: 5, semesterNo: 2, academicYear: '2025/2026', students: 6, status: 'active', lastSync: null, ...changes });
@@ -47,12 +49,13 @@ test('combined Marks Entry grid keeps class IDs, programme, capacity and each as
   const allocations = sections.map((section,index)=>({offeringId:`offering-${index}`,data:{sections:[section],assessments:[{id:`assessment-${index}`,name:`Assessment ${index}`,maxMarks:100,weightage:50}]},settings:{carryMax:50,eligibleThreshold:40}}));
   const summaries=sections.map((section,index)=>({...section,offeringId:`offering-${index}`,studentCount:section.students.length}));
   let selectedId=null;
+  const releaseCalls=[]; let reloads=0;
   const states=[];
   let cursor=0, effects=[];
   const useState=initial=>{const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],v=>states[i]=typeof v==='function'?v(states[i]):v]};
   const icon=()=>null;
-  const deps={React,useState,useEffect:fn=>effects.push(fn),useRef:()=>({current:null}),useColors:()=>({}),useAuth:()=>({user:{authId:'lecturer'}}),
-    useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,eligibleThreshold:40,loading:false,detailLoading:false,error:'',reload:async()=>{},updateDetailedSections:()=>{}}},
+  const deps={React,W,useState,finaliseSection:async id=>releaseCalls.push(id),useEffect:fn=>effects.push(fn),useRef:()=>({current:null}),useColors:()=>({}),useAuth:()=>({user:{authId:'lecturer'}}),
+    useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,eligibleThreshold:40,loading:false,detailLoading:false,error:'',reload:async()=>{reloads++},updateDetailedSections:()=>{}}},
     classSelectorCardStyle:{},classSelectorGridStyle:{},classSelectorIconStyle:{},classSelectorMetaStyle:{},classSelectorTitleStyle:{},classSelectorActionStyle:{},
     ...Object.fromEntries(['Check','CheckCircle','ChevronLeft','ChevronRight','Copy','KeyRound','MoreVertical','Plus','RefreshCw','Users','X'].map(name=>[name,icon]))};
   const Component=new Function(...Object.keys(deps),code+';return MarksEntryTab;')(...Object.values(deps));
@@ -65,8 +68,8 @@ test('combined Marks Entry grid keeps class IDs, programme, capacity and each as
   const pendingCard = nodes(tree).find(n=>n.props?.['aria-label']==='Enter marks for Class A');
   const finalisedCard = nodes(tree).find(n=>n.props?.['aria-label']==='Enter marks for Class B');
   assert.match(renderToStaticMarkup(pendingCard), /aria-label="Class marks pending"[^>]*>PENDING<\/span>/);
-  assert.doesNotMatch(renderToStaticMarkup(pendingCard), />FINALISED<\/span>/);
-  assert.match(renderToStaticMarkup(finalisedCard), /aria-label="Class marks finalised"[^>]*>FINALISED<\/span>/);
+  assert.doesNotMatch(renderToStaticMarkup(pendingCard), />RELEASED<\/span>/);
+  assert.match(renderToStaticMarkup(finalisedCard), /aria-label="Class marks released"[^>]*>RELEASED<\/span>/);
   assert.doesNotMatch(renderToStaticMarkup(finalisedCard), />PENDING<\/span>/);
   nodes(tree).find(n=>n.props?.['aria-label']==='Enter marks for Class B').props.onClick();
   tree=render();
@@ -75,6 +78,24 @@ test('combined Marks Entry grid keeps class IDs, programme, capacity and each as
   assert.equal(grid.props.selected.finalised,true);
   assert.equal(grid.props.selected.joinCode,'JOIN-B');
   assert.equal(grid.props.assessments[0].id,'assessment-1');
+  const previousWindow=globalThis.window;
+  const confirmations=[];
+  try {
+    globalThis.window={confirm:message=>{confirmations.push(message);return true}};
+    await grid.props.finalise();
+    assert.deepEqual(releaseCalls,[], 'Released classes cannot be released again');
+    selectedId='class-a';
+    const pendingGrid=nodes(render()).find(n=>typeof n.type==='function'&&n.type.name==='MarkGrid');
+    await pendingGrid.props.finalise();
+    assert.deepEqual(releaseCalls,['class-a']);
+    assert.equal(reloads,1);
+    assert.match(confirmations[0],/^Release carry marks for Class A/);
+    assert.match(confirmations[0],/students will be notified/);
+    assert.doesNotMatch(confirmations[0],/finalis|finaliz/i);
+  } finally {
+    if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;
+  }
+
 });
 
 test('Export class selector includes all programmes and uses the selected class assessment IDs', async () => {
@@ -83,10 +104,11 @@ test('Export class selector includes all programmes and uses the selected class 
   const sections=['CS240','CS251'].map((programmeCode,index)=>({id:`class-${index}`,programmeCode,programmeName:programmeCode,label:`Class ${index}`,capacity:10,students:[],finalised:false}));
   const allocations=sections.map((section,index)=>({offeringId:`offering-${index}`,data:{sections:[section],assessments:[{id:`assessment-${index}`,name:`Assessment ${index}`,maxMarks:100}]},settings:{carryMax:50}}));
   const summaries=sections.map((section,index)=>({...section,offeringId:`offering-${index}`,studentCount:section.students.length}));
-  let selectedId=null;const states=[];let cursor=0,effects=[];
+  let selectedId=null;
+  const releaseCalls=[]; let reloads=0;const states=[];let cursor=0,effects=[];
   const useState=initial=>{const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],v=>states[i]=typeof v==='function'?v(states[i]):v]};
   const icon=()=>null;
-  const deps={React,useState,useEffect:fn=>effects.push(fn),useColors:()=>({}),useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,loading:false,error:'',reload:async()=>{}}},classSelectorCardStyle:{},classSelectorGridStyle:{},classSelectorIconStyle:{},classSelectorMetaStyle:{},classSelectorTitleStyle:{},classSelectorActionStyle:{},
+  const deps={React,W,useState,useEffect:fn=>effects.push(fn),useColors:()=>({}),useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,loading:false,error:'',reload:async()=>{}}},classSelectorCardStyle:{},classSelectorGridStyle:{},classSelectorIconStyle:{},classSelectorMetaStyle:{},classSelectorTitleStyle:{},classSelectorActionStyle:{},
     ...Object.fromEntries(['CheckCircle','ChevronLeft','ChevronRight','Download','Users'].map(name=>[name,icon]))};
   const Component=new Function(...Object.keys(deps),code+';return ExportTab;')(...Object.values(deps));
   const render=()=>{cursor=0;effects=[];return Component({offeringId:'offering-0',offeringIds:['offering-0','offering-1'],subjectCode:'ITT550',subjectName:'Network Design',academicYear:'2025/2026',programmeSemester:5})};

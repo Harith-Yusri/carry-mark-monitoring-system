@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useColors } from "../../context/DarkModeContext";
+import { useCardColors, useColors } from "./adminStyles";
 import { listArchivedSemesterSummaries } from "../../services/carryMarkApi";
 import { userError } from "../../utils/errors";
 
@@ -15,6 +15,7 @@ interface SemesterSummary {
 
 export function SemesterHistory() {
   const C = useColors();
+  const CC = useCardColors();
   const [semesters, setSemesters] = useState<SemesterSummary[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -32,12 +33,12 @@ export function SemesterHistory() {
     {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
     {!loading && !error && semesters.length === 0 && <p style={{ color: C.textMuted }}>No archived semesters yet.</p>}
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
-      {semesters.map(semester => <section key={semester.id} style={{ padding: "18px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "9px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}><strong style={{ color: C.text }}>{semester.label}</strong><span style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>ARCHIVED</span></div>
-        <div style={{ color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))", marginTop: "5px" }}>{semester.dates}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px", marginTop: "14px", color: C.textSub, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>
-          <span><strong style={{ color: C.text }}>{semester.offerings}</strong> offerings</span><span><strong style={{ color: C.text }}>{semester.classes}</strong> classes</span>
-          <span><strong style={{ color: C.text }}>{semester.enrolments}</strong> enrolments</span><span><strong style={{ color: C.text }}>{semester.finalised}</strong> finalised</span>
+      {semesters.map(semester => <section key={semester.id} className="staff-content-card" style={{ padding: "18px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}><strong style={{ color: CC.text }}>{semester.label}</strong><span style={{ color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>Archived</span></div>
+        <div style={{ color: CC.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))", marginTop: "5px" }}>{semester.dates}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px", marginTop: "14px", color: CC.textSub, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>
+          <span><strong style={{ color: CC.text }}>{semester.offerings}</strong> offerings</span><span><strong style={{ color: CC.text }}>{semester.classes}</strong> classes</span>
+          <span><strong style={{ color: CC.text }}>{semester.enrolments}</strong> enrolments</span><span><strong style={{ color: CC.text }}>{semester.finalised}</strong> released</span>
         </div>
       </section>)}
     </div>

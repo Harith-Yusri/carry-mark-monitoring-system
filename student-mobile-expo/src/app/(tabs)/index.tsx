@@ -1,3 +1,4 @@
+import { releaseTerminology } from "@/lib/releaseTerminology";
 import { router } from "expo-router";
 import { Bell, BellRing, BookOpen, Plus, X } from "lucide-react-native";
 import { useState } from "react";
@@ -75,7 +76,7 @@ export default function DashboardScreen() {
     <Modal visible={notificationsOpen} transparent animationType="slide" onRequestClose={() => setNotificationsOpen(false)}>
       <Pressable style={styles.overlay} onPress={() => setNotificationsOpen(false)}><Pressable style={[styles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => undefined}>
         <View style={styles.modalHeader}><View><Heading size={24}>Notifications</Heading><Text style={[typography.body, { color: colors.muted }]}>Latest continuous assessment updates</Text></View><Pressable onPress={() => setNotificationsOpen(false)} accessibilityLabel="Close notifications"><X size={22} color={colors.muted} /></Pressable></View>
-        {notifications.length ? notifications.slice(0, 5).map(item => <View key={item.id} style={[styles.notification, { backgroundColor: colors.elevated }]}><View style={[styles.notificationIcon, { backgroundColor: colors.primarySoft }]}><BellRing size={17} color={colors.accent} /></View><View style={{ flex: 1, gap: 3 }}><Text style={[typography.bodyStrong, { color: colors.text }]}>{item.title}</Text><Text style={[typography.body, { color: colors.muted }]}>{item.body}</Text></View></View>) : <View style={styles.emptyNotification}><Bell size={24} color={colors.muted} /><Text style={[typography.body, { color: colors.muted }]}>You’re all caught up.</Text></View>}
+        {notifications.length ? notifications.slice(0, 5).map(item => <View key={item.id} style={[styles.notification, { backgroundColor: colors.elevated }]}><View style={[styles.notificationIcon, { backgroundColor: colors.primarySoft }]}><BellRing size={17} color={colors.accent} /></View><View style={{ flex: 1, gap: 3 }}><Text style={[typography.bodyStrong, { color: colors.text }]}>{releaseTerminology(item.title)}</Text><Text style={[typography.body, { color: colors.muted }]}>{releaseTerminology(item.body)}</Text></View></View>) : <View style={styles.emptyNotification}><Bell size={24} color={colors.muted} /><Text style={[typography.body, { color: colors.muted }]}>You’re all caught up.</Text></View>}
       </Pressable></Pressable>
     </Modal>
   </Screen>;

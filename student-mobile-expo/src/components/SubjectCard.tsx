@@ -20,7 +20,7 @@ export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPr
         </View>
         <View style={[styles.status, { backgroundColor: `${statusColor}16`, borderColor: `${statusColor}55` }]}>
           {ineligible ? <AlertCircle size={13} color={statusColor} /> : released ? <CheckCircle2 size={13} color={statusColor} /> : <Clock3 size={13} color={statusColor} />}
-          <Text style={[styles.statusText, { color: statusColor }]}>{ineligible ? "INELIGIBLE" : released ? "RELEASED" : "PENDING"}</Text>
+          <Text style={[styles.statusText, { color: statusColor }]}>{ineligible ? "NOT ELIGIBLE" : released ? "RELEASED" : "PENDING"}</Text>
         </View>
       </View>
 
@@ -36,7 +36,7 @@ export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPr
           {ineligible ? <AlertCircle size={17} color={colors.danger} /> : released ? <CheckCircle2 size={17} color={colors.success} /> : <LockKeyhole size={17} color={colors.muted} />}
           <View>
             <Text style={[styles.resultLabel, { color: colors.muted }]}>CARRY MARK</Text>
-            <Text style={[typography.bodyStrong, { color: released ? resultColor : colors.textSecondary }]}>{ineligible ? "Finalised · not eligible" : released ? "Finalised and released" : "Not released yet"}</Text>
+            <Text style={[typography.bodyStrong, { color: released ? resultColor : colors.textSecondary }]}>{ineligible ? "Released · Not Eligible" : released ? "Released" : "Not released yet"}</Text>
           </View>
         </View>
         {released && <Text style={[styles.mark, { color: resultColor }]}>{subject.carry_mark!.toFixed(0)}<Text style={[styles.markMaximum, { color: colors.textSecondary }]}>/{subject.carry_maximum.toFixed(0)}</Text></Text>}

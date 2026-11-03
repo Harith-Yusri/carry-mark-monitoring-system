@@ -50,8 +50,8 @@ export default function SubjectDetailScreen() {
     </Card>
     <Card style={{ gap: 12 }}>
       <View style={styles.summary}><Text style={[styles.sectionTitle, { color: colors.text }]}>Carry total</Text><Text style={[styles.total, { color: isIneligible ? colors.danger : subject.is_finalised ? colors.success : colors.muted }]}>{subject.is_finalised && subject.carry_mark !== null ? `${subject.carry_mark.toFixed(0)} / ${subject.carry_maximum.toFixed(0)}` : "Not released yet"}</Text></View>
-      <Text style={[typography.body, { color: colors.muted }]}>{subject.is_finalised ? `Eligibility threshold: ${subject.eligible_threshold}%` : "Your lecturer can sync draft marks without publishing them. Results appear only after finalisation."}</Text>
-      {subject.is_finalised && <Text style={[typography.bodyStrong, { color: subject.eligible ? colors.success : colors.danger }]}>{subject.eligible ? "Eligible for examination" : "Not currently eligible for examination"}</Text>}
+      <Text style={[typography.body, { color: colors.muted }]}>{subject.is_finalised ? `Eligibility threshold: ${subject.eligible_threshold}%` : "Your lecturer can sync draft marks without publishing them. Results appear only after release."}</Text>
+      {subject.is_finalised && <Text style={[typography.bodyStrong, { color: subject.eligible ? colors.success : colors.danger }]}>{subject.eligible ? "Eligible for Final Assessment" : "Not Eligible for Final Assessment"}</Text>}
       {isIneligible && <View style={[styles.consult, { borderTopColor: colors.border }]}>
         <Text style={[typography.body, { color: colors.muted }]}>Contact the lecturer assigned to your class to discuss your continuous assessment status. WhatsApp will open with a message for you to review and send.</Text>
         <Pressable accessibilityRole="button" disabled={consulting} onPress={() => void consultLecturer()}

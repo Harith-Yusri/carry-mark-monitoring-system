@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { BookOpen, Plus, CheckCircle, ChevronRight, MoreVertical, Trash2, X } from "lucide-react";
-import { useColors } from "../../context/DarkModeContext";
+import { BookOpen, Plus, Users, Clock, ChevronRight, MoreVertical, Trash2, X } from "lucide-react";
+import { workspace as W } from "./workspaceStyles";
 import { useAuth } from "../../context/AuthContext";
 import { createLecturerSubject, deleteLecturerSubject, listProgrammes, loadLecturerSubjectDashboard, loadOfferingData, loadSubjectCreationData, SubjectCatalogueEntry, listLecturerSubjects, SubjectSummary, updateLecturerSubject } from "../../services/carryMarkApi";
 import { ProgrammeOption } from "../../types";
@@ -8,8 +8,45 @@ import { userError } from "../../utils/errors";
 
 export type LecturerSubject = SubjectSummary;
 
+const subjectThemes = [
+  { ink: '#3730A3', tint: '#E0E7FF', accent: '#6366F1' },
+  { ink: '#0F5F59', tint: '#CCFBF1', accent: '#14B8A6' },
+  { ink: '#8A3B0B', tint: '#FEF0C7', accent: '#F59E0B' },
+  { ink: '#5B21B6', tint: '#EDE9FE', accent: '#8B5CF6' },
+  { ink: '#075985', tint: '#E0F2FE', accent: '#0EA5E9' },
+  { ink: '#86198F', tint: '#FAE8FF', accent: '#D946EF' },
+  { ink: '#9A3412', tint: '#FFEDD5', accent: '#FB923C' },
+  { ink: '#3F6212', tint: '#ECFCCB', accent: '#84CC16' },
+];
+
+function getCardTheme(index: number) {
+  if (index < subjectThemes.length) return subjectThemes[index];
+  // Extend the palette without wrapping or using error-red / success-green hues.
+  const hue = 180 + ((index - subjectThemes.length) * 137.508) % 140;
+  return {
+    accent: `hsl(${hue} 70% 45%)`,
+    tint: `hsl(${hue} 75% 94%)`,
+    ink: `hsl(${hue} 70% 25%)`,
+  };
+}
+
+function assignSubjectThemes(subjects: Pick<LecturerSubject, 'code'>[]) {
+  // Allocate across all loaded terms, never separately within semester groups.
+  // Sorting makes assignment independent of response order and active filters.
+  const codes = [...new Set(subjects.map(subject => subject.code.trim().toUpperCase()))].sort();
+  return new Map(codes.map((code, index) => [code, getCardTheme(index)]));
+}
+
+function formatSubjectSync(value: string | null) {
+  if (!value) return 'Sync pending';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Sync unavailable';
+  const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(date);
+  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+  return `Synced ${day}, ${time}`;
+}
+
 export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj: LecturerSubject) => void }) {
-  const C = useColors();
   const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<LecturerSubject | null>(null);
@@ -35,6 +72,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const [catalogueLoading, setCatalogueLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const saveInFlight = useRef(false);
+  const [activeTerm, setActiveTerm] = useState<{ academicYear: string; semesterNo: number } | null>(null);
   const existingSubject = catalogue.find(subject => subject.code === code.trim().toUpperCase());
   const validForm = editingSubject
     ? name.trim().length > 0 && name.trim().length <= 200 && Boolean(programmeId) && Number(semester) >= 1 && Number(semester) <= 12 && !saving
@@ -44,11 +82,16 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
 
 
   const teachingHistory = [...subjects, ...archivedSubjects];
+  const subjectColors = assignSubjectThemes(teachingHistory);
   const currentTermMatch = creationTerm.match(/^Semester\s+(\d+)\s+·\s+(.+)$/);
-  const currentAcademicYear = subjects[0]?.academicYear ?? currentTermMatch?.[2] ?? "";
-  const currentSemesterNo = subjects[0]?.semesterNo ?? (currentTermMatch ? Number(currentTermMatch[1]) : null);
-  const academicYears = [...new Set(teachingHistory.map(subject => subject.academicYear))].sort().reverse();
-  const semestersForYear = [...new Set(teachingHistory.filter(subject => subject.academicYear === selectedAcademicYear).map(subject => subject.semesterNo))].sort((a, b) => b - a);
+  const currentAcademicYear = activeTerm?.academicYear ?? subjects[0]?.academicYear ?? currentTermMatch?.[2] ?? "";
+  const currentSemesterNo = activeTerm?.semesterNo ?? subjects[0]?.semesterNo ?? (currentTermMatch ? Number(currentTermMatch[1]) : null);
+  // The real active term must remain selectable before its first allocation.
+  // Otherwise the native select can display a historical year while state still
+  // points at the (missing) active option, leaving the semester selector empty.
+  const availableTerms = activeTerm ? [...teachingHistory, activeTerm] : teachingHistory;
+  const academicYears = [...new Set(availableTerms.map(term => term.academicYear))].sort().reverse();
+  const semestersForYear = [...new Set(availableTerms.filter(term => term.academicYear === selectedAcademicYear).map(term => term.semesterNo))].sort((a, b) => b - a);
   const visibleSubjects = teachingHistory.filter(subject => subject.academicYear === selectedAcademicYear && subject.semesterNo === selectedSemesterNo);
   const isCurrentSelection = selectedAcademicYear === currentAcademicYear && selectedSemesterNo === currentSemesterNo;
   const progSems = [...new Set(visibleSubjects.map(s => s.progSem))].sort((a, b) => a - b);
@@ -56,12 +99,11 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
 
   useEffect(() => {
     loadLecturerSubjectDashboard()
-      .then(({ current: items, archived, termLabel }) => {
+      .then(({ current: items, archived, termLabel, activeTerm: term }) => {
         setSubjects(items); setArchivedSubjects(archived); setCreationTerm(termLabel);
-        const current = items[0];
-        const termMatch = termLabel.match(/^Semester\s+(\d+)\s+·\s+(.+)$/);
-        setSelectedAcademicYear(current?.academicYear ?? termMatch?.[2] ?? "");
-        setSelectedSemesterNo(current?.semesterNo ?? (termMatch ? Number(termMatch[1]) : null));
+        setActiveTerm(term);
+        setSelectedAcademicYear(term.academicYear);
+        setSelectedSemesterNo(term.semesterNo);
       })
       .catch(error => setLoadError(userError(error, "Unable to load your subjects.")))
       .finally(() => setLoading(false));
@@ -105,13 +147,13 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const deleteSubject = async (subject: LecturerSubject) => {
     setMenuOfferingId(null);
     setSubjectActionError("");
-    if (!window.confirm(`Delete ${subject.code} from ${subject.termLabel}? All classes, assessments, enrolments and draft marks linked to this offering will also be deleted. Finalised or archived records cannot be deleted.`)) return;
+    if (!window.confirm(`Delete ${subject.code} from ${subject.termLabel}? All classes, assessments, enrolments and draft marks linked to this offering will also be deleted. Released or archived records cannot be deleted.`)) return;
     setDeletingOfferingId(subject.offeringId);
     try {
       await deleteLecturerSubject(subject.offeringId);
       setSubjects(await listLecturerSubjects());
     } catch (reason) {
-      setSubjectActionError(userError(reason, "Unable to delete this subject. Finalised or archived academic records cannot be deleted."));
+      setSubjectActionError(userError(reason, "Unable to delete this subject. Released or archived academic records cannot be deleted."));
     } finally {
       setDeletingOfferingId(null);
     }
@@ -141,164 +183,123 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   };
 
   return (
-    <div>
-      <div className="responsive-action-header" style={{ alignItems: "center", marginBottom: "20px" }}>
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
         <div>
-          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 2px" }}>My Subjects</h1>
-          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted }}>
-            {user?.name} ({user?.id}) · {visibleSubjects[0]?.termLabel ?? creationTerm} · {visibleSubjects.length} assignment{visibleSubjects.length === 1 ? "" : "s"} across {programmeCount} programme{programmeCount === 1 ? "" : "s"}{!isCurrentSelection && visibleSubjects.length ? " · read-only" : ""}
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-50">My Subjects</h1>
+          <p className={W.muted}>{user?.name} ({user?.id}) · {visibleSubjects[0]?.termLabel ?? creationTerm} · {visibleSubjects.length} assignment{visibleSubjects.length === 1 ? "" : "s"} across {programmeCount} programme{programmeCount === 1 ? "" : "s"}{!isCurrentSelection && visibleSubjects.length ? " · read-only" : ""}</p>
         </div>
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "flex-end" }}>
-          <label style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 600, letterSpacing: ".05em" }}>ACADEMIC YEAR
-            <select aria-label="Academic year" value={selectedAcademicYear} onChange={event => { const year = event.target.value; const available = [...new Set(teachingHistory.filter(subject => subject.academicYear === year).map(subject => subject.semesterNo))].sort((a, b) => b - a); setSelectedAcademicYear(year); setSelectedSemesterNo(available[0] ?? null); setMenuOfferingId(null); }} style={{ display: "block", minWidth: "148px", minHeight: "42px", marginTop: "6px", padding: "9px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontFamily: C.sans, fontSize: "calc(0.875rem * var(--staff-text-scale))", fontWeight: 600 }}>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="min-w-36 flex-1"><span className={W.label}>Academic Year</span>
+            <select aria-label="Academic year" value={selectedAcademicYear} onChange={event => { const year = event.target.value; const available = [...new Set(availableTerms.filter(term => term.academicYear === year).map(term => term.semesterNo))].sort((a, b) => b - a); setSelectedAcademicYear(year); setSelectedSemesterNo(year === currentAcademicYear && currentSemesterNo !== null && available.includes(currentSemesterNo) ? currentSemesterNo : available[0] ?? null); setMenuOfferingId(null); }} className={W.field}>
               {academicYears.map(year => <option key={year} value={year}>{year}</option>)}
             </select>
           </label>
-          <label style={{ color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 600, letterSpacing: ".05em" }}>SEMESTER
-            <select aria-label="Semester" value={selectedSemesterNo ?? ""} onChange={event => { setSelectedSemesterNo(Number(event.target.value)); setMenuOfferingId(null); }} style={{ display: "block", minWidth: "132px", minHeight: "42px", marginTop: "6px", padding: "9px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", color: C.text, fontFamily: C.sans, fontSize: "calc(0.875rem * var(--staff-text-scale))", fontWeight: 600 }}>
+          <label className="min-w-32 flex-1"><span className={W.label}>Semester</span>
+            <select aria-label="Semester" value={selectedSemesterNo ?? ""} onChange={event => { setSelectedSemesterNo(Number(event.target.value)); setMenuOfferingId(null); }} className={W.field}>
               {semestersForYear.map(value => <option key={value} value={value}>Semester {value}</option>)}
             </select>
           </label>
-          {isCurrentSelection && <button
-          onClick={openCreateModal}
-          style={{ background: C.maroon, color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 600, fontFamily: C.sans, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-        >
-          <Plus size={15} /> Create New Subject
-        </button>}
+          {isCurrentSelection && <button onClick={openCreateModal} className={W.primary}><Plus size={16} /> Create New Subject</button>}
         </div>
       </div>
+      {archiveError && <p role="alert" className={W.error}>{archiveError}</p>}
+      {subjectActionError && <p role="alert" className={W.error}>{subjectActionError}</p>}
 
-      {archiveError && <p role="alert" style={{ color: C.red }}>{archiveError}</p>}
-      {subjectActionError && <p role="alert" style={{ color: C.red, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{subjectActionError}</p>}
-
-      {archivedDetail && <div role="dialog" aria-modal="true" aria-label="Archived subject details" style={{ position: "fixed", inset: 0, zIndex: 50, padding: "16px", background: "rgba(0,0,0,.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: "min(680px, 100%)", maxHeight: "85vh", overflowY: "auto", padding: "22px", background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "14px" }}><div><div style={{ color: C.maroon, fontFamily: C.mono, fontWeight: 700 }}>{archivedDetail.subject.code} · {archivedDetail.subject.termLabel}</div><h2 style={{ color: C.text, margin: "4px 0" }}>{archivedDetail.subject.name}</h2><span style={{ color: C.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Archived record · read-only</span></div><button type="button" aria-label="Close archived details" onClick={() => setArchivedDetail(null)} style={{ alignSelf: "flex-start", border: 0, background: "transparent", color: C.textMuted, cursor: "pointer" }}><X size={18} /></button></div>
-          <h3 style={{ color: C.text, fontSize: "calc(0.875rem * var(--staff-text-scale))", margin: "20px 0 8px" }}>Classes</h3>
-          {archivedDetail.data.sections.map(section => <div key={section.id} style={{ padding: "9px 0", borderBottom: `1px solid ${C.border}`, color: C.textSub, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}><strong style={{ color: C.text }}>{section.programmeCode} · {section.label}</strong> · {section.students.length} students · {section.finalised ? "Finalised" : "Not finalised"}</div>)}
-          {!archivedDetail.data.sections.length && <p style={{ color: C.textMuted }}>No classes were recorded.</p>}
-          <h3 style={{ color: C.text, fontSize: "calc(0.875rem * var(--staff-text-scale))", margin: "20px 0 8px" }}>Assessment Structure</h3>
-          {archivedDetail.data.assessments.map(assessment => <div key={assessment.id} style={{ padding: "9px 0", borderBottom: `1px solid ${C.border}`, color: C.textSub, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}><strong style={{ color: C.text }}>{assessment.name}</strong> · {assessment.type} · {assessment.weightage}% carry weight</div>)}
-          {!archivedDetail.data.assessments.length && <p style={{ color: C.textMuted }}>No assessments were recorded.</p>}
+      {archivedDetail && <div role="dialog" aria-modal="true" aria-label="Archived subject details" className={W.overlay}>
+        <div className={W.modal + " max-w-2xl"}>
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div><span className={W.code}>{archivedDetail.subject.code} · {archivedDetail.subject.termLabel}</span><h2 className={W.title + " mt-3"}>{archivedDetail.subject.name}</h2><span className={W.muted}>Archived record · read-only</span></div>
+            <button type="button" aria-label="Close archived details" onClick={() => setArchivedDetail(null)} className={W.iconButton}><X size={20} /></button>
+          </div>
+          <h3 className="mb-3 font-semibold">Classes</h3>
+          {archivedDetail.data.sections.map(section => <div key={section.id} className="border-b border-slate-200 py-3 text-sm dark:border-slate-700"><strong>{section.programmeCode} · {section.label}</strong> · {section.students.length} students · {section.finalised ? "Released" : "Not released"}</div>)}
+          {!archivedDetail.data.sections.length && <p className={W.muted}>No classes were recorded.</p>}
+          <h3 className="mb-3 mt-6 font-semibold">Assessment Structure</h3>
+          {archivedDetail.data.assessments.map(assessment => <div key={assessment.id} className="border-b border-slate-200 py-3 text-sm dark:border-slate-700"><strong>{assessment.name}</strong> · {assessment.type} · {assessment.weightage}% carry weight</div>)}
+          {!archivedDetail.data.assessments.length && <p className={W.muted}>No assessments were recorded.</p>}
         </div>
       </div>}
+      {loading && <p role="status" className={W.muted}>Loading your subjects…</p>}
+      {loadError && <p role="alert" className={W.error}>Unable to load your subjects. {loadError}</p>}
+      {!loading && !loadError && visibleSubjects.length === 0 && <div role="status" className={W.panel + " py-12 text-center"}>
+        <BookOpen size={32} aria-hidden="true" className="mx-auto mb-4 text-purple-800" />
+        <h2 className={W.title}>No Teaching Allocations</h2>
+        <p className={W.muted + " mx-auto mt-3 max-w-lg"}>{academicYears.length ? "No subjects are available for the selected semester." : "No current or archived teaching allocations were found."}</p>
+        {isCurrentSelection && <p className={W.muted + " mt-3"}>Select “Create New Subject” to add your first current-semester subject.</p>}
+      </div>}
 
-      {loading && <p role="status" style={{ color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>Loading your subjects…</p>}
-      {loadError && <p role="alert" style={{ color: C.red, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>Unable to load your subjects. {loadError}</p>}
-      {!loading && !loadError && visibleSubjects.length === 0 && (
-        <div role="status" style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px", padding: "48px 24px", textAlign: "center" }}>
-          <BookOpen size={32} aria-hidden="true" style={{ color: C.maroon, marginBottom: "16px" }} />
-          <h2 style={{ fontFamily: C.display, color: C.text, fontSize: "calc(1.25rem * var(--staff-text-scale))", fontWeight: 700, margin: "0 0 10px" }}>No Teaching Allocations</h2>
-          <p style={{ color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))", lineHeight: 1.7, maxWidth: "460px", margin: "0 auto" }}>
-            {academicYears.length ? "No subjects are available for the selected semester." : "No current or archived teaching allocations were found."}
-          </p>
-          {isCurrentSelection && <p style={{ color: C.textSub, fontSize: "calc(0.8125rem * var(--staff-text-scale))", lineHeight: 1.7, margin: "12px 0 0" }}>Select “Create New Subject” to add your first current-semester subject.</p>}
-        </div>
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <div className="space-y-8">
         {progSems.map(ps => {
           const psSubs = visibleSubjects.filter(s => s.progSem === ps);
-          return (
-            <div key={ps}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "28px", height: "28px", background: C.metadataLight, border: `1px solid ${C.border}`, borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontFamily: C.mono, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700, color: C.metadata }}>{ps}</span>
-                </div>
-                <span style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text }}>Programme Semester {ps}</span>
-                <span style={{ fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted }}>· {psSubs.length} subject{psSubs.length !== 1 ? "s" : ""}</span>
-                <div style={{ flex: 1, height: "1px", background: C.border }} />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "14px" }}>
-                {psSubs.map(subj => {
-                  const isSubmitted = subj.status === "submitted";
-                  return (
-                    <div
-                      key={subj.offeringId}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => isCurrentSelection ? onSelectSubject(subj) : openArchivedDetail(subj)}
-                      onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); isCurrentSelection ? onSelectSubject(subj) : openArchivedDetail(subj); } }}
-                      style={{ position: "relative", textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "8px", padding: "18px 20px", cursor: "pointer", boxShadow: C.panelShadow, transition: "border-color 0.15s, box-shadow 0.15s" }}
-                      onMouseEnter={event => { event.currentTarget.style.borderColor = `${C.maroon}88`; event.currentTarget.style.boxShadow = C.panelShadowHover; }}
-                      onMouseLeave={event => { event.currentTarget.style.borderColor = C.border; event.currentTarget.style.boxShadow = C.panelShadow; }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0, marginBottom: "8px", whiteSpace: "nowrap" }}>
-                        <span style={{ flexShrink: 0, fontFamily: C.mono, fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.code, fontWeight: 650 }}>{subj.code}</span>
-                        <span title={subj.programmeCodes.join(", ") || "No classes"} aria-label={subj.programmeCodes.length ? `Programmes ${subj.programmeCodes.join(", ")}` : "No classes"} style={{ flexShrink: 1, minWidth: 0, maxWidth: "76px", overflow: "hidden", textOverflow: "ellipsis", fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, background: C.metadataLight, border: `1px solid ${C.border}`, color: C.metadata, borderRadius: "3px", padding: "2px 5px" }}>{subj.programmeCodes.length > 1 ? `${subj.programmeCodes[0]} +${subj.programmeCodes.length - 1}` : subj.programmeCodes[0] ?? "NO CLASSES"}</span>
-                        <span style={{ flexShrink: 0, fontFamily: C.mono, fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, background: C.elevated, border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: "3px", padding: "2px 5px" }}>SEM {subj.progSem}</span>
-                        <span style={{ flex: 1, minWidth: 0 }} />
-                        <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", lineHeight: 1.25, fontFamily: C.mono, padding: "2px 6px", borderRadius: "3px", background: isSubmitted ? C.greenLight : C.amberLight, color: isSubmitted ? C.green : C.amber, border: `1px solid ${isSubmitted ? C.green + "44" : C.amber + "44"}` }}>
-                          {isSubmitted && <CheckCircle size={9} />}{isSubmitted ? "FINALISED" : "IN PROGRESS"}
-                        </span>
-                        {isCurrentSelection ? <button aria-label={`Manage ${subj.code}`} onClick={event => { event.stopPropagation(); setMenuOfferingId(menuOfferingId === subj.offeringId ? null : subj.offeringId); }} style={{ flexShrink: 0, padding: "2px", border: "none", background: "transparent", color: C.textMuted, cursor: "pointer" }}><MoreVertical size={17} /></button> : <span style={{ flexShrink: 0, color: C.textMuted, fontFamily: C.mono, fontSize: "calc(0.625rem * var(--staff-text-scale))" }}>READ-ONLY</span>}
-                      </div>
-                      {menuOfferingId === subj.offeringId && <div onClick={event => event.stopPropagation()} style={{ position: "absolute", right: "18px", top: "49px", zIndex: 4, minWidth: "156px", padding: "5px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "7px", boxShadow: "0 10px 30px rgba(0,0,0,.3)" }}>{(subj.offerings ?? [subj]).map(offering => <React.Fragment key={offering.offeringId}><button onClick={() => openEditModal(offering)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.text, textAlign: "left", cursor: "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Edit subject{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button><button disabled={deletingOfferingId === offering.offeringId} onClick={() => deleteSubject(offering)} style={{ width: "100%", padding: "7px 8px", border: "none", background: "transparent", color: C.red, textAlign: "left", cursor: deletingOfferingId === offering.offeringId ? "wait" : "pointer", fontSize: "calc(0.75rem * var(--staff-text-scale))", display: "flex", alignItems: "center", gap: "6px" }}><Trash2 size={12} />{deletingOfferingId === offering.offeringId ? "Deleting…" : "Delete subject"}{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button></React.Fragment>)}</div>}
-                      <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text, marginBottom: "10px" }}>{subj.name}</div>
-                      <div style={{ display: "flex", gap: "14px", marginBottom: "10px", fontSize: "calc(0.75rem * var(--staff-text-scale))", color: C.textMuted }}>
-                        <div><span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.students}</span> students</div>
-                        <div>Last Sync: <span style={{ fontFamily: C.mono, color: C.textSub }}>{subj.lastSync ? new Date(subj.lastSync).toLocaleString() : "Pending"}</span></div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px", color: C.maroon, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 600 }}>
-                        <span>{isCurrentSelection ? "Manage Subject Hub" : "View archived details"}</span><ChevronRight size={14} />
-                      </div>
+          return <section key={ps}>
+            <h2 className="subject-semester-heading">
+              Programme Semester {ps}<span className="font-normal text-slate-500 dark:text-slate-300">· {psSubs.length} subject{psSubs.length !== 1 ? "s" : ""}</span>
+            </h2>
+            <div className="subject-card-grid">
+              {psSubs.map(subj => {
+                const isSubmitted = subj.status === "submitted";
+                const theme = subjectColors.get(subj.code.trim().toUpperCase())!;
+                const cardStyle = {
+                  '--subject-accent': theme.accent,
+                  '--subject-light-tint': theme.tint,
+                  '--subject-light-ink': theme.ink,
+                } as React.CSSProperties;
+                const openSubject = () => isCurrentSelection ? onSelectSubject(subj) : openArchivedDetail(subj);
+                return <article key={subj.offeringId} role="button" tabIndex={0} aria-label={`${isCurrentSelection ? "Open Subject Hub" : "View archived details"} for ${subj.code}: ${subj.name}`}
+                  onClick={openSubject}
+                  onKeyDown={event => {
+                    if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                      event.preventDefault();
+                      openSubject();
+                    }
+                  }}
+                  style={cardStyle}
+                  className="subject-dashboard-card">
+                  <div className="subject-card-body">
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
+                      <span className="subject-code-chip">{subj.code}</span>
+                      <span title={subj.programmeCodes.join(", ") || "No classes"} aria-label={subj.programmeCodes.length ? `Programmes ${subj.programmeCodes.join(", ")}` : "No classes"} className="subject-neutral-chip">{subj.programmeCodes.length > 1 ? `${subj.programmeCodes[0]} +${subj.programmeCodes.length - 1}` : subj.programmeCodes[0] ?? "No classes"}</span>
+                      <span className="subject-neutral-chip">Sem {subj.progSem}</span>
+                      <span className={"subject-card-status" + (isSubmitted ? " is-finalised" : "")}><span aria-hidden="true" />{isSubmitted ? "Released" : "Pending"}</span>
+                      {isCurrentSelection ? <button aria-label={`Manage ${subj.code}`} aria-expanded={menuOfferingId === subj.offeringId} onClick={event => { event.stopPropagation(); setMenuOfferingId(menuOfferingId === subj.offeringId ? null : subj.offeringId); }} className={W.iconButton + " ml-auto"}><MoreVertical size={20} aria-hidden="true" /></button> : <span className="text-xs font-medium text-slate-500">Read-only</span>}
                     </div>
-                  );
-                })}
-              </div>
+                    {menuOfferingId === subj.offeringId && <div onClick={event => event.stopPropagation()} className={W.menu + " subject-card-menu"}>{(subj.offerings ?? [subj]).map(offering => <React.Fragment key={offering.offeringId}>
+                      <button onClick={() => openEditModal(offering)} className={W.menuItem}>Edit subject{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button>
+                      <button disabled={deletingOfferingId === offering.offeringId} onClick={() => deleteSubject(offering)} className={W.menuItem + " text-rose-700 disabled:opacity-50"}><Trash2 size={15} aria-hidden="true" />{deletingOfferingId === offering.offeringId ? "Deleting…" : "Delete subject"}{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button>
+                    </React.Fragment>)}</div>}
+                    <h3 className="subject-card-name">{subj.name}</h3>
+                    <div className="subject-card-info">
+                      <span><Users size={12} aria-hidden="true" />{subj.students} students</span>
+                      <span title={subj.lastSync ? new Date(subj.lastSync).toLocaleString() : undefined}><Clock size={12} aria-hidden="true" />{formatSubjectSync(subj.lastSync)}</span>
+                    </div>
+                  </div>
+                  <button onClick={event => { event.stopPropagation(); openSubject(); }} className="subject-hub-button">{isCurrentSelection ? "Manage Subject Hub" : "View archived details"}<ChevronRight size={16} aria-hidden="true" /></button>
+                </article>;
+              })}
             </div>
-          );
+          </section>;
         })}
       </div>
 
-      {/* Modal */}
-      {showCreateModal && (
-        <div role="dialog" aria-modal="true" aria-label={editingSubject ? "Edit Subject" : "Create New Subject"} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
-          <div style={{ background: C.surface, border: `1px solid ${C.borderMid}`, borderRadius: "10px", width: "min(420px, calc(100vw - 32px))", boxSizing: "border-box", padding: "24px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1rem * var(--staff-text-scale))", color: C.text }}>{editingSubject ? "Edit Subject" : "Create New Subject"}</div>
-              <button type="button" aria-label="Close" disabled={saving || catalogueLoading} onClick={closeSubjectModal} style={{ background: "none", border: 0, color: C.textMuted, cursor: "pointer" }}><X size={18} /></button>
-            </div>
-            <form onSubmit={createSubject}>
-            <p style={{ color: C.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))", lineHeight: 1.6, margin: "0 0 20px" }}>
-              {editingSubject ? `Update your ${editingSubject.code} subject details for ${editingSubject.termLabel}. Existing classes, assessments and marks will not be changed.` : catalogueLoading ? "Loading subject catalogue…" : creationTerm ? `Add a subject for ${creationTerm}. Select an existing code or enter a new one.` : "Subject creation is unavailable."}
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
-              <div>
-                <label style={{ fontSize: "calc(0.75rem * var(--staff-text-scale))", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT CODE</label>
-                <input aria-label="Subject code" list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { const nextCode = event.target.value.toUpperCase(); setCode(nextCode); setFormError(""); }} placeholder="e.g. ITT600" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none", opacity: editingSubject ? .7 : 1 }} />
-              </div>
+      {showCreateModal && <div role="dialog" aria-modal="true" aria-label={editingSubject ? "Edit Subject" : "Create New Subject"} className={W.overlay}>
+        <div className={W.modal}>
+          <div className="mb-5 flex items-start justify-between gap-3"><h2 className={W.title}>{editingSubject ? "Edit Subject" : "Create New Subject"}</h2><button type="button" aria-label="Close" disabled={saving || catalogueLoading} onClick={closeSubjectModal} className={W.iconButton}><X size={20} /></button></div>
+          <form onSubmit={createSubject}>
+            <p className={W.muted + " mb-6"}>{editingSubject ? `Update your ${editingSubject.code} subject details for ${editingSubject.termLabel}. Existing classes, assessments and marks will not be changed.` : catalogueLoading ? "Loading subject catalogue…" : creationTerm ? `Add a subject for ${creationTerm}. Select an existing code or enter a new one.` : "Subject creation is unavailable."}</p>
+            <div className="space-y-4">
+              <div><label htmlFor="lecturer-subject-code" className={W.label}>Subject Code</label><input id="lecturer-subject-code" aria-label="Subject code" list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { const nextCode = event.target.value.toUpperCase(); setCode(nextCode); setFormError(""); }} placeholder="e.g. ITT600" className={W.field} /></div>
               <datalist id="subject-catalogue">{catalogue.filter(subject => subject.is_active).map(subject => <option key={subject.code} value={subject.code}>{subject.name}</option>)}</datalist>
-              {existingSubject && <p role="status" style={{ color: existingSubject.is_active ? C.textSub : C.red, fontSize: "calc(0.8125rem * var(--staff-text-scale))", lineHeight: 1.6, margin: 0 }}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
-              <div>
-                <label style={{ fontSize: "calc(0.75rem * var(--staff-text-scale))", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>SUBJECT NAME</label>
-                <input aria-label="Subject name" required maxLength={200} disabled={(!editingSubject && Boolean(existingSubject)) || saving || catalogueLoading} value={!editingSubject && existingSubject ? existingSubject.name : name} onChange={event => setName(event.target.value)} placeholder="e.g. Cloud Computing & DevOps" style={{ width: "100%", boxSizing: "border-box", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none" }} />
-              </div>
-              {editingSubject && <div>
-                <label style={{ fontSize: "calc(0.75rem * var(--staff-text-scale))", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>PROGRAMME</label>
-                <select aria-label="Programme" required disabled={saving || catalogueLoading} value={programmeId} onChange={event => { setProgrammeId(event.target.value); setFormError(""); }} style={{ width: "100%", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text }}>
-                  <option value="" disabled>Select programme</option>
-                  {programmes.map(programme => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}
-                </select>
-              </div>}
-              <div>
-                <label style={{ fontSize: "calc(0.75rem * var(--staff-text-scale))", fontFamily: C.mono, color: C.textMuted, display: "block", marginBottom: "4px" }}>PROGRAMME SEMESTER</label>
-                <select aria-label="Programme semester" disabled={saving || catalogueLoading} value={semester} onChange={event => setSemester(event.target.value)} style={{ width: "100%", padding: "8px 12px", background: C.elevated, border: `1px solid ${C.borderMid}`, borderRadius: "6px", color: C.text }}>
-                  {[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>Semester {value}</option>)}
-                </select>
-              </div>
-              {formError && <div role="alert" style={{ color: C.red, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{formError}</div>}
+              {existingSubject && <p role="status" className={existingSubject.is_active ? W.muted : W.error}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
+              <div><label htmlFor="lecturer-subject-name" className={W.label}>Subject Name</label><input id="lecturer-subject-name" aria-label="Subject name" required maxLength={200} disabled={(!editingSubject && Boolean(existingSubject)) || saving || catalogueLoading} value={!editingSubject && existingSubject ? existingSubject.name : name} onChange={event => setName(event.target.value)} placeholder="e.g. Cloud Computing & DevOps" className={W.field} /></div>
+              {editingSubject && <div><label htmlFor="lecturer-subject-programme" className={W.label}>Programme</label><select id="lecturer-subject-programme" aria-label="Programme" required disabled={saving || catalogueLoading} value={programmeId} onChange={event => { setProgrammeId(event.target.value); setFormError(""); }} className={W.field}><option value="" disabled>Select programme</option>{programmes.map(programme => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>}
+              <div><label htmlFor="lecturer-subject-semester" className={W.label}>Programme Semester</label><select id="lecturer-subject-semester" aria-label="Programme semester" disabled={saving || catalogueLoading} value={semester} onChange={event => setSemester(event.target.value)} className={W.field}>{[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>Semester {value}</option>)}</select></div>
+              {formError && <div role="alert" className={W.error}>{formError}</div>}
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-              <button type="button" disabled={saving || catalogueLoading} onClick={closeSubjectModal} style={{ padding: "8px 14px", background: C.elevated, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", cursor: "pointer" }}>Cancel</button>
-              <button type="submit" disabled={!validForm} style={{ padding: "8px 14px", background: C.maroon, border: "none", borderRadius: "6px", color: "#fff", fontWeight: 600, fontSize: "calc(0.8125rem * var(--staff-text-scale))", cursor: "pointer" , opacity: validForm ? 1 : .55 }}>{saving ? "Saving…" : editingSubject ? "Save Changes" : existingSubject ? "Add Subject" : "Create Subject"}</button>
-            </div>
-            </form>
-          </div>
+            <div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={saving || catalogueLoading} onClick={closeSubjectModal} className={W.secondary}>Cancel</button><button type="submit" disabled={!validForm} className={W.primary}>{saving ? "Saving…" : editingSubject ? "Save Changes" : existingSubject ? "Add Subject" : "Create Subject"}</button></div>
+          </form>
         </div>
-      )}
+      </div>}
     </div>
   );
 }
