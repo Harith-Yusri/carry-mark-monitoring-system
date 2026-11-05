@@ -10,3 +10,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 supabase/.temp/
+.wrangler/
+.dev.vars
+.dev.vars.*

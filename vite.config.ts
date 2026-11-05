@@ -9,7 +9,7 @@ export default defineConfig(({ command, mode }) => {
     const url = env.VITE_SUPABASE_URL?.trim()
     const key = env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
     if (!url || !key) {
-      throw new Error('Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY before building. On Cloudflare Pages, add them to the build environment variables.')
+      throw new Error('Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY before building. On Cloudflare Workers Builds, add them to Build variables and secrets.')
     }
     if (new URL(url).protocol !== 'https:') {
       throw new Error('VITE_SUPABASE_URL must be the HTTPS URL of the existing Supabase project.')

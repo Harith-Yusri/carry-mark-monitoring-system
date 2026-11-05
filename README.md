@@ -9,7 +9,7 @@ Run `npm install`, then `npm run dev`.
 
 ## Production hosting
 
-The staff web portal is a static React/Vite application. Follow the [Cloudflare Pages deployment guide](docs/cloudflare-pages.md) to deploy from GitHub to `https://unicams.online`. The guide covers build settings, public environment variables, routing, custom domain setup, and Supabase Auth redirects while preserving the student app configuration.
+The staff web portal is a static React/Vite application hosted with **Cloudflare Workers Static Assets**. Follow the [Workers deployment guide](docs/cloudflare-workers.md) to deploy from GitHub to `https://unicams.online`. Build with `npm run build`, then deploy `dist` with `npx wrangler deploy`. Wrangler serves the SPA without a Worker entry script; Auth, data, RPCs, RLS, and backend services remain on Supabase.
 
 ## Supabase setup
 

@@ -1,5 +1,7 @@
 # CAMS staff portal on Cloudflare Pages
 
+> Historical reference: deployment now targets **Cloudflare Workers Static Assets**. Use [the current Workers deployment guide](cloudflare-workers.md) and `wrangler.jsonc`. The Pages setup below is retained as a record of the earlier preparation; do not use it to create the new deployment.
+
 ## Verified project settings
 
 | Setting | Value |
