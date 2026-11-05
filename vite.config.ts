@@ -6,10 +6,15 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ command, mode }) => {
   if (command === 'build') {
     const env = loadEnv(mode, process.cwd(), 'VITE_')
-    const url = env.VITE_SUPABASE_URL?.trim()
-    const key = env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
+    // Prefer CI-provided values; fall back to Vite env files for local builds.
+    const url = (process.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL)?.trim()
+    const key = (process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? env.VITE_SUPABASE_PUBLISHABLE_KEY)?.trim()
     if (!url || !key) {
-      throw new Error('Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY before building. On Cloudflare Workers Builds, add them to Build variables and secrets.')
+      const missing = [
+        !url && 'VITE_SUPABASE_URL',
+        !key && 'VITE_SUPABASE_PUBLISHABLE_KEY',
+      ].filter(Boolean)
+      throw new Error(`Missing or empty frontend build variables: ${missing.join(', ')}. On Cloudflare Workers Builds, add them to Build variables and secrets.`)
     }
     if (new URL(url).protocol !== 'https:') {
       throw new Error('VITE_SUPABASE_URL must be the HTTPS URL of the existing Supabase project.')
