@@ -19,6 +19,12 @@ function requestFailureDetails(reason: unknown) {
   return { code: typeof failure?.code === "string" ? failure.code : undefined, status: typeof failure?.status === "number" ? failure.status : undefined };
 }
 
+function saveResultIsUncertain(reason: unknown) {
+  const failure = reason as { code?: string; status?: number; message?: string } | null;
+  return failure?.status === 0 || failure?.status === 408 || failure?.status === 502 || failure?.status === 503 || failure?.status === 504
+    || (!failure?.code && typeof failure?.message === "string" && /fetch|network|timeout|timed out|abort|gateway/i.test(failure.message));
+}
+
 export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string; subjectCode: string }) {
   const [carryMax, setCarryMax] = useState<number | null>(null);
   const [weightInput, setWeightInput] = useState("");
@@ -75,7 +81,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const resetModal = () => { setModal(null); setEditingId(null); setForm(emptyForm); };
   const closeModal = () => { if (!saveInFlight.current) resetModal(); };
 
-  const refreshSavedAssessment = async () => {
+  const refreshSavedAssessment = async (confirmedSave = true) => {
     const started = performance.now();
     assessmentDiagnostic("refresh started", { rpc: "get_my_subject_assessment_structure" });
     try {
@@ -83,15 +89,17 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
       setRefreshWarning("");
       assessmentDiagnostic("refresh succeeded", { elapsedMs: Math.round(performance.now() - started) });
     } catch (reason) {
-      setRefreshWarning("Assessment saved, but the latest data could not be refreshed. Please retry refreshing the list.");
-      assessmentDiagnostic("refresh failed after confirmed save", { ...requestFailureDetails(reason), elapsedMs: Math.round(performance.now() - started) });
+      setRefreshWarning(confirmedSave
+        ? "Assessment saved, but the latest data could not be refreshed. Please retry refreshing the list."
+        : "The save result is still unconfirmed because the assessment list could not be refreshed. Please retry refreshing before submitting again.");
+      assessmentDiagnostic("refresh failed", { ...requestFailureDetails(reason), confirmedSave, elapsedMs: Math.round(performance.now() - started) });
     }
   };
 
   const retryRefresh = async () => {
     if (saveInFlight.current) return;
     saveInFlight.current = true; setSavingAssessment(true);
-    try { await refreshSavedAssessment(); }
+    try { await refreshSavedAssessment(Boolean(success)); }
     finally { saveInFlight.current = false; setSavingAssessment(false); }
   };
 
@@ -108,6 +116,13 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
         await persistAssessment(offeringId, values, editingId ?? undefined);
       } catch (reason) {
         assessmentDiagnostic(`${operation} request failed`, { ...requestFailureDetails(reason), elapsedMs: Math.round(performance.now() - started) });
+        if (saveResultIsUncertain(reason)) {
+          // A missing network response does not prove a rollback. Do not retry
+          // the write automatically; reconcile using the real list first.
+          setRefreshWarning("The save result could not be confirmed. Refresh the assessment list before trying again to avoid submitting twice.");
+          resetModal();
+          return;
+        }
         setError(userError(reason, "Unable to save assessment."));
         return;
       }

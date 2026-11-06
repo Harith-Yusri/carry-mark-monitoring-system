@@ -10,7 +10,7 @@ const source = (await readFile('src/features/lecturer/AssessmentsTab.tsx', 'utf8
 const { code } = await transform(source, { loader: 'tsx', jsx: 'transform' });
 function nodes(tree) { return !tree || typeof tree !== 'object' ? [] : [tree, ...React.Children.toArray(tree.props?.children).flatMap(nodes)]; }
 function deferred() { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; }
-function setup({ saveGate, refreshGate, failRefresh = false, failSave = false } = {}) {
+function setup({ saveGate, refreshGate, failRefresh = false, failSave = false, loseResponse = false } = {}) {
   const states = [60, '60', false, false, []];
   const saveRef = { current: false };
   const calls = []; let refreshes = 0; let cursor = 0; let records = []; let serial = 0;
@@ -35,6 +35,7 @@ function setup({ saveGate, refreshGate, failRefresh = false, failSave = false } 
       if (failSave) throw { code: '23505' };
       if (id) records = records.map(r => r.id === id ? { ...r, ...values } : r);
       else records.push({ ...values, id: `saved-${++serial}`, position: records.length + 1 });
+      if (loseResponse) throw { code: '', message: 'TypeError: Failed to fetch' };
       // Production RPC returns void; the UI must not invent assessment IDs.
     },
   );
@@ -113,4 +114,19 @@ test('multiple different creates and a later edit retain accurate IDs and list v
   await ui.button('Save Changes').props.onClick();
   assert.equal(ui.records.length, 2); assert.equal(ui.calls[2].id, 'saved-1');
   assert.match(ui.html(), /Updated Quiz One/); assert.match(ui.html(), /Quiz Two/);
+});
+
+test('a lost response after a server commit is uncertain, never called a failed save or automatically retried', async () => {
+  const ui = setup({ loseResponse: true }); ui.open(); await ui.button('Add Assessment').props.onClick();
+  assert.equal(ui.records.length, 1); assert.equal(ui.calls.length, 1);
+  assert.match(ui.html(), /save result could not be confirmed/);
+  assert.doesNotMatch(ui.html(), /Unable to save assessment|Assessment saved\./);
+  assert.equal(ui.button(' Add Assessment').props.disabled, true);
+  ui.setRefreshFailure(true); await ui.button('Refresh assessments').props.onClick();
+  assert.match(ui.html(), /save result is still unconfirmed/);
+  assert.doesNotMatch(ui.html(), /Assessment saved/);
+  ui.setRefreshFailure(false); await ui.button('Refresh assessments').props.onClick();
+  assert.match(ui.html(), /Quiz One/);
+  assert.equal(ui.calls.length, 1); assert.equal(ui.records.length, 1);
+  assert.equal(ui.button(' Add Assessment').props.disabled, false);
 });
