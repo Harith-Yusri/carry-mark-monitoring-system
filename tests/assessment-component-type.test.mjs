@@ -6,7 +6,7 @@ import React from 'react';
 
 // Run the form's real event handlers with only the API and hook boundaries stubbed.
 const source = (await readFile('src/features/lecturer/AssessmentsTab.tsx', 'utf8'))
-  .replace(/^import .*;\n/gm, '').replace('export function AssessmentsTab', 'function AssessmentsTab');
+  .replace(/^import .*;\n/gm, '').replaceAll('import.meta.env.DEV', 'false').replace('export function AssessmentsTab', 'function AssessmentsTab');
 const { code } = await transform(source, { loader: 'tsx', jsx: 'transform' });
 function nodes(tree) {
   if (!tree || typeof tree !== 'object') return [];
@@ -17,6 +17,7 @@ function setup(existingType) {
   const states = [60, '60', false, false, existingType === undefined ? [] : [item]];
   let cursor = 0;
   const saved = [];
+  const saveRef = { current: false };
   const useState = initial => {
     const i = cursor++;
     if (!(i in states)) states[i] = initial;
@@ -25,11 +26,12 @@ function setup(existingType) {
   const icon = () => null;
   const Component = new Function('React', 'useState', 'useEffect', 'useMemo', 'W', 'userError',
     'CheckCircle', 'Edit3', 'Plus', 'Trash2', 'X', 'listAssessments', 'loadOfferingWeightage',
-    'saveOfferingWeightage', 'deleteAssessment', 'persistAssessment', 'loadAssessmentStructure', code + '; return AssessmentsTab;')(
+    'saveOfferingWeightage', 'deleteAssessment', 'persistAssessment', 'loadAssessmentStructure', 'useRef', code + '; return AssessmentsTab;')(
     React, useState, () => {}, fn => fn(), {}, (_, fallback) => fallback,
     icon, icon, icon, icon, icon, async () => [], async () => ({}), async () => {}, async () => {},
     async (...args) => saved.push(args),
     async () => ({ assessments: [], carryMax: 60 }),
+    () => saveRef,
   );
   const render = () => { cursor = 0; return Component({ offeringId: 'offering-1', subjectCode: 'ITT593' }); };
   const field = id => nodes(render()).find(n => n.props?.id === id);

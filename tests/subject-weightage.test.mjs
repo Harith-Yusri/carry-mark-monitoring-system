@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { transform } from 'esbuild';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-const source = (await readFile(new URL('../src/features/lecturer/AssessmentsTab.tsx', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '').replace('export function AssessmentsTab', 'function AssessmentsTab');
+const source = (await readFile(new URL('../src/features/lecturer/AssessmentsTab.tsx', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '').replaceAll('import.meta.env.DEV', 'false').replace('export function AssessmentsTab', 'function AssessmentsTab');
 const { code } = await transform(source, { loader: 'tsx', jsx: 'transform' });
 const { code: styleCode } = await transform(await readFile('src/features/lecturer/workspaceStyles.ts', 'utf8'), { loader: 'ts', format: 'cjs' });
 const { workspace: W } = new Function('module', styleCode + ';return module.exports;')({ exports: {} });
@@ -13,7 +13,8 @@ function setup(max) {
   const states = [max, max === null ? '' : String(max), false, false]; let cursor = 0; const saves = [];
   const useState = initial => { const i = cursor++; if (!(i in states)) states[i] = initial; return [states[i], value => states[i] = typeof value === 'function' ? value(states[i]) : value]; };
   const icon = () => null;
-  const Component = new Function('React','useState','useEffect','useMemo','useColors','CheckCircle','Edit3','Plus','Trash2','X','saveOfferingWeightage','W',code+';return AssessmentsTab;')(React,useState,()=>{},fn=>fn(),()=>({}),icon,icon,icon,icon,icon,async(...args)=>saves.push(args),W);
+  const saveRef = { current: false };
+  const Component = new Function('React','useState','useEffect','useMemo','useColors','CheckCircle','Edit3','Plus','Trash2','X','saveOfferingWeightage','W','useRef',code+';return AssessmentsTab;')(React,useState,()=>{},fn=>fn(),()=>({}),icon,icon,icon,icon,icon,async(...args)=>saves.push(args),W,()=>saveRef);
   const render=()=>{ cursor=0; return Component({offeringId:'offering',subjectCode:'ITT593'}); };
   return {render,saves};
 }
