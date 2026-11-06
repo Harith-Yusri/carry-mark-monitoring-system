@@ -4,7 +4,8 @@ import { workspace as W } from "./workspaceStyles";
 import { userError } from "../../utils/errors";
 import { loadOfferingWeightage, saveOfferingWeightage, AssessmentRecord as Assessment, deleteAssessment, listAssessments, saveAssessment as persistAssessment } from "../../services/carryMarkApi";
 
-const emptyForm = { name: "", type: "", maxMarks: "", weightage: "" };
+const componentTypes = ["Quiz", "Assignment", "Test", "Project", "Presentation", "Lab", "Practical", "Case Study", "Final Assessment"];
+const emptyForm = { name: "", type: "", customType: "", maxMarks: "", weightage: "" };
 type AssessmentForm = typeof emptyForm;
 
 export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string; subjectCode: string }) {
@@ -38,12 +39,14 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const weightWithoutEditing = totalWeight - (editingItem?.weightage ?? 0);
   const prospectiveTotal = weightWithoutEditing + (Number(form.weightage) || 0);
   const remaining = Math.max(0, (carryMax ?? 0) - weightWithoutEditing);
-  const formValid = form.name.trim().length > 0 && form.type.trim().length > 0 && Number(form.maxMarks) > 0 && Number(form.weightage) > 0 && carryMax !== null && prospectiveTotal <= carryMax;
-  const knownTypes = [...new Set(items.map(item => item.type.trim()).filter(Boolean))].sort();
+  const componentType = (form.type === "Other" ? form.customType : form.type).trim();
+  const formValid = form.name.trim().length > 0 && componentType.length > 0 && Number(form.maxMarks) > 0 && Number(form.weightage) > 0 && carryMax !== null && prospectiveTotal <= carryMax;
 
   const openAdd = () => { setForm(emptyForm); setEditingId(null); setModal("add"); };
   const openEdit = (item: Assessment) => {
-    setForm({ name: item.name, type: item.type, maxMarks: String(item.maxMarks), weightage: String(item.weightage) });
+    const existingType = item.type.trim();
+    const isPredefined = componentTypes.includes(existingType);
+    setForm({ name: item.name, type: isPredefined ? existingType : "Other", customType: isPredefined ? "" : existingType, maxMarks: String(item.maxMarks), weightage: String(item.weightage) });
     setEditingId(item.id);
     setModal("edit");
   };
@@ -51,7 +54,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
 
   const saveAssessment = async () => {
     if (!formValid) return;
-    const values = { name: form.name.trim(), type: form.type.trim(), maxMarks: Number(form.maxMarks), weightage: Number(form.weightage) };
+    const values = { name: form.name.trim(), type: componentType, maxMarks: Number(form.maxMarks), weightage: Number(form.weightage) };
     setError("");
     try { await persistAssessment(offeringId, values, editingId ?? undefined); await reload(); closeModal(); }
     catch (reason) { setError(userError(reason, "Unable to save assessment.")); }
@@ -89,7 +92,8 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
           <div className="mb-6 flex items-start justify-between gap-4"><div><h3 id="assessment-modal-title" className={W.title}>{modal === "add" ? "Add Assessment Component" : "Edit Assessment"}</h3><div className={W.muted}>{subjectCode}</div></div><button aria-label="Close" onClick={closeModal} className={W.iconButton}><X size={21} /></button></div>
           <div className="space-y-4">
             <div><label htmlFor="component-name" className={W.label}>Component Name</label><input id="component-name" autoFocus value={form.name} onChange={event => setForm(previous => ({ ...previous, name: event.target.value }))} placeholder="e.g. Quiz 3" className={W.field} /></div>
-            <div><label htmlFor="component-type" className={W.label}>Component Type</label><input id="component-type" list="assessment-types" value={form.type} onChange={event => setForm(previous => ({ ...previous, type: event.target.value }))} placeholder="Enter a component type" className={W.field} /><datalist id="assessment-types">{knownTypes.map(type => <option key={type} value={type} />)}</datalist></div>
+            <div><label htmlFor="component-type" className={W.label}>Component Type</label><select id="component-type" required value={form.type} onChange={event => setForm(previous => ({ ...previous, type: event.target.value }))} className={W.field}><option value="" disabled>Select component type</option>{[...componentTypes, "Other"].map(type => <option key={type} value={type}>{type}</option>)}</select></div>
+            {form.type === "Other" && <div><label htmlFor="custom-component-type" className={W.label}>Custom Component Type</label><input id="custom-component-type" required value={form.customType} onChange={event => setForm(previous => ({ ...previous, customType: event.target.value }))} placeholder="Enter custom component type" className={W.field} /></div>}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><label htmlFor="component-max-score" className={W.label}>Max Score</label><input id="component-max-score" type="number" min="1" value={form.maxMarks} onChange={event => setForm(previous => ({ ...previous, maxMarks: event.target.value }))} placeholder="e.g. 20" className={W.field} /></div><div><label htmlFor="component-weightage" className={W.label}>Weightage (%) — {remaining}% Left</label><input id="component-weightage" type="number" min="0.01" step="0.01" max={remaining} value={form.weightage} onChange={event => setForm(previous => ({ ...previous, weightage: event.target.value }))} placeholder={`Max ${remaining}`} className={W.field} /></div></div>
             <div className="flex justify-between gap-3 rounded-lg bg-purple-50 p-4 text-sm text-purple-900"><span>Total after save</span><strong className={prospectiveTotal > (carryMax ?? 0) ? "text-rose-700" : prospectiveTotal === carryMax ? "text-emerald-700" : "text-amber-800"}>{prospectiveTotal}% / {carryMax === null ? "Not set" : `${carryMax}%`}</strong></div>
           </div>
