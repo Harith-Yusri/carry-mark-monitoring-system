@@ -17,12 +17,11 @@ export function LecturerWebPortal() {
   const [activeTab, setActiveTab] = useState<LecturerTab>("assessments");
 
   const currentSubj = selectedSubj;
-  const [assessmentOfferingId, setAssessmentOfferingId] = useState<string | null>(null);
 
   return (
     <div className="lecturer-workspace w-full min-w-0 px-5 pb-12 font-sans text-sm text-slate-800 dark:text-slate-100 sm:px-8 lg:px-12">
       <Suspense fallback={<div role="status" aria-live="polite" className="p-6 text-slate-500">Loading section…</div>}>
-        {screen === "dashboard" ? <LecturerDashboard onSelectSubject={subj => { setSelectedSubj(subj); setAssessmentOfferingId(subj.offeringId); setScreen("subject-hub"); setActiveTab("assessments"); }} /> : currentSubj ? <div className="space-y-6">
+        {screen === "dashboard" ? <LecturerDashboard onSelectSubject={subj => { setSelectedSubj(subj); setScreen("subject-hub"); setActiveTab("assessments"); }} /> : currentSubj ? <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <button onClick={() => setScreen("dashboard")} className={W.secondary}><ChevronLeft size={16} /> Back to My Subjects</button>
             <span className={W.muted}>Subject Hub · {currentSubj.code}</span>
@@ -38,10 +37,7 @@ export function LecturerWebPortal() {
               { key: "export", step: "03", label: "Export Carry Marks" },
             ].map(t => <button key={t.key} onClick={() => setActiveTab(t.key as LecturerTab)} aria-pressed={activeTab === t.key} className={"flex min-h-11 items-center gap-2 rounded-t-lg border-b-2 px-4 py-3 text-sm transition-colors " + (activeTab === t.key ? "border-[var(--staff-brand-border)] bg-[var(--staff-brand-surface)] font-semibold text-[var(--staff-brand-text)]" : "border-transparent font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-[var(--staff-row-hover)]")}><span className="text-xs">{t.step}</span>{t.label}</button>)}
           </nav>
-          {activeTab === "assessments" && <>
-            {currentSubj.offerings && <label className="block max-w-lg"><span className={W.label}>Assessment structure for classes in</span><select aria-label="Assessment allocation" value={assessmentOfferingId ?? currentSubj.offeringId} onChange={event => setAssessmentOfferingId(event.target.value)} className={W.field}>{currentSubj.offerings.map(offering => <option key={offering.offeringId} value={offering.offeringId}>{offering.programmeCode || "Unassigned classes"}</option>)}</select></label>}
-            <AssessmentsTab key={assessmentOfferingId ?? currentSubj.offeringId} offeringId={assessmentOfferingId ?? currentSubj.offeringId} subjectCode={currentSubj.code} />
-          </>}
+          {activeTab === "assessments" && <AssessmentsTab key={currentSubj.offeringId} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
           {activeTab === "marks" && <MarksEntryTab offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
           {activeTab === "export" && <ExportTab offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
         </div> : null}

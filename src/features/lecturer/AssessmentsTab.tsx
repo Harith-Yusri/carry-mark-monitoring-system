@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { CheckCircle, Edit3, Plus, Trash2, X } from "lucide-react";
 import { workspace as W } from "./workspaceStyles";
 import { userError } from "../../utils/errors";
-import { loadOfferingWeightage, saveOfferingWeightage, AssessmentRecord as Assessment, deleteAssessment, listAssessments, saveAssessment as persistAssessment } from "../../services/carryMarkApi";
+import type { AssessmentRecord as Assessment } from "../../services/carryMarkApi";
+import { loadAssessmentStructure, saveOfferingWeightage, deleteAssessment, saveAssessment as persistAssessment } from "../../services/subjectAssessmentApi";
 
 const componentTypes = ["Quiz", "Assignment", "Test", "Project", "Presentation", "Lab", "Practical", "Case Study", "Final Assessment"];
 const emptyForm = { name: "", type: "", customType: "", maxMarks: "", weightage: "" };
@@ -19,11 +20,11 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AssessmentForm>(emptyForm);
 
-  const reload = () => listAssessments(offeringId).then(setItems).catch(reason => setError(userError(reason, "Unable to load assessments.")));
+  const reload = () => loadAssessmentStructure(offeringId).then(data => setItems(data.assessments));
   useEffect(() => {
     setLoading(true); setError(""); setCarryMax(null); setWeightInput("");
-    Promise.all([listAssessments(offeringId), loadOfferingWeightage(offeringId)])
-      .then(([assessments, settings]) => { setItems(assessments); setCarryMax(settings.carryMax); setWeightInput(settings.carryMax === null ? "" : String(settings.carryMax)); })
+    loadAssessmentStructure(offeringId)
+      .then(settings => { setItems(settings.assessments); setCarryMax(settings.carryMax); setWeightInput(settings.carryMax === null ? "" : String(settings.carryMax)); })
       .catch(reason => setError(userError(reason, "Unable to load assessment settings."))).finally(() => setLoading(false));
   }, [offeringId]);
   const saveTotalWeight = async (event: React.FormEvent) => {
@@ -61,8 +62,8 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   };
 
   const removeAssessment = async (item: Assessment) => {
-    const confirmed = window.confirm(`Remove “${item.name}”?\n\nThis assessment component and its configuration will be deleted. This action cannot be undone.`);
-    if (confirmed) try { await deleteAssessment(item.id); await reload(); } catch (reason) { setError(userError(reason, "Unable to remove assessment.")); }
+    const confirmed = window.confirm(`Remove “${item.name}” from every class in this Subject Hub?\n\nThis shared assessment component and its configuration will be deleted. Components with student marks or released classes cannot be removed. This action cannot be undone.`);
+    if (confirmed) try { await deleteAssessment(offeringId, item.id); await reload(); } catch (reason) { setError(userError(reason, "Unable to remove assessment.")); }
   };
 
   const weightSaveDisabled = loading || savingWeight || !weightInput || Number(weightInput) === carryMax;

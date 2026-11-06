@@ -867,6 +867,18 @@ export type Database = {
       }
     }
     Functions: {
+      get_my_subject_assessment_structure: {
+        Args: { target_offering: string };
+        Returns: Json;
+      };
+      mutate_my_subject_assessment_structure: {
+        Args: {
+          target_offering: string; operation: string; target_assessment?: string;
+          component_name?: string; component_type?: string; maximum_score?: number;
+          component_weight?: number; total_weight?: number;
+        };
+        Returns: undefined;
+      };
       get_my_lecturer_whatsapp: { Args: { target_offering: string }; Returns: string | null }
       get_admin_current_overview: { Args: never; Returns: Json }
       get_admin_semester_history: {

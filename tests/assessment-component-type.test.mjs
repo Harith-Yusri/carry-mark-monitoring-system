@@ -25,10 +25,11 @@ function setup(existingType) {
   const icon = () => null;
   const Component = new Function('React', 'useState', 'useEffect', 'useMemo', 'W', 'userError',
     'CheckCircle', 'Edit3', 'Plus', 'Trash2', 'X', 'listAssessments', 'loadOfferingWeightage',
-    'saveOfferingWeightage', 'deleteAssessment', 'persistAssessment', code + '; return AssessmentsTab;')(
+    'saveOfferingWeightage', 'deleteAssessment', 'persistAssessment', 'loadAssessmentStructure', code + '; return AssessmentsTab;')(
     React, useState, () => {}, fn => fn(), {}, (_, fallback) => fallback,
     icon, icon, icon, icon, icon, async () => [], async () => ({}), async () => {}, async () => {},
     async (...args) => saved.push(args),
+    async () => ({ assessments: [], carryMax: 60 }),
   );
   const render = () => { cursor = 0; return Component({ offeringId: 'offering-1', subjectCode: 'ITT593' }); };
   const field = id => nodes(render()).find(n => n.props?.id === id);
