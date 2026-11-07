@@ -477,7 +477,7 @@ textarea:focus-visible,
 
 .operations-summary {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-top: 1px solid;
   border-bottom: 1px solid;
   margin-bottom: 30px;
@@ -597,6 +597,10 @@ textarea:focus-visible,
 
   .operations-summary {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .operations-summary > div:last-child {
+    grid-column: 1 / -1;
   }
 
   .operations-summary > div:nth-child(2) {

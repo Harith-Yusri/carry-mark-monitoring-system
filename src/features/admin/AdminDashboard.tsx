@@ -19,7 +19,6 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
   const total = records.length;
   const submitted = records.filter(item => item.submissionStatus === "Finalised").length;
   const overdue = records.filter(item => item.submissionStatus === "Overdue").length;
-  const compliance = total ? Math.round((submitted / total) * 100) : 0;
 
   return (
     <div>
@@ -40,7 +39,6 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
           { value: pendingLecturers.length, label: "Require Attention", note: "Not released", tone: "attention" },
           { value: overdue, label: "Overdue", note: "Past submission date", tone: "overdue" },
           { value: submitted, label: "Released", note: `of ${total} lecturer records`, tone: "finalised" },
-          { value: `${compliance}%`, label: "Faculty Compliance", note: "Current semester", tone: "compliance" },
         ].map(item => (
           <div key={item.label} className="admin-metric-card" data-tone={item.tone}>
             <div style={{ color: "var(--metric-ink)", fontSize: "calc(1.5rem * var(--staff-text-scale))", fontWeight: 700, lineHeight: 1 }}>{item.value}</div>
