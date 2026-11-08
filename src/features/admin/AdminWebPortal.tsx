@@ -1,8 +1,9 @@
-import React, { lazy, Suspense, useMemo, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Archive, LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
 import { useColors } from "./adminStyles";
 import { AdminTab } from "../../types";
 import { requiresSubmissionAction, submissionAllocations, useAdminRecords } from "../../hooks/useAdminRecords";
+import { loadCorrectionPendingCount } from "../../services/markCorrectionApi";
 
 const AdminDashboard = lazy(() => import("./AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
 const LecturerDirectory = lazy(() => import("./LecturerDirectory").then((module) => ({ default: module.LecturerDirectory })));
@@ -10,11 +11,24 @@ const ComplianceReports = lazy(() => import("./ComplianceReports").then((module)
 const AdminSettings = lazy(() => import("./AdminSettings").then((module) => ({ default: module.AdminSettings })));
 const SubmissionMonitor = lazy(() => import("./SubmissionMonitor").then((module) => ({ default: module.SubmissionMonitor })));
 const SemesterHistory = lazy(() => import("./SessionHistory").then((module) => ({ default: module.SemesterHistory })));
+const MarkCorrectionQueue = lazy(() => import("./MarkCorrectionQueue").then((module) => ({ default: module.MarkCorrectionQueue })));
 
 export function AdminWebPortal() {
   const C = useColors();
   const { records, context, loading, error, reload } = useAdminRecords();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [pendingCorrections, setPendingCorrections] = useState<number | null>(null);
+  const [correctionCountError, setCorrectionCountError] = useState(false);
+  const refreshCorrectionCount = useCallback(() => {
+    void loadCorrectionPendingCount().then(count => { setPendingCorrections(count); setCorrectionCountError(false); })
+      .catch(() => { setPendingCorrections(null); setCorrectionCountError(true); });
+  }, []);
+  useEffect(() => {
+    refreshCorrectionCount();
+    window.addEventListener("focus", refreshCorrectionCount);
+    const timer = window.setInterval(refreshCorrectionCount, 60000);
+    return () => { window.removeEventListener("focus", refreshCorrectionCount); window.clearInterval(timer); };
+  }, [context?.termId, activeTab, refreshCorrectionCount]);
   const pendingSubmissions = useMemo(
     () => submissionAllocations(records).filter(requiresSubmissionAction).length,
     [records],
@@ -36,6 +50,7 @@ export function AdminWebPortal() {
             {[
               { key: "overview",   label: "Compliance Overview", icon: <LayoutDashboard size={15} /> },
               { key: "submissions", label: "Submission Monitor", icon: <ClipboardList size={15} />, pending: pendingSubmissions },
+              { key: "corrections", label: "Mark Corrections", icon: <ClipboardList size={15} />, pending: pendingCorrections ?? undefined },
               { key: "directory",  label: "Lecturer Directory",  icon: <Users size={15} /> },
               { key: "compliance", label: "Reports & Exports",    icon: <FileText size={15} /> },
               { key: "history",    label: "Past Semesters",       icon: <Archive size={15} /> },
@@ -65,7 +80,7 @@ export function AdminWebPortal() {
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {item.pending !== undefined && (
                   <span
-                    aria-label={`${item.pending} pending submissions`}
+                    aria-label={`${item.pending} ${item.key === "corrections" ? "pending correction requests" : "pending submissions"}`}
                     style={{
                       minWidth: "23px",
                       height: "23px",
@@ -88,6 +103,7 @@ export function AdminWebPortal() {
               </button>
             ))}
           </div>
+          {correctionCountError && <p role="status" className="px-3 text-xs text-amber-700">Correction count unavailable. Open Mark Corrections to refresh.</p>}
         </nav>
       </div>
 
@@ -100,6 +116,7 @@ export function AdminWebPortal() {
           {activeTab === "compliance" && <ComplianceReports records={records} context={context} loading={loading} error={error} />}
           {activeTab === "history" && <SemesterHistory />}
           {activeTab === "settings" && <AdminSettings onActiveSemesterChanged={reload} />}
+          {activeTab === "corrections" && <MarkCorrectionQueue onChanged={refreshCorrectionCount} />}
         </Suspense>
       </div>
     </div>

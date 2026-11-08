@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { logOAuthError } from "@/lib/oauthDiagnostics";
 import { sessionLog } from "@/lib/sessionDiagnostics";
 import * as api from "@/services/studentApi";
-import { StudentPortalPayload, SubjectResult } from "@/types/portal";
+import { StudentPortalPayload } from "@/types/portal";
+import { markIssueError, submitStudentMarkIssue } from "@/services/markIssues";
 
 type AuthDestination = "portal" | "onboarding";
 
@@ -29,7 +30,7 @@ type StudentContextValue = StudentState & {
   restoreSession: () => Promise<boolean>;
   setNotificationAlertsEnabled: (enabled: boolean) => Promise<boolean>;
   joinClass: (code: string) => Promise<boolean>;
-  dispute: (subject: SubjectResult, assessment: string, explanation: string) => Promise<boolean>;
+  dispute: (enrolmentId: string, assessmentId: string, explanation: string, requestKey: string) => Promise<boolean>;
   clearError: () => void;
 };
 
@@ -358,14 +359,14 @@ export function StudentProvider({ children }: PropsWithChildren) {
         return false;
       }
     },
-    dispute: async (subject, assessment, explanation) => {
+    dispute: async (enrolmentId, assessmentId, explanation, requestKey) => {
       setState(current => ({ ...current, actionLoading: true, error: null }));
       try {
-        await api.submitMarkDispute(subject.offering_id, assessment, explanation);
+        await submitStudentMarkIssue(enrolmentId, assessmentId, explanation, requestKey);
         setState(current => ({ ...current, actionLoading: false }));
         return true;
       } catch (reason) {
-        setState(current => ({ ...current, actionLoading: false, error: friendlyError(reason) }));
+        setState(current => ({ ...current, actionLoading: false, error: markIssueError(reason) }));
         return false;
       }
     },

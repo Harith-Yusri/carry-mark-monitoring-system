@@ -867,6 +867,14 @@ export type Database = {
       }
     }
     Functions: {
+      get_staff_mark_issues: { Args: { target_offering: string }; Returns: Json };
+      get_mark_correction_queue: { Args: never; Returns: Json };
+      get_mark_correction_pending_count: { Args: never; Returns: number };
+      respond_to_mark_issue: { Args: { target_issue: string; decision: string; lecturer_response: string }; Returns: undefined };
+      request_mark_correction: { Args: { target_issue: string; correction_reason: string }; Returns: string };
+      review_mark_correction: { Args: { target_request: string; approve: boolean; admin_note?: string }; Returns: undefined };
+      update_approved_mark: { Args: { target_request: string; new_score: number }; Returns: undefined };
+      release_corrected_mark: { Args: { target_request: string }; Returns: undefined };
       get_my_subject_assessment_structure: {
         Args: { target_offering: string };
         Returns: Json;
