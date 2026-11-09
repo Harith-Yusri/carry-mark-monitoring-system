@@ -144,3 +144,15 @@ Only the two reviewed migrations are applied before the frontend references the 
 No table/column cleanup (including student_login_attempts), policy rewrite, index consolidation/addition, totals-view/mobile-bootstrap redesign, image-source deletion, dependency purge, compute/hosting change, broad archive request redesign or login retirement. No `npm audit fix --force`. Selected-class RPC still pays existing RLS costs; further SQL tuning requires a separate role-correct plan review. Real WAN/prod-user timing and physical-device push receipt/rotation remain validation gaps; fixture and native-fingerprint checks are not a physical-device delivery test.
 
 Numeric evidence: [conservative-2026-11-09.json](conservative-2026-11-09.json). Raw authenticated plans, rollback regression results, asset comparison images and browser screenshots are retained in `/tmp/cams-perf-evidence`.
+
+## Verified release
+
+- Source commit: `b8496a9`, pushed to `main`. Both reviewed migration versions are recorded in the linked project, and the deployed class RPC's authenticated/anonymous grants and invoker security were checked. The deployed RPC regression passed in another rollback-only fixture transaction.
+- Existing Worker `cams-staff`, version `1357b5a8-e162-4f1c-ad1d-dfeb4cefcc9f`, deployed at https://unicams.online. Root, Admin and Lecturer SPA URLs return 200. Both new WebP files return 200 and hash-match the local verified assets (16,460 and 9,414 transferred bytes).
+- Ten live-hosted UI scenarios passed with synthetic Supabase responses. Live-hosted performance fixture also confirms one first class read, zero unchanged cross-tab reads and one term-bootstrap count. These are live frontend checks, **not** claims of real authenticated Supabase HTTP timing.
+- Android **preview only**: update `01a1be39-f30e-7009-99e6-ba9cb35cb26b`, group `18fc65d5-84bd-46a6-8517-240a7bb7fd50`; preview channel mapping independently verified. Runtime `29797fbf5d8d4b0719c4a4c7ac7f9cff2d863c05` matches the existing Android preview build. No new binary/native dependency or production-channel update.
+- Preview was exported from the existing mobile working tree after merging the patch, preserving its current UI drafts rather than replacing them with the older clean-commit UI. Mobile lint/typecheck passed; all 82 working-tree regressions and the staff build passed. The source commit itself contains only this task's changes and passes 67 tests.
+- Existing drafts were preserved; the Git index is clean. No `.env.local`, account tokens, native credentials or secrets were committed.
+- Physical-device push delivery/rotation was not manually exercised; client/server regression tests and runtime compatibility checks are the supporting evidence.
+
+Release identifiers and live HTTP samples are also in [conservative-release-2026-11-09.json](conservative-release-2026-11-09.json).

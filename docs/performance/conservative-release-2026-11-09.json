@@ -1,0 +1,230 @@
+{
+  "staffCommit": "b8496a991133f4b07cf7086a4d59f4bb78efae00",
+  "worker": "cams-staff",
+  "domain": "https://unicams.online",
+  "workerVersion": "1357b5a8-e162-4f1c-ad1d-dfeb4cefcc9f",
+  "migrations": [
+    "202611090001",
+    "202611090002"
+  ],
+  "androidUpdate": {
+    "id": "01a1be39-f30e-7009-99e6-ba9cb35cb26b",
+    "group": "18fc65d5-84bd-46a6-8517-240a7bb7fd50",
+    "branch": "preview",
+    "runtimeVersion": "29797fbf5d8d4b0719c4a4c7ac7f9cff2d863c05",
+    "platform": "android",
+    "manifestPermalink": "https://u.expo.dev/update/01a1be39-f30e-7009-99e6-ba9cb35cb26b"
+  },
+  "liveLoadingScenarios": 10,
+  "workspaceTests": 82,
+  "sourceCommitTests": 67,
+  "mobileTypecheck": "pass",
+  "mobileLint": "pass",
+  "webTypecheck": "same five pre-existing diagnostics; no new errors",
+  "physicalDevicePushReceipt": "not tested",
+  "actualAuthenticatedBrowserRpcLatency": "not measured; live role-correct SQL measured separately",
+  "liveHttp": [
+    {
+      "path": "/",
+      "sample": 0,
+      "status": 200,
+      "ms": 101.34,
+      "ttfbMs": 101.134,
+      "transferBytes": 642,
+      "decodedBytes": 1487,
+      "sha256": "f40849352c4fb897b0b359ce04d0b60978b635f092f5e0def774ca56f4fbe9ee"
+    },
+    {
+      "path": "/admin/dashboard",
+      "sample": 0,
+      "status": 200,
+      "ms": 107.017,
+      "ttfbMs": 106.787,
+      "transferBytes": 642,
+      "decodedBytes": 1487,
+      "sha256": "f40849352c4fb897b0b359ce04d0b60978b635f092f5e0def774ca56f4fbe9ee"
+    },
+    {
+      "path": "/lecturer/dashboard",
+      "sample": 0,
+      "status": 200,
+      "ms": 129.849,
+      "ttfbMs": 127.806,
+      "transferBytes": 642,
+      "decodedBytes": 1487,
+      "sha256": "f40849352c4fb897b0b359ce04d0b60978b635f092f5e0def774ca56f4fbe9ee"
+    },
+    {
+      "path": "/assets/branding/cams-login-144.webp",
+      "sample": 0,
+      "status": 200,
+      "ms": 487.981,
+      "ttfbMs": 485.734,
+      "transferBytes": 16460,
+      "decodedBytes": 16460,
+      "sha256": "9ac3e3244bed0ab1611f58ba1edfb95c8ec9416d2a2f90288507c614778d7040"
+    },
+    {
+      "path": "/assets/branding/cams-login-144.webp",
+      "sample": 1,
+      "status": 200,
+      "ms": 143.38600000000002,
+      "ttfbMs": 143.195,
+      "transferBytes": 16460,
+      "decodedBytes": 16460,
+      "sha256": "9ac3e3244bed0ab1611f58ba1edfb95c8ec9416d2a2f90288507c614778d7040"
+    },
+    {
+      "path": "/assets/branding/cams-login-144.webp",
+      "sample": 2,
+      "status": 200,
+      "ms": 105.575,
+      "ttfbMs": 103.342,
+      "transferBytes": 16460,
+      "decodedBytes": 16460,
+      "sha256": "9ac3e3244bed0ab1611f58ba1edfb95c8ec9416d2a2f90288507c614778d7040"
+    },
+    {
+      "path": "/assets/branding/cams-portal-144.webp",
+      "sample": 0,
+      "status": 200,
+      "ms": 123.224,
+      "ttfbMs": 120.699,
+      "transferBytes": 9414,
+      "decodedBytes": 9414,
+      "sha256": "1d8e4911c5514a2c0f0ed0fcd43deb74c561d7f44f9b8e3d36769ebd906a3dbe"
+    },
+    {
+      "path": "/assets/branding/cams-portal-144.webp",
+      "sample": 1,
+      "status": 200,
+      "ms": 106.255,
+      "ttfbMs": 103.93900000000001,
+      "transferBytes": 9414,
+      "decodedBytes": 9414,
+      "sha256": "1d8e4911c5514a2c0f0ed0fcd43deb74c561d7f44f9b8e3d36769ebd906a3dbe"
+    },
+    {
+      "path": "/assets/branding/cams-portal-144.webp",
+      "sample": 2,
+      "status": 200,
+      "ms": 159.383,
+      "ttfbMs": 157.134,
+      "transferBytes": 9414,
+      "decodedBytes": 9414,
+      "sha256": "1d8e4911c5514a2c0f0ed0fcd43deb74c561d7f44f9b8e3d36769ebd906a3dbe"
+    },
+    {
+      "path": "/cmms-favicon-v3.png",
+      "sample": 0,
+      "status": 200,
+      "ms": 250.74999999999997,
+      "ttfbMs": 111.17399999999999,
+      "transferBytes": 1545225,
+      "decodedBytes": 1545225,
+      "sha256": "d197aef610f7b2785ec0a1edfeff5d292cf43bc1d70f2e415e761396511486d7"
+    },
+    {
+      "path": "/assets/branding/cmms-logo-mark.png",
+      "sample": 0,
+      "status": 200,
+      "ms": 176.197,
+      "ttfbMs": 95.308,
+      "transferBytes": 554097,
+      "decodedBytes": 554097,
+      "sha256": "6864a1fe677bb566914585b42ebb693a907eb3fe07d3f6d44967bd00ec97ec49"
+    }
+  ],
+  "liveBrowser": {
+    "base": "https://unicams.online",
+    "fixtureLatencyMs": 200,
+    "syntheticBackend": true,
+    "scenarios": [
+      {
+        "name": "Subject Hub assessments",
+        "readyMs": 323.6489590000001,
+        "calls": 1,
+        "payloadBytes": 156,
+        "requests": [
+          {
+            "name": "get_my_subject_assessment_structure",
+            "bytes": 156,
+            "ms": 201.97475000000009
+          }
+        ]
+      },
+      {
+        "name": "Marks selector first visit",
+        "readyMs": 326.56383299999993,
+        "calls": 1,
+        "payloadBytes": 715,
+        "requests": [
+          {
+            "name": "class_sections",
+            "bytes": 715,
+            "ms": 201.72662499999979
+          }
+        ]
+      },
+      {
+        "name": "Selected class first visit",
+        "readyMs": 324.702667,
+        "calls": 1,
+        "payloadBytes": 701,
+        "requests": [
+          {
+            "name": "get_staff_class_detail",
+            "bytes": 701,
+            "ms": 201.1779160000001
+          }
+        ]
+      },
+      {
+        "name": "Export selector first visit",
+        "readyMs": 108.20920799999976,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Same class Export preview",
+        "readyMs": 47.22745799999984,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Marks selector return",
+        "readyMs": 34.633792000000085,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Same class Marks return",
+        "readyMs": 36.769041000000016,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Sync Draft (read refresh only)",
+        "readyMs": 322.31829199999993,
+        "calls": 1,
+        "payloadBytes": 701,
+        "requests": [
+          {
+            "name": "get_staff_class_detail",
+            "bytes": 701,
+            "ms": 200.67391700000007
+          }
+        ]
+      }
+    ],
+    "correctionCounts": {
+      "bootstrap": 1,
+      "unrelatedTabChanges": 0,
+      "manualQueueRefresh": 0
+    }
+  }
+}
