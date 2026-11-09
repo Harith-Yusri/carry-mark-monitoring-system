@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from './helpers/staff-loading.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -27,7 +28,7 @@ function setup(dashboard=payload) {
   const useRef=initial=>{const i=cursor++;if(!(i in states))states[i]={current:initial};return states[i]};
   const icon=()=>null;
   const failWrite=async()=>{writes.push('unexpected write');throw Error('Archived data must not be mutated')};
-  const deps={React,useState,useRef,useEffect:fn=>{if(!effectMounted){effectMounted=true;effects.push(fn)}},useAuth:()=>({user:{name:'Lecturer',id:'L1'}}),W,userError:(e,f)=>e?.message||f,
+  const deps={React,InitialDataState,RefreshStatus,useState,useRef,useEffect:fn=>{if(!effectMounted){effectMounted=true;effects.push(fn)}},useAuth:()=>({user:{name:'Lecturer',id:'L1'}}),W,userError:(e,f)=>e?.message||f,
     loadLecturerSubjectDashboard:api.loadLecturerSubjectDashboard,
     loadOfferingData:async id=>{reads.push(id);return {sections:[{id:'section-'+id,programmeCode:'CS240',label:'Historical Class',students:[{}],finalised:true}],assessments:[{id:'a-'+id,name:'Historical Test',type:'Test',weightage:30}]}},
     loadSubjectCreationData:async()=>({catalogue:[],termLabel:'Semester 1 · 2026/2027'}),listProgrammes:async()=>[],

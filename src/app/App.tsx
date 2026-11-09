@@ -1,3 +1,4 @@
+import { LoadingState } from "../components/StaffDataState";
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { DarkModeProvider } from "../context/DarkModeContext";
@@ -13,7 +14,7 @@ const AdminWebPortal = lazy(() => import("../features/admin/AdminWebPortal").the
 function RouteFallback() {
   return (
     <div role="status" aria-live="polite" style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-      Loading CAMS…
+      <LoadingState label="Loading CAMS…" />
     </div>
   );
 }

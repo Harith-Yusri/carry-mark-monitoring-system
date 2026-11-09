@@ -1,3 +1,4 @@
+import { LoadingState } from "../../components/StaffDataState";
 import React, { lazy, Suspense, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { workspace as W } from "./workspaceStyles";
@@ -21,7 +22,7 @@ export function LecturerWebPortal() {
 
   return (
     <div className="lecturer-workspace w-full min-w-0 px-5 pb-12 font-sans text-sm text-slate-800 dark:text-slate-100 sm:px-8 lg:px-12">
-      <Suspense fallback={<div role="status" aria-live="polite" className="p-6 text-slate-500">Loading section…</div>}>
+      <Suspense fallback={<LoadingState layout={activeTab === "assessments" || activeTab === "issues" ? "table" : "cards"} />}>
         {screen === "dashboard" ? <LecturerDashboard onSelectSubject={subj => { setSelectedSubj(subj); setScreen("subject-hub"); setActiveTab("assessments"); }} /> : currentSubj ? <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <button onClick={() => setScreen("dashboard")} className={W.secondary}><ChevronLeft size={16} /> Back to My Subjects</button>

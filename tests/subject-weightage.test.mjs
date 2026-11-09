@@ -10,7 +10,8 @@ const { code: styleCode } = await transform(await readFile('src/features/lecture
 const { workspace: W } = new Function('module', styleCode + ';return module.exports;')({ exports: {} });
 function nodes(tree) { return !tree || typeof tree !== 'object' ? [] : [tree, ...React.Children.toArray(tree.props?.children).flatMap(nodes)]; }
 function setup(max) {
-  const states = [max, max === null ? '' : String(max), false, false]; let cursor = 0; const saves = [];
+  const states = [max, max === null ? '' : String(max), false, false, []]; // Loaded empty structure, not an unknown request.
+  let cursor = 0; const saves = [];
   const useState = initial => { const i = cursor++; if (!(i in states)) states[i] = initial; return [states[i], value => states[i] = typeof value === 'function' ? value(states[i]) : value]; };
   const icon = () => null;
   const saveRef = { current: false };

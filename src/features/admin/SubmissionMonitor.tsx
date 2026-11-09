@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useMemo, useState } from "react";
 import { CheckCircle, ChevronDown, Clock, Send } from "lucide-react";
 import { AdminStatus, useCardColors, useColors } from "./adminStyles";
@@ -42,6 +43,8 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
     : allocations.filter(allocation => allocation.programmeCode === code).length;
 
 
+  if (!context) return <InitialDataState title="Submission Monitor" label="Loading submissions…" error={error} layout="table" />;
+
   return (
     <div>
       <div className="responsive-action-header" style={{ alignItems: "flex-end", marginBottom: "20px" }}>
@@ -76,8 +79,8 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
           </button>
         ))}
       </div>
-      {loading && <p style={{ color: C.textMuted }}>Loading submissions…</p>}
-      {error && <p style={{ color: C.red }}>{error}</p>}
+      {loading && <RefreshStatus label="Refreshing submissions…" />}
+      {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
       {reminderError && <p role="alert" style={{ color: C.red }}>{reminderError}</p>}
 
       <p className="submission-summary-note">Lecturer summaries reflect the classes matching the current filters.</p>
@@ -137,7 +140,7 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
         </section>;
       })}
       </div>
-      {filtered.length === 0 && <div className="admin-table-panel submission-empty-state" role="status">No submissions match the selected programme and status filters.</div>}
+      {!loading && !error && filtered.length === 0 && <div className="admin-table-panel submission-empty-state" role="status">No submissions match the selected programme and status filters.</div>}
     </div>
   );
 }

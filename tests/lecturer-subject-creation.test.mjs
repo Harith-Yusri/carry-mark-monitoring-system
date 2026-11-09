@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from './helpers/staff-loading.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -18,8 +19,10 @@ function nodes(tree) {
 function setup({ reject = false, subjects = [] } = {}) {
   const states = []; let cursor = 0; const calls = [];
   states[3] = subjects;
-  states[5] = subjects[0]?.academicYear ?? '';
-  states[6] = subjects[0]?.semesterNo ?? null;
+  states[5] = subjects[0]?.academicYear ?? '2025/2026';
+  states[6] = subjects[0]?.semesterNo ?? 2;
+  states[11] = false;
+  states[24] = { academicYear: states[5], semesterNo: states[6] }; // Successful dashboard bootstrap.
   let serverSubjects = subjects;
   const useState = initial => { const i = cursor++; if (!(i in states)) states[i] = initial; return [states[i], value => { states[i] = typeof value === 'function' ? value(states[i]) : value; }]; };
   const useRef = initial => { const i = cursor++; if (!(i in states)) states[i] = { current: initial }; return states[i]; };
@@ -37,10 +40,10 @@ function setup({ reject = false, subjects = [] } = {}) {
       programmeId: savedProgrammeId,
     } : subject);
   };
-  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','Trash2','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','listArchivedLecturerSubjects','listProgrammes','loadCurrentTermLabel','loadOfferingData','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject','userError','W','Users','Clock',code+'; return LecturerDashboard;')(
+  const Component = new Function('React','useState','useRef','useEffect','useColors','useAuth','Trash2','BookOpen','Plus','CheckCircle','ChevronRight','MoreVertical','X','listLecturerSubjects','listArchivedLecturerSubjects','listProgrammes','loadCurrentTermLabel','loadOfferingData','loadSubjectCreationData','createLecturerSubject','updateLecturerSubject','userError','W','Users','Clock','InitialDataState','RefreshStatus',code+'; return LecturerDashboard;')(
     React,useState,useRef,()=>{},()=>({}),()=>({ user: { name: 'Test', id: 'TS004' } }),icon,icon,icon,icon,icon,icon,icon,
     async()=>serverSubjects,async()=>[],async()=>programmes,async()=>'Session 2, 2025/2026',async()=>({ assessments: [], sections: [] }),
-    async()=>({ catalogue, termLabel: 'Session 2, 2025/2026' }),create,update,(reason, fallback)=>reason?.message ?? fallback,W,icon,icon,
+    async()=>({ catalogue, termLabel: 'Session 2, 2025/2026' }),create,update,(reason, fallback)=>reason?.message ?? fallback,W,icon,icon,InitialDataState,RefreshStatus,
   );
   const render = () => { cursor = 0; return Component({ onSelectSubject() {} }); };
   const field = label => nodes(render()).find(node => node.props?.['aria-label'] === label);

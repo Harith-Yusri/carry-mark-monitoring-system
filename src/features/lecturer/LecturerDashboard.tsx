@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useRef, useState } from "react";
 import { BookOpen, Plus, Users, Clock, ChevronRight, MoreVertical, Trash2, X } from "lucide-react";
 import { workspace as W } from "./workspaceStyles";
@@ -73,6 +74,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const [saving, setSaving] = useState(false);
   const saveInFlight = useRef(false);
   const [activeTerm, setActiveTerm] = useState<{ academicYear: string; semesterNo: number } | null>(null);
+  const [archiveLoading, setArchiveLoading] = useState(false);
   const existingSubject = catalogue.find(subject => subject.code === code.trim().toUpperCase());
   const validForm = editingSubject
     ? name.trim().length > 0 && name.trim().length <= 200 && Boolean(programmeId) && Number(semester) >= 1 && Number(semester) <= 12 && !saving
@@ -98,15 +100,18 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const programmeCount = new Set(visibleSubjects.flatMap(subject => subject.programmeIds)).size;
 
   useEffect(() => {
+    let active = true;
     loadLecturerSubjectDashboard()
       .then(({ current: items, archived, termLabel, activeTerm: term }) => {
+        if (!active) return;
         setSubjects(items); setArchivedSubjects(archived); setCreationTerm(termLabel);
         setActiveTerm(term);
         setSelectedAcademicYear(term.academicYear);
         setSelectedSemesterNo(term.semesterNo);
       })
-      .catch(error => setLoadError(userError(error, "Unable to load your subjects.")))
-      .finally(() => setLoading(false));
+      .catch(error => { if (active) setLoadError(userError(error, "Unable to load your subjects.")); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const openCreateModal = async () => {
@@ -136,12 +141,14 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   };
 
   const openArchivedDetail = async (subject: LecturerSubject) => {
-    setArchiveError("");
+    if (archiveLoading) return;
+    setArchiveError(""); setArchiveLoading(true);
     try {
       const loaded = await Promise.all((subject.offerings ?? [subject]).map(offering => loadOfferingData(offering.offeringId)));
       setArchivedDetail({ subject, data: { sections: loaded.flatMap(data => data.sections), assessments: loaded.flatMap(data => data.assessments) } });
     }
     catch (reason) { setArchiveError(userError(reason, "Unable to load archived subject details.")); }
+    finally { setArchiveLoading(false); }
   };
 
   const deleteSubject = async (subject: LecturerSubject) => {
@@ -182,6 +189,8 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
     } finally { saveInFlight.current = false; setSaving(false); }
   };
 
+  if (!activeTerm) return <InitialDataState title="My Subjects" label="Loading your subjects…" error={loadError} />;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
@@ -203,6 +212,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
           {isCurrentSelection && <button onClick={openCreateModal} className={W.primary}><Plus size={16} /> Create New Subject</button>}
         </div>
       </div>
+      {archiveLoading && <RefreshStatus label="Loading archived subject details…" />}
       {archiveError && <p role="alert" className={W.error}>{archiveError}</p>}
       {subjectActionError && <p role="alert" className={W.error}>{subjectActionError}</p>}
 
@@ -220,7 +230,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
           {!archivedDetail.data.assessments.length && <p className={W.muted}>No assessments were recorded.</p>}
         </div>
       </div>}
-      {loading && <p role="status" className={W.muted}>Loading your subjects…</p>}
+      {loading && <RefreshStatus label="Refreshing your subjects…" />}
       {loadError && <p role="alert" className={W.error}>Unable to load your subjects. {loadError}</p>}
       {!loading && !loadError && visibleSubjects.length === 0 && <div role="status" className={W.panel + " py-12 text-center"}>
         <BookOpen size={32} aria-hidden="true" className="mx-auto mb-4 text-purple-800" />
@@ -292,7 +302,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
               <datalist id="subject-catalogue">{catalogue.filter(subject => subject.is_active).map(subject => <option key={subject.code} value={subject.code}>{subject.name}</option>)}</datalist>
               {existingSubject && <p role="status" className={existingSubject.is_active ? W.muted : W.error}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
               <div><label htmlFor="lecturer-subject-name" className={W.label}>Subject Name</label><input id="lecturer-subject-name" aria-label="Subject name" required maxLength={200} disabled={(!editingSubject && Boolean(existingSubject)) || saving || catalogueLoading} value={!editingSubject && existingSubject ? existingSubject.name : name} onChange={event => setName(event.target.value)} placeholder="e.g. Cloud Computing & DevOps" className={W.field} /></div>
-              {editingSubject && <div><label htmlFor="lecturer-subject-programme" className={W.label}>Programme</label><select id="lecturer-subject-programme" aria-label="Programme" required disabled={saving || catalogueLoading} value={programmeId} onChange={event => { setProgrammeId(event.target.value); setFormError(""); }} className={W.field}><option value="" disabled>Select programme</option>{programmes.map(programme => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>}
+              {editingSubject && <div><label htmlFor="lecturer-subject-programme" className={W.label}>Programme</label><select id="lecturer-subject-programme" aria-label="Programme" required disabled={saving || catalogueLoading} value={programmeId} onChange={event => { setProgrammeId(event.target.value); setFormError(""); }} className={W.field}><option value="" disabled>{catalogueLoading ? "Loading programmes…" : formError ? "Programmes unavailable" : programmes.length ? "Select programme" : "No programmes available"}</option>{programmes.map(programme => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>}
               <div><label htmlFor="lecturer-subject-semester" className={W.label}>Programme Semester</label><select id="lecturer-subject-semester" aria-label="Programme semester" disabled={saving || catalogueLoading} value={semester} onChange={event => setSemester(event.target.value)} className={W.field}>{[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>Semester {value}</option>)}</select></div>
               {formError && <div role="alert" className={W.error}>{formError}</div>}
             </div>

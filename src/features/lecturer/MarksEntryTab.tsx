@@ -1,3 +1,4 @@
+import { InitialDataState, LoadingState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useRef, useState } from "react";
 import { Check, CheckCircle, ChevronLeft, ChevronRight, Copy, KeyRound, MoreVertical, Plus, RefreshCw, Users, X } from "lucide-react";
 import { useColors } from "../../context/DarkModeContext";
@@ -17,7 +18,7 @@ export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, su
   const C = useColors();
   const { user } = useAuth();
   const { sections, selectedId, setSelectedId, selected: selectedRecord, assessments, carryMax, eligibleThreshold,
-    loading, detailLoading, error: loadError, reload, updateDetailedSections } = useSubjectClassData(offeringId, offeringIds);
+    loading, hasLoaded, detailLoading, error: loadError, reload, updateDetailedSections } = useSubjectClassData(offeringId, offeringIds);
   const selected = selectedRecord ? { ...selectedRecord, students: selectedRecord.students.map(student => ({ ...student, id: student.enrolmentId })) } : null;
   const [programmes, setProgrammes] = useState<ProgrammeOption[]>([]);
   const [modal, setModal] = useState<"add" | "edit" | null>(null);
@@ -33,18 +34,20 @@ export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, su
     return () => { if (saveTimer.current !== null) window.clearTimeout(saveTimer.current); };
   }, [offeringId]);
   const [programmeError, setProgrammeError] = useState("");
+  const [programmeLoading, setProgrammeLoading] = useState(false);
   useEffect(() => {
     if (!modal) return;
     let active = true;
-    setProgrammeError("");
+    setProgrammeError(""); setProgrammeLoading(true);
     listProgrammes().then(rows => { if (active) setProgrammes(rows); })
-      .catch(reason => { if (active) setProgrammeError(userError(reason, "Unable to load programmes.")); });
+      .catch(reason => { if (active) setProgrammeError(userError(reason, "Unable to load programmes.")); })
+      .finally(() => { if (active) setProgrammeLoading(false); });
     return () => { active = false; };
   }, [modal]);
-  const formValid = form.label.trim().length > 0 && Number(form.capacity) > 0 && programmes.some(programme => programme.id === form.programmeId);
+  const formValid = !programmeLoading && !programmeError && form.label.trim().length > 0 && Number(form.capacity) > 0 && programmes.some(programme => programme.id === form.programmeId);
 
-  const openAdd = () => { setForm({ ...blankForm, programmeId: offeringProgrammeId }); setEditingId(null); setModal("add"); };
-  const openEdit = (section: ClassSectionSummary) => { setForm({ label: section.label, capacity: String(section.capacity), programmeId: section.programmeId }); setEditingId(section.id); setMenuId(null); setModal("edit"); };
+  const openAdd = () => { setProgrammeLoading(true); setProgrammeError(""); setForm({ ...blankForm, programmeId: offeringProgrammeId }); setEditingId(null); setModal("add"); };
+  const openEdit = (section: ClassSectionSummary) => { setProgrammeLoading(true); setProgrammeError(""); setForm({ label: section.label, capacity: String(section.capacity), programmeId: section.programmeId }); setEditingId(section.id); setMenuId(null); setModal("edit"); };
   const closeModal = () => { setModal(null); setEditingId(null); setForm(blankForm); };
   const saveSection = async () => {
     if (!formValid) return;
@@ -101,13 +104,15 @@ export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, su
     setRotatingId(section.id);
     try { await rotateJoinCode(section.id); await reload(); } finally { setRotatingId(null); }
   };
+  if (!hasLoaded) return <InitialDataState title="Select a Class" label="Loading class sections…" error={loadError} onRetry={() => void reload().catch(() => undefined)} />;
+
   if (selectedId && !selected) return <div className="space-y-4 p-5">
     <button onClick={() => setSelectedId(null)} className={W.secondary}>‹ All Classes</button>
-    {loadError ? <p role="alert" className={W.error}>{loadError}</p> : <p role="status" className={W.muted}>Loading this class's marks…</p>}
+    {loadError ? <p role="alert" className={W.error}>{loadError}</p> : <LoadingState label="Loading this class's marks…" layout="table" />}
     {loadError && <button onClick={() => void reload().catch(() => undefined)} className={W.primary}>Try again</button>}
   </div>;
   if (!selected) return <div className="space-y-6">
-    {loading && <p role="status" className={W.muted}>Loading class sections…</p>}
+    {loading && <RefreshStatus label="Refreshing class sections…" />}
     {loadError && <p role="alert" className={W.error}>{loadError}</p>}
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><h2 className={W.title}>Select a Class</h2><p className={W.muted}>{subjectCode} has {sections.length} class section{sections.length === 1 ? "" : "s"}. Choose one to begin entering marks.</p></div><button onClick={openAdd} className={W.primary}><Plus size={16} /> Add Class Section</button></div>
     <div className={W.grid}>{sections.map(section => <div key={section.id} role="button" tabIndex={0} aria-label={`Enter marks for ${section.label}`} onClick={() => setSelectedId(section.id)} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); setSelectedId(section.id); } }} className={W.classCard + " flex flex-col " + (section.finalised ? "staff-card-success" : "staff-card-pending")}>
@@ -127,18 +132,19 @@ export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, su
       <div className={W.primary + " mt-auto w-full text-xs"}>Enter Marks <ChevronRight size={16} /></div>
     </div>)}</div>
     {!loading && !loadError && sections.length === 0 && <div className={W.panel + " py-12 text-center text-sm text-slate-500"}>No class sections yet. Select Add Class Section to create the first one.</div>}
-    {modal && <ClassModal error={programmeError} C={C} mode={modal} form={form} setForm={setForm} close={closeModal} save={saveSection} valid={formValid} subjectCode={subjectCode} programmes={programmes} />}
+    {modal && <ClassModal loading={programmeLoading} error={programmeError} C={C} mode={modal} form={form} setForm={setForm} close={closeModal} save={saveSection} valid={formValid} subjectCode={subjectCode} programmes={programmes} />}
   </div>;
-  return <div className="space-y-4">{detailLoading && <p role="status" className={W.muted}>Refreshing class data…</p>}{loadError && <p role="alert" className={W.error}>{loadError}</p>}<MarkGrid assessments={assessments} carryMax={carryMax} C={C} sections={sections} selected={selected} setSelectedId={setSelectedId} updateMark={updateMark} flushPendingMarks={flushPendingMarks} syncMarks={syncMarks} synced={synced} finalise={finalise} copyJoinCode={copyJoinCode} copiedId={copiedId} regenerateJoinCode={regenerateJoinCode} rotatingId={rotatingId} /></div>;
+  return <div className="space-y-4">{(loading || detailLoading) && <RefreshStatus label="Refreshing class data…" />}{loadError && <p role="alert" className={W.error}>{loadError}</p>}<MarkGrid assessments={assessments} carryMax={carryMax} C={C} sections={sections} selected={selected} setSelectedId={setSelectedId} updateMark={updateMark} flushPendingMarks={flushPendingMarks} syncMarks={syncMarks} synced={synced} finalise={finalise} copyJoinCode={copyJoinCode} copiedId={copiedId} regenerateJoinCode={regenerateJoinCode} rotatingId={rotatingId} /></div>;
 }
 
-function ClassModal({ error, C, mode, form, setForm, close, save, valid, subjectCode, programmes }: any) {
+function ClassModal({ loading, error, C, mode, form, setForm, close, save, valid, subjectCode, programmes }: any) {
   return <div role="dialog" aria-modal="true" aria-labelledby="class-modal-title" className={W.overlay} onMouseDown={event => { if (event.target === event.currentTarget) close(); }}><div className={W.modal}>
     <div className="mb-6 flex items-start justify-between gap-4"><div><h3 id="class-modal-title" className={W.title}>{mode === "add" ? "Add Class Section" : "Edit Class Section"}</h3><div className={W.muted}>{subjectCode}</div></div><button aria-label="Close" onClick={close} className={W.iconButton}><X size={21} /></button></div>
     {error && <p role="alert" className={W.error}>{error}</p>}
+    {loading && <RefreshStatus label="Loading programmes…" />}
     <div className="space-y-4">
       <div><label htmlFor="class-label" className={W.label}>Class Label</label><input id="class-label" autoFocus value={form.label} onChange={(event: any) => setForm((previous: ClassForm) => ({ ...previous, label: event.target.value }))} placeholder="e.g. Class D" className={W.field} /></div>
-      <div><label htmlFor="class-programme" className={W.label}>Programme</label><select id="class-programme" aria-label="Programme" value={form.programmeId} onChange={(event: any) => setForm((previous: ClassForm) => ({ ...previous, programmeId: event.target.value }))} className={W.field}><option value="">Select programme</option>{programmes.map((programme: ProgrammeOption) => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>
+      <div><label htmlFor="class-programme" className={W.label}>Programme</label><select id="class-programme" aria-label="Programme" disabled={loading || Boolean(error)} value={form.programmeId} onChange={(event: any) => setForm((previous: ClassForm) => ({ ...previous, programmeId: event.target.value }))} className={W.field}><option value="">{loading ? "Loading programmes…" : error ? "Programmes unavailable" : programmes.length ? "Select programme" : "No programmes available"}</option>{programmes.map((programme: ProgrammeOption) => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>
       <div><label htmlFor="class-capacity" className={W.label}>Student Capacity</label><input id="class-capacity" type="number" min="1" value={form.capacity} onChange={(event: any) => setForm((previous: ClassForm) => ({ ...previous, capacity: event.target.value }))} placeholder="e.g. 20" className={W.field} /></div>
     </div>
     <div className="mt-6 grid grid-cols-2 gap-3"><button onClick={close} className={W.secondary}>Cancel</button><button disabled={!valid} onClick={save} className={W.primary}><Plus size={16} /> {mode === "add" ? "Add Section" : "Save Changes"}</button></div>

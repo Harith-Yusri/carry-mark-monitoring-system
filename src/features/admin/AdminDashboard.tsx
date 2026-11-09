@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React from "react";
 import { CheckCircle } from "lucide-react";
 import { AdminStatus, useCardColors, useColors } from "./adminStyles";
@@ -20,6 +21,8 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
   const submitted = records.filter(item => item.submissionStatus === "Finalised").length;
   const overdue = records.filter(item => item.submissionStatus === "Overdue").length;
 
+  if (!context) return <InitialDataState title="Academic Operations" label="Loading academic operations…" error={error} layout="metrics" />;
+
   return (
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px" }}>
@@ -30,7 +33,7 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
         </div>
       </div>
 
-      {loading && <p style={{ color: C.textMuted }}>Loading academic operations…</p>}
+      {loading && <RefreshStatus label="Refreshing academic operations…" />}
       {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
       {reminderError && <p role="alert" style={{ color: C.red }}>{reminderError}</p>}
 
@@ -60,7 +63,7 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
 
           <div style={{ borderTop: "1px solid var(--operations-divider)" }}>
             {pendingLecturers.length === 0 && (
-              <div style={{ padding: "24px 0", color: CC.green, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>All lecturer submissions are released.</div>
+              <div style={{ padding: "24px 0", color: CC.green, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{total ? "All lecturer submissions are released." : "No lecturer records for this semester."}</div>
             )}
             {pendingLecturers.map(lecturer => {
               const sent = sentReminders.has(lecturer.id);

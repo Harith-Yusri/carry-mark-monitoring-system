@@ -1,3 +1,4 @@
+import { InitialDataState } from "../../components/StaffDataState";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, Edit3, Plus, Trash2, X } from "lucide-react";
 import { workspace as W } from "./workspaceStyles";
@@ -30,7 +31,8 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const [weightInput, setWeightInput] = useState("");
   const [savingWeight, setSavingWeight] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<Assessment[]>([]);
+  const [assessmentData, setItems] = useState<Assessment[] | null>(null);
+  const items = assessmentData ?? [];
   const [error, setError] = useState("");
   const [modal, setModal] = useState<"add" | "edit" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,10 +49,13 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
     setWeightInput(data.carryMax === null ? "" : String(data.carryMax));
   };
   useEffect(() => {
-    setLoading(true); setError(""); setCarryMax(null); setWeightInput("");
+    let active = true;
+    setLoading(true); setError(""); setItems(null); setCarryMax(null); setWeightInput("");
     loadAssessmentStructure(offeringId)
-      .then(settings => { setItems(settings.assessments); setCarryMax(settings.carryMax); setWeightInput(settings.carryMax === null ? "" : String(settings.carryMax)); })
-      .catch(reason => setError(userError(reason, "Unable to load assessment settings."))).finally(() => setLoading(false));
+      .then(settings => { if (active) { setItems(settings.assessments); setCarryMax(settings.carryMax); setWeightInput(settings.carryMax === null ? "" : String(settings.carryMax)); } })
+      .catch(reason => { if (active) setError(userError(reason, "Unable to load assessment settings.")); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [offeringId]);
   const saveTotalWeight = async (event: React.FormEvent) => {
     event.preventDefault(); if (savingWeight || loading || saveInFlight.current || refreshWarning) return;
@@ -147,6 +152,8 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const mutationDisabled = savingAssessment || Boolean(refreshWarning);
   const weightSaveDisabled = loading || savingWeight || mutationDisabled || !weightInput || Number(weightInput) === carryMax;
 
+  if (assessmentData === null) return <InitialDataState title="Continuous Assessment Components" label="Loading assessment settings…" error={error} layout="table" />;
+
   return (
     <div className={W.panel}>
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -157,7 +164,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
         <label htmlFor="subject-carry-max" className={W.label}>Total Carry-Mark Weightage (%)</label>
         <div className="flex flex-wrap items-center gap-3"><input id="subject-carry-max" type="number" min="0.01" max="100" step="0.01" required value={weightInput} disabled={loading || savingWeight || mutationDisabled} onChange={event => setWeightInput(event.target.value)} placeholder="e.g. 60" className={W.field + " max-w-32"} /><button type="submit" disabled={weightSaveDisabled} className={W.primary}>{savingWeight ? "Saving…" : "Save Weightage"}</button></div>
       </form>
-      {!loading && carryMax === null && <p className={W.muted + " mb-4"}>Enter and save the subject’s total weightage before adding assessments.</p>}
+      {!loading && !error && carryMax === null && <p className={W.muted + " mb-4"}>Enter and save the subject’s total weightage before adding assessments.</p>}
       {!modal && error && <p role="alert" className={W.error}>{error}</p>}
       {!modal && success && <p role="status" className="mb-4 text-sm font-medium text-emerald-700">{success}</p>}
       {refreshWarning && <div role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p>{refreshWarning}</p><button onClick={retryRefresh} disabled={savingAssessment} className={W.secondary + " mt-3"}>{savingAssessment ? "Refreshing…" : "Refresh assessments"}</button></div>}
@@ -167,7 +174,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
         <table className={W.table + " min-w-[680px]"}><thead className={W.tableHead}><tr><th scope="col">Assessment Component</th><th scope="col">Type</th><th scope="col">Max Score</th><th scope="col">Weightage</th><th scope="col" className="text-right">Actions</th></tr></thead>
           <tbody>{items.map(item => <tr key={item.id} className={W.tableRow}><td className="staff-card-primary font-semibold text-slate-800 dark:text-slate-50">{item.name}</td><td>{item.type}</td><td>{item.maxMarks}</td><td className="font-semibold">{item.weightage}%</td><td><div className="flex justify-end gap-2"><button disabled={mutationDisabled} onClick={() => openEdit(item)} className={W.secondary + " px-3 text-xs"}><Edit3 size={15} /> Edit</button><button disabled={mutationDisabled} onClick={() => removeAssessment(item)} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100"><Trash2 size={15} /> Remove</button></div></td></tr>)}</tbody>
         </table>
-        {items.length === 0 && <div className="py-10 text-center text-sm text-slate-500">No assessment components yet. Select Add Assessment to create one.</div>}
+        {!loading && !error && items.length === 0 && <div className="py-10 text-center text-sm text-slate-500">No assessment components yet. Select Add Assessment to create one.</div>}
       </div>
       {modal && <div role="dialog" aria-modal="true" aria-labelledby="assessment-modal-title" className={W.overlay} onMouseDown={event => { if (event.target === event.currentTarget) closeModal(); }}>
         <div className={W.modal}>

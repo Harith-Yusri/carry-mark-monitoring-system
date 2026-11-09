@@ -1,3 +1,4 @@
+import { InitialDataState, LoadingState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useState } from "react";
 import { CheckCircle, ChevronLeft, ChevronRight, Download, Users } from "lucide-react";
 import { workspace as W } from "./workspaceStyles";
@@ -6,23 +7,26 @@ import { escapeCsv } from "../../utils/csv";
 import { useSubjectClassData } from "../../hooks/useSubjectClassData";
 
 export function ExportTab({ offeringId, offeringIds, subjectCode, subjectName, academicYear, programmeSemester }: { offeringId: string; offeringIds?: string[]; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
-  const { sections, selectedId, setSelectedId, selected, assessments, carryMax, loading, error, reload } = useSubjectClassData(offeringId, offeringIds);
+  const { sections, selectedId, setSelectedId, selected, assessments, carryMax, loading, hasLoaded, detailLoading, error, reload } = useSubjectClassData(offeringId, offeringIds);
   const [downloaded, setDownloaded] = useState(false);
+
+  if (!hasLoaded) return <InitialDataState title="Select a Class to Export" label="Loading class sections…" error={error} onRetry={() => void reload().catch(() => undefined)} />;
 
   if (selectedId && !selected) return <div className="space-y-4 p-5">
     <button onClick={() => setSelectedId(null)} className={W.secondary}>‹ Choose another class</button>
-    {error ? <p role="alert" className={W.error}>{error}</p> : <p role="status" className={W.muted}>Loading this class's export data…</p>}
+    {error ? <p role="alert" className={W.error}>{error}</p> : <LoadingState label="Loading this class's export data…" layout="table" />}
     {error && <button onClick={() => void reload().catch(() => undefined)} className={W.primary}>Try again</button>}
   </div>;
 
   if (!selected) return <div className="space-y-6">
-    {loading && <p role="status" className={W.muted}>Loading class sections…</p>}
+    {loading && <RefreshStatus label="Refreshing class sections…" />}
     {error && <p role="alert" className={W.error}>{error}</p>}
     <div><h2 className={W.title}>Select a Class to Export</h2><p className={W.muted}>Choose a {subjectCode} class to preview its carry marks before exporting.</p></div>
     <div className={W.grid}>{sections.map(section => <button key={section.id} onClick={() => setSelectedId(section.id)} className={W.classCard + " flex flex-col " + (section.finalised ? "staff-card-success" : "staff-card-pending")}>
       <div className="mb-5 flex items-start justify-between gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-lg bg-purple-50 text-purple-800"><Users size={21} /></div><span className={section.finalised ? W.success : W.pending}>{section.finalised ? "RELEASED" : "PENDING"}</span></div>
       <h3 className={W.title + " mb-2"}>{section.label}</h3><div className={W.muted}><strong className="staff-card-primary font-bold text-slate-800 dark:text-slate-50">{section.programmeCode}</strong> · {section.studentCount} students synced · capacity {section.capacity}</div><div className={W.primary + " mt-5 w-full text-xs"}>Open e-Res Preview <ChevronRight size={16} /></div>
     </button>)}</div>
+    {!loading && !error && sections.length === 0 && <p className={W.muted}>No class sections are available to export.</p>}
   </div>;
 
   const classSlug = selected.label.replace(/\s+/g, "");
@@ -39,6 +43,8 @@ export function ExportTab({ offeringId, offeringIds, subjectCode, subjectName, a
   };
 
   return <div>
+    {(loading || detailLoading) && <RefreshStatus label="Refreshing export data…" />}
+    {error && <p role="alert" className={W.error}>{error}</p>}
     <button onClick={() => setSelectedId(null)} className={W.secondary + " mb-6"}><ChevronLeft size={16} /> Choose another class</button>
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
       <section className={W.panel + " min-w-0 lg:col-span-4"}>

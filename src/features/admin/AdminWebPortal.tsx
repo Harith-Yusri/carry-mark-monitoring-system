@@ -1,4 +1,5 @@
-import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { LoadingState } from "../../components/StaffDataState";
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Archive, LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
 import { useColors } from "./adminStyles";
 import { AdminTab } from "../../types";
@@ -19,15 +20,24 @@ export function AdminWebPortal() {
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [pendingCorrections, setPendingCorrections] = useState<number | null>(null);
   const [correctionCountError, setCorrectionCountError] = useState(false);
+  const correctionCountRequest = useRef(0);
+  const correctionTerm = useRef(context?.termId);
   const refreshCorrectionCount = useCallback(() => {
-    void loadCorrectionPendingCount().then(count => { setPendingCorrections(count); setCorrectionCountError(false); })
-      .catch(() => { setPendingCorrections(null); setCorrectionCountError(true); });
+    const request = ++correctionCountRequest.current;
+    void loadCorrectionPendingCount().then(count => {
+      if (request === correctionCountRequest.current) { setPendingCorrections(count); setCorrectionCountError(false); }
+    }).catch(() => { if (request === correctionCountRequest.current) setCorrectionCountError(true); });
   }, []);
   useEffect(() => {
+    // A previous semester's count is not a loaded count for the new semester.
+    if (correctionTerm.current !== context?.termId) {
+      correctionTerm.current = context?.termId;
+      setPendingCorrections(null);
+    }
     refreshCorrectionCount();
     window.addEventListener("focus", refreshCorrectionCount);
     const timer = window.setInterval(refreshCorrectionCount, 60000);
-    return () => { window.removeEventListener("focus", refreshCorrectionCount); window.clearInterval(timer); };
+    return () => { correctionCountRequest.current++; window.removeEventListener("focus", refreshCorrectionCount); window.clearInterval(timer); };
   }, [context?.termId, activeTab, refreshCorrectionCount]);
   const pendingSubmissions = useMemo(
     () => submissionAllocations(records).filter(requiresSubmissionAction).length,
@@ -49,7 +59,7 @@ export function AdminWebPortal() {
           <div className="admin-nav-list">
             {[
               { key: "overview",   label: "Compliance Overview", icon: <LayoutDashboard size={15} /> },
-              { key: "submissions", label: "Submission Monitor", icon: <ClipboardList size={15} />, pending: pendingSubmissions },
+              { key: "submissions", label: "Submission Monitor", icon: <ClipboardList size={15} />, pending: context ? pendingSubmissions : undefined },
               { key: "corrections", label: "Mark Corrections", icon: <ClipboardList size={15} />, pending: pendingCorrections ?? undefined },
               { key: "directory",  label: "Lecturer Directory",  icon: <Users size={15} /> },
               { key: "compliance", label: "Reports & Exports",    icon: <FileText size={15} /> },
@@ -109,7 +119,7 @@ export function AdminWebPortal() {
 
       {/* Main Content Pane */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <Suspense fallback={<div role="status" aria-live="polite" style={{ color: C.textMuted, padding: "24px" }}>Loading section…</div>}>
+        <Suspense fallback={<LoadingState layout={activeTab === "overview" ? "metrics" : "table"} />}>
           {activeTab === "overview" && <AdminDashboard records={records} context={context} loading={loading} error={error} />}
           {activeTab === "submissions" && <SubmissionMonitor records={records} context={context} loading={loading} error={error} />}
           {activeTab === "directory" && <LecturerDirectory records={records} context={context} loading={loading} error={error} />}

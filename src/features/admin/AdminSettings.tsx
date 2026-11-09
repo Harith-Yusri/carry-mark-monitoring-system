@@ -1,3 +1,4 @@
+import { InitialDataState } from "../../components/StaffDataState";
 import React, { useEffect, useState } from "react";
 import { CheckCircle, Save } from "lucide-react";
 import { AdminStatus, useCardColors, useColors } from "./adminStyles";
@@ -115,8 +116,8 @@ export function AdminSettings({ onActiveSemesterChanged }: { onActiveSemesterCha
     </div>
   );
 
-  if (loadError) return <p role="alert" style={{ color: C.red }}>{loadError}</p>;
-  if (!settings) return <p style={{ color: C.textMuted }}>Loading settings from Supabase…</p>;
+  if (loadError && !settings) return <InitialDataState title="System Settings" label="Loading settings…" error={loadError} layout="table" />;
+  if (!settings) return <InitialDataState title="System Settings" label="Loading settings…" layout="table" />;
 
   const tabs: { id: SettingsTab; label: string }[] = [
     { id: "semester", label: "Academic Semester" },

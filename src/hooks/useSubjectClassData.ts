@@ -4,7 +4,9 @@ import { userError } from "../utils/errors";
 
 export function useSubjectClassData(offeringId: string, offeringIds?: string[]) {
   const allocationKey = JSON.stringify(offeringIds ?? [offeringId]);
-  const [sections, setSections] = useState<ClassSectionSummary[]>([]);
+  const [summaries, setSummaries] = useState<{ key: string; rows: ClassSectionSummary[] } | null>(null);
+  const hasLoaded = summaries?.key === allocationKey;
+  const sections = hasLoaded ? summaries.rows : [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<(Awaited<ReturnType<typeof loadSubjectClassDetail>> & { sectionId: string }) | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,7 @@ export function useSubjectClassData(offeringId: string, offeringIds?: string[]) 
     setLoading(true); setError("");
     try {
       const rows = await loadSubjectClassSummaries(JSON.parse(allocationKey));
-      if (request === summaryRequest.current) setSections(rows);
+      if (request === summaryRequest.current) setSummaries({ key: allocationKey, rows });
       return rows;
     } catch (reason) {
       if (request === summaryRequest.current) setError(userError(reason, "Unable to load classes."));
@@ -66,13 +68,13 @@ export function useSubjectClassData(offeringId: string, offeringIds?: string[]) 
   const updateDetailedSections = (update: (sections: SectionRecord[]) => SectionRecord[]) => {
     setDetail(current => current ? { ...current, data: { ...current.data, sections: update(current.data.sections) } } : current);
   };
-  const activeDetail = detail?.sectionId === selectedId ? detail : null;
+  const activeDetail = hasLoaded && detail?.sectionId === selectedId ? detail : null;
   return {
     sections, selectedId, setSelectedId,
     selected: activeDetail?.data.sections.find(section => section.id === selectedId) ?? null,
     assessments: activeDetail?.data.assessments ?? [],
     carryMax: activeDetail?.settings.carryMax ?? null,
     eligibleThreshold: activeDetail?.settings.eligibleThreshold ?? null,
-    loading, detailLoading, error, reload, updateDetailedSections,
+    loading, hasLoaded, detailLoading, error, reload, updateDetailedSections,
   };
 }

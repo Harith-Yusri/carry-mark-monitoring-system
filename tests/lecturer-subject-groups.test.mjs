@@ -1,3 +1,4 @@
+import { InitialDataState, LoadingState, RefreshStatus } from './helpers/staff-loading.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -54,8 +55,8 @@ test('combined Marks Entry grid keeps class IDs, programme, capacity and each as
   let cursor=0, effects=[];
   const useState=initial=>{const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],v=>states[i]=typeof v==='function'?v(states[i]):v]};
   const icon=()=>null;
-  const deps={React,W,useState,finaliseSection:async id=>releaseCalls.push(id),useEffect:fn=>effects.push(fn),useRef:()=>({current:null}),useColors:()=>({}),useAuth:()=>({user:{authId:'lecturer'}}),
-    useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,eligibleThreshold:40,loading:false,detailLoading:false,error:'',reload:async()=>{reloads++},updateDetailedSections:()=>{}}},
+  const deps={React,W,InitialDataState,LoadingState,RefreshStatus,useState,finaliseSection:async id=>releaseCalls.push(id),useEffect:fn=>effects.push(fn),useRef:()=>({current:null}),useColors:()=>({}),useAuth:()=>({user:{authId:'lecturer'}}),
+    useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {hasLoaded:true,sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,eligibleThreshold:40,loading:false,detailLoading:false,error:'',reload:async()=>{reloads++},updateDetailedSections:()=>{}}},
     classSelectorCardStyle:{},classSelectorGridStyle:{},classSelectorIconStyle:{},classSelectorMetaStyle:{},classSelectorTitleStyle:{},classSelectorActionStyle:{},
     ...Object.fromEntries(['Check','CheckCircle','ChevronLeft','ChevronRight','Copy','KeyRound','MoreVertical','Plus','RefreshCw','Users','X'].map(name=>[name,icon]))};
   const Component=new Function(...Object.keys(deps),code+';return MarksEntryTab;')(...Object.values(deps));
@@ -108,7 +109,7 @@ test('Export class selector includes all programmes and uses the selected class 
   const releaseCalls=[]; let reloads=0;const states=[];let cursor=0,effects=[];
   const useState=initial=>{const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],v=>states[i]=typeof v==='function'?v(states[i]):v]};
   const icon=()=>null;
-  const deps={React,W,useState,useEffect:fn=>effects.push(fn),useColors:()=>({}),useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,loading:false,error:'',reload:async()=>{}}},classSelectorCardStyle:{},classSelectorGridStyle:{},classSelectorIconStyle:{},classSelectorMetaStyle:{},classSelectorTitleStyle:{},classSelectorActionStyle:{},
+  const deps={React,W,InitialDataState,LoadingState,RefreshStatus,useState,useEffect:fn=>effects.push(fn),useColors:()=>({}),useSubjectClassData:()=>{const selected=sections.find(section=>section.id===selectedId)??null;const allocation=allocations.find(a=>a.data.sections.some(s=>s.id===selectedId));return {hasLoaded:true,sections:summaries,selectedId,setSelectedId:id=>{selectedId=id},selected,assessments:allocation?.data.assessments??[],carryMax:50,loading:false,error:'',reload:async()=>{}}},classSelectorCardStyle:{},classSelectorGridStyle:{},classSelectorIconStyle:{},classSelectorMetaStyle:{},classSelectorTitleStyle:{},classSelectorActionStyle:{},
     ...Object.fromEntries(['CheckCircle','ChevronLeft','ChevronRight','Download','Users'].map(name=>[name,icon]))};
   const Component=new Function(...Object.keys(deps),code+';return ExportTab;')(...Object.values(deps));
   const render=()=>{cursor=0;effects=[];return Component({offeringId:'offering-0',offeringIds:['offering-0','offering-1'],subjectCode:'ITT550',subjectName:'Network Design',academicYear:'2025/2026',programmeSemester:5})};

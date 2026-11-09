@@ -97,3 +97,41 @@ test('summary and selected-class loader errors propagate rather than producing f
   await assert.rejects(apiFixture('class_sections').api.loadSubjectClassSummaries(['offering-a']),/backend error/);
   await assert.rejects(apiFixture('marks').api.loadSubjectClassDetail(summary('a','offering-a')),/backend error/);
 });
+
+test('pending summaries remain unknown until even an empty response succeeds', async () => {
+  let resolve;
+  const app = harness({ loadSummaries: () => new Promise(done => { resolve = done; }) });
+  await app.flush();
+  assert.equal(app.value.loading, true);
+  assert.equal(app.value.hasLoaded, false, 'an initial empty array is not a loaded zero count');
+  resolve([]); await app.flush();
+  assert.equal(app.value.loading, false);
+  assert.equal(app.value.hasLoaded, true);
+  assert.equal(app.value.sections.length, 0, 'zero is real only after success');
+  app.unmount();
+});
+
+test('failed initial summaries remain an error rather than a loaded empty result', async () => {
+  const app = harness({ loadSummaries: async () => { throw Error('offline'); } });
+  await app.flush();
+  assert.equal(app.value.loading, false);
+  assert.equal(app.value.hasLoaded, false);
+  assert.ok(app.value.error);
+  app.unmount();
+});
+
+test('background summary failure retains the previously successful class list', async () => {
+  let reject, refresh = false;
+  const app = harness({ loadSummaries: () => refresh ? new Promise((_, fail) => { reject = fail; }) : Promise.resolve([summary('a', 'offering-a')]) });
+  await app.flush(); refresh = true;
+  const pending = app.value.reload().catch(() => undefined);
+  await app.flush();
+  assert.equal(app.value.hasLoaded, true);
+  assert.equal(app.value.loading, true);
+  assert.equal(app.value.sections[0].id, 'a');
+  reject(Error('offline')); await pending; await app.flush();
+  assert.ok(app.value.error);
+  assert.equal(app.value.hasLoaded, true);
+  assert.equal(app.value.sections[0].id, 'a');
+  app.unmount();
+});

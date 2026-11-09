@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useState } from "react";
 import { AdminStatus, useCardColors, useColors } from "./adminStyles";
 import type { AdminRecordsViewProps } from "../../hooks/useAdminRecords";
@@ -23,6 +24,8 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
     const matchesProgramme = !programmeId || lecturer.programmeAssignments.some(assignment => assignment.id === programmeId);
     return matchesSearch && matchesProgramme;
   });
+
+  if (!context) return <InitialDataState title="Lecturer Directory" label="Loading lecturers…" error={error} layout="table" />;
 
   return (
     <div>
@@ -62,7 +65,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
         </label>
       </div>
 
-      {loading && <p style={{ color: C.textMuted }}>Loading lecturers…</p>}
+      {loading && <RefreshStatus label="Refreshing lecturers…" />}
       {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
 
       <div className="admin-table-panel"><div className="admin-table-scroll">
@@ -122,7 +125,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
             })}
           </tbody>
         </table>
-        {!loading && filtered.length === 0 && <div style={{ padding: "24px 10px", borderBottom: `1px solid ${CC.borderMid}`, color: CC.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No lecturer records match the selected search and programme filters.</div>}
+        {!loading && !error && filtered.length === 0 && <div style={{ padding: "24px 10px", borderBottom: `1px solid ${CC.borderMid}`, color: CC.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No lecturer records match the selected search and programme filters.</div>}
       </div>
       </div>
     </div>

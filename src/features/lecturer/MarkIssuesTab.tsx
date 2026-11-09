@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { workspace as W } from "./workspaceStyles";
 import { correctionError, loadMarkIssues, releaseCorrection, requestCorrection, respondToIssue, saveCorrection, type CorrectionStatus, type MarkIssue } from "../../services/markCorrectionApi";
@@ -7,7 +8,8 @@ export const correctionLabels: Record<CorrectionStatus, string> = {
   corrected: "Corrected · awaiting release", released: "Resolved · updated mark released",
 };
 export function MarkIssuesTab({ offeringId }: { offeringId: string }) {
-  const [items, setItems] = useState<MarkIssue[]>([]);
+  const [listData, setItems] = useState<MarkIssue[] | null>(null);
+  const items = listData ?? [];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -15,7 +17,11 @@ export function MarkIssuesTab({ offeringId }: { offeringId: string }) {
   const inFlight = useRef(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [scores, setScores] = useState<Record<string, string>>({});
-  const reload = useCallback(async () => { setItems(await loadMarkIssues(offeringId)); }, [offeringId]);
+  const reload = useCallback(async () => {
+    setLoading(true); setError("");
+    try { const data = await loadMarkIssues(offeringId); setItems(data); setError(""); }
+    finally { setLoading(false); }
+  }, [offeringId]);
   useEffect(() => {
     let active = true;
     setLoading(true); setError("");
@@ -35,11 +41,13 @@ export function MarkIssuesTab({ offeringId }: { offeringId: string }) {
     } catch (reason) { setError(correctionError(reason)); }
     finally { inFlight.current = false; setBusy(false); }
   };
+  if (listData === null) return <InitialDataState title="Mark Issues" label="Loading mark issues…" error={error} layout="table" onRetry={() => void reload().catch(reason => setError(correctionError(reason)))} />;
+
   return <section className={W.panel}>
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h2 className={W.title}>Mark Issues</h2><p className={W.muted}>Review reports across all classes. Released marks stay locked until an exact correction is approved.</p></div><button className={W.secondary} disabled={busy} onClick={() => void reload().then(() => setError("")).catch(reason => setError(correctionError(reason)))}>Refresh</button></div>
-    {loading && <p role="status" className={W.muted}>Loading mark issues…</p>}
+    {loading && <RefreshStatus label="Refreshing mark issues…" />}
     {error && <p role="alert" className={W.error}>{error}</p>}{notice && <p role="status" className="mb-4 text-sm text-emerald-700">{notice}</p>}
-    {!loading && !error && !items.length && <p className={W.muted}>No mark issues have been reported for this subject.</p>}
+    {!error && !items.length && <p className={W.muted}>No mark issues have been reported for this subject.</p>}
     <div className="space-y-5">{items.map(issue => {
       const request = issue.corrections[0];
       const active = request && ["pending", "approved", "corrected"].includes(request.status);

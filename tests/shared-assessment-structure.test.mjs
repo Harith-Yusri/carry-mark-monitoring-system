@@ -1,3 +1,4 @@
+import { LoadingState } from './helpers/staff-loading.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -17,8 +18,8 @@ test('multi-programme Hub has one assessment editor and retains every offering f
   const states = ['subject-hub', subject, 'assessments'];
   let cursor = 0;
   const useState = initial => { const i = cursor++; return [states[i] ?? initial, value => { states[i] = value; }]; };
-  const Portal = new Function('React', 'useState', 'lazy', 'Suspense', 'ChevronLeft', 'W', 'useAuth', portalCode + ';return LecturerWebPortal;')(
-    React, useState, () => () => null, ({ children }) => children, () => null, {}, () => ({ user: { name: 'Lecturer' } }),
+  const Portal = new Function('React', 'useState', 'lazy', 'Suspense', 'ChevronLeft', 'W', 'useAuth', 'LoadingState', portalCode + ';return LecturerWebPortal;')(
+    React, useState, () => () => null, ({ children }) => children, () => null, {}, () => ({ user: { name: 'Lecturer' } }), LoadingState,
   );
   const render = () => { cursor = 0; return Portal(); };
   const tree = render();

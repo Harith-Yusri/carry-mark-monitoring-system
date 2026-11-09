@@ -1,14 +1,20 @@
+import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { workspace as W } from "../lecturer/workspaceStyles";
 import { correctionError, loadCorrectionQueue, reviewCorrection, type Correction } from "../../services/markCorrectionApi";
 
 const labels = { pending: "Pending Approval", approved: "Approved for Correction", rejected: "Rejected", corrected: "Corrected · awaiting release", released: "Completed · Released" };
 export function MarkCorrectionQueue({ onChanged }: { onChanged: () => void }) {
-  const [items, setItems] = useState<Correction[]>([]);
+  const [listData, setItems] = useState<Correction[] | null>(null);
+  const items = listData ?? [];
   const [error, setError] = useState(""); const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false); const guard = useRef(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const reload = useCallback(async () => { setItems(await loadCorrectionQueue()); setError(""); }, []);
+  const reload = useCallback(async () => {
+    setLoading(true); setError("");
+    try { const data = await loadCorrectionQueue(); setItems(data); setError(""); }
+    finally { setLoading(false); }
+  }, []);
   useEffect(() => { void reload().catch(reason => setError(correctionError(reason))).finally(() => setLoading(false));
     const focus = () => { if (!guard.current) void reload().catch(reason => setError(correctionError(reason))); };
     window.addEventListener("focus", focus); return () => window.removeEventListener("focus", focus);
@@ -22,10 +28,12 @@ export function MarkCorrectionQueue({ onChanged }: { onChanged: () => void }) {
     } catch (reason) { setError(correctionError(reason)); }
     finally { guard.current = false; setBusy(false); }
   };
+  if (listData === null) return <InitialDataState title="Mark Correction Requests" label="Loading correction requests…" error={error} layout="table" onRetry={() => void reload().catch(reason => setError(correctionError(reason)))} />;
+
   return <section className={W.panel}>
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h1 className={W.title}>Mark Correction Requests</h1><p className={W.muted}>Each approval applies to one student and one assessment. Released classes remain locked.</p></div><button disabled={busy} className={W.secondary} onClick={() => void reload().then(onChanged).catch(reason => setError(correctionError(reason)))}>Refresh</button></div>
-    {loading && <p role="status" className={W.muted}>Loading correction requests…</p>}{error && <p role="alert" className={W.error}>{error}</p>}
-    {!loading && !items.length && !error && <p className={W.muted}>No mark correction requests.</p>}
+    {loading && <RefreshStatus label="Refreshing correction requests…" />}{error && <p role="alert" className={W.error}>{error}</p>}
+    {!items.length && !error && <p className={W.muted}>No mark correction requests.</p>}
     <div className="space-y-4">{items.map(request => <article key={request.id} className="staff-content-card rounded-xl border border-slate-200 p-5">
       <div className="flex flex-wrap justify-between gap-3"><h2 className="staff-card-title font-semibold">{request.snapshot.student_name} · {request.snapshot.student_number}</h2><span className={request.status === "pending" || request.status === "corrected" ? W.pending : request.status === "rejected" ? W.danger : W.success}>{labels[request.status]}</span></div>
       <p className={W.muted}>{request.snapshot.subject_code} · {request.snapshot.subject_name} · {request.snapshot.class_label}</p>

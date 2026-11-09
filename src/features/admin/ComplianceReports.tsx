@@ -1,3 +1,4 @@
+import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useState } from "react";
 import { CheckCircle, Download } from "lucide-react";
 import { useCardColors, useColors } from "./adminStyles";
@@ -59,6 +60,8 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
     window.setTimeout(() => setDownloaded(null), 2500);
   };
 
+  if (!context) return <InitialDataState title="Reports & Exports" label="Loading report data…" error={error} layout="table" />;
+
   return (
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px", alignItems: "flex-end" }}>
@@ -70,7 +73,7 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
         <span style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{context?.termLabel ?? "Current Semester"}</span>
       </div>
 
-      {loading && <p style={{ color: C.textMuted }}>Loading report data…</p>}
+      {loading && <RefreshStatus label="Refreshing report data…" />}
       {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
 
       <div className="admin-table-panel"><div className="admin-table-scroll">
