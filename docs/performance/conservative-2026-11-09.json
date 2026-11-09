@@ -1,0 +1,453 @@
+{
+  "date": "2026-11-09",
+  "assets": [
+    {
+      "source": "public/cmms-favicon-v3.png",
+      "before": 1545225,
+      "asset": "public/assets/branding/cams-login-144.webp",
+      "after": 16460,
+      "dimensions": [
+        144,
+        144
+      ]
+    },
+    {
+      "source": "public/assets/branding/cmms-logo-mark.png",
+      "before": 554097,
+      "asset": "public/assets/branding/cams-portal-144.webp",
+      "after": 9414,
+      "dimensions": [
+        144,
+        144
+      ]
+    }
+  ],
+  "sql": [
+    {
+      "name": "assessments",
+      "firstMs": 1.854,
+      "medianWarmMs": 0.654,
+      "jsonBytes": 765
+    },
+    {
+      "name": "enrolments",
+      "firstMs": 9.565,
+      "medianWarmMs": 8.708,
+      "jsonBytes": 1428
+    },
+    {
+      "name": "marks",
+      "firstMs": 30.388,
+      "medianWarmMs": 26.079,
+      "jsonBytes": 6678
+    },
+    {
+      "name": "new_detail",
+      "firstMs": 42.439,
+      "medianWarmMs": 36.742,
+      "jsonBytes": 3905
+    },
+    {
+      "name": "old_totals",
+      "firstMs": 3.453,
+      "medianWarmMs": 2.361,
+      "jsonBytes": 590
+    },
+    {
+      "name": "settings",
+      "firstMs": 2.738,
+      "medianWarmMs": 1.402,
+      "jsonBytes": 71
+    },
+    {
+      "name": "submissions",
+      "firstMs": 1.756,
+      "medianWarmMs": 1.325,
+      "jsonBytes": 79
+    }
+  ],
+  "browserBefore": {
+    "base": "http://127.0.0.1:4179",
+    "fixtureLatencyMs": 200,
+    "syntheticBackend": true,
+    "scenarios": [
+      {
+        "name": "Subject Hub assessments",
+        "readyMs": 317.6007920000002,
+        "calls": 1,
+        "payloadBytes": 156,
+        "requests": [
+          {
+            "name": "get_my_subject_assessment_structure",
+            "bytes": 156,
+            "ms": 201.50395900000012
+          }
+        ]
+      },
+      {
+        "name": "Marks selector first visit",
+        "readyMs": 300.0044580000001,
+        "calls": 1,
+        "payloadBytes": 715,
+        "requests": [
+          {
+            "name": "class_sections",
+            "bytes": 715,
+            "ms": 201.17945800000007
+          }
+        ]
+      },
+      {
+        "name": "Selected class first visit",
+        "readyMs": 312.70050000000015,
+        "calls": 6,
+        "payloadBytes": 720,
+        "requests": [
+          {
+            "name": "assessments",
+            "bytes": 141,
+            "ms": 201.23370799999975
+          },
+          {
+            "name": "subject_offerings",
+            "bytes": 59,
+            "ms": 201.41812500000015
+          },
+          {
+            "name": "enrolments",
+            "bytes": 217,
+            "ms": 200.84204099999988
+          },
+          {
+            "name": "submissions",
+            "bytes": 2,
+            "ms": 200.86537499999986
+          },
+          {
+            "name": "marks",
+            "bytes": 210,
+            "ms": 200.95566699999995
+          },
+          {
+            "name": "get_offering_student_totals",
+            "bytes": 91,
+            "ms": 201.0059580000002
+          }
+        ]
+      },
+      {
+        "name": "Export selector first visit",
+        "readyMs": 293.90770799999973,
+        "calls": 1,
+        "payloadBytes": 715,
+        "requests": [
+          {
+            "name": "class_sections",
+            "bytes": 715,
+            "ms": 200.4471249999997
+          }
+        ]
+      },
+      {
+        "name": "Same class Export preview",
+        "readyMs": 305.7097920000001,
+        "calls": 6,
+        "payloadBytes": 720,
+        "requests": [
+          {
+            "name": "assessments",
+            "bytes": 141,
+            "ms": 201.0062499999999
+          },
+          {
+            "name": "subject_offerings",
+            "bytes": 59,
+            "ms": 200.73949999999968
+          },
+          {
+            "name": "enrolments",
+            "bytes": 217,
+            "ms": 200.8324590000002
+          },
+          {
+            "name": "submissions",
+            "bytes": 2,
+            "ms": 200.89975000000004
+          },
+          {
+            "name": "marks",
+            "bytes": 210,
+            "ms": 200.83841699999994
+          },
+          {
+            "name": "get_offering_student_totals",
+            "bytes": 91,
+            "ms": 200.91862500000025
+          }
+        ]
+      },
+      {
+        "name": "Marks selector return",
+        "readyMs": 310.16820800000005,
+        "calls": 1,
+        "payloadBytes": 715,
+        "requests": [
+          {
+            "name": "class_sections",
+            "bytes": 715,
+            "ms": 201.03687500000024
+          }
+        ]
+      },
+      {
+        "name": "Same class Marks return",
+        "readyMs": 294.6571250000002,
+        "calls": 6,
+        "payloadBytes": 720,
+        "requests": [
+          {
+            "name": "assessments",
+            "bytes": 141,
+            "ms": 201.42075000000023
+          },
+          {
+            "name": "subject_offerings",
+            "bytes": 59,
+            "ms": 201.39037499999995
+          },
+          {
+            "name": "enrolments",
+            "bytes": 217,
+            "ms": 204.16754199999968
+          },
+          {
+            "name": "submissions",
+            "bytes": 2,
+            "ms": 204.29808300000013
+          },
+          {
+            "name": "marks",
+            "bytes": 210,
+            "ms": 204.46716700000025
+          },
+          {
+            "name": "get_offering_student_totals",
+            "bytes": 91,
+            "ms": 204.5972499999998
+          }
+        ]
+      },
+      {
+        "name": "Sync Draft (read refresh only)",
+        "readyMs": 809.2963329999998,
+        "calls": 7,
+        "payloadBytes": 1435,
+        "requests": [
+          {
+            "name": "class_sections",
+            "bytes": 715,
+            "ms": 202.1434589999999
+          },
+          {
+            "name": "assessments",
+            "bytes": 141,
+            "ms": 200.95345799999996
+          },
+          {
+            "name": "subject_offerings",
+            "bytes": 59,
+            "ms": 201.29420899999968
+          },
+          {
+            "name": "enrolments",
+            "bytes": 217,
+            "ms": 201.42174999999997
+          },
+          {
+            "name": "submissions",
+            "bytes": 2,
+            "ms": 201.5740410000003
+          },
+          {
+            "name": "marks",
+            "bytes": 210,
+            "ms": 201.85591599999998
+          },
+          {
+            "name": "get_offering_student_totals",
+            "bytes": 91,
+            "ms": 202.75783300000012
+          }
+        ]
+      }
+    ],
+    "correctionCounts": {
+      "bootstrap": 2,
+      "unrelatedTabChanges": 5,
+      "manualQueueRefresh": 1
+    }
+  },
+  "browserAfter": {
+    "base": "http://127.0.0.1:4180",
+    "fixtureLatencyMs": 200,
+    "syntheticBackend": true,
+    "scenarios": [
+      {
+        "name": "Subject Hub assessments",
+        "readyMs": 305.26933299999996,
+        "calls": 1,
+        "payloadBytes": 156,
+        "requests": [
+          {
+            "name": "get_my_subject_assessment_structure",
+            "bytes": 156,
+            "ms": 200.69404200000008
+          }
+        ]
+      },
+      {
+        "name": "Marks selector first visit",
+        "readyMs": 296.69683299999997,
+        "calls": 1,
+        "payloadBytes": 715,
+        "requests": [
+          {
+            "name": "class_sections",
+            "bytes": 715,
+            "ms": 200.42200000000003
+          }
+        ]
+      },
+      {
+        "name": "Selected class first visit",
+        "readyMs": 300.1093750000002,
+        "calls": 1,
+        "payloadBytes": 701,
+        "requests": [
+          {
+            "name": "get_staff_class_detail",
+            "bytes": 701,
+            "ms": 201.09870899999987
+          }
+        ]
+      },
+      {
+        "name": "Export selector first visit",
+        "readyMs": 53.271209,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Same class Export preview",
+        "readyMs": 47.92441599999984,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Marks selector return",
+        "readyMs": 31.456250000000182,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Same class Marks return",
+        "readyMs": 36.065791999999874,
+        "calls": 0,
+        "payloadBytes": 0,
+        "requests": []
+      },
+      {
+        "name": "Sync Draft (read refresh only)",
+        "readyMs": 321.80320800000027,
+        "calls": 1,
+        "payloadBytes": 701,
+        "requests": [
+          {
+            "name": "get_staff_class_detail",
+            "bytes": 701,
+            "ms": 201.36345800000026
+          }
+        ]
+      }
+    ],
+    "correctionCounts": {
+      "bootstrap": 1,
+      "unrelatedTabChanges": 0,
+      "manualQueueRefresh": 0
+    }
+  },
+  "assetBrowser": {
+    "conditions": "cold cache, local build, simulated 150ms latency/200000 bytes per second",
+    "samples": [
+      {
+        "base": "http://127.0.0.1:4179",
+        "sample": 0,
+        "bodyBytes": 1771657,
+        "imageBytes": 1545225,
+        "imageDurationMs": 8313.700000001118,
+        "firstContentfulPaint": 1144,
+        "largestContentfulPaint": 1144,
+        "loadMs": 1071.699999999255
+      },
+      {
+        "base": "http://127.0.0.1:4179",
+        "sample": 1,
+        "bodyBytes": 1771657,
+        "imageBytes": 1545225,
+        "imageDurationMs": 8307.599999999627,
+        "firstContentfulPaint": 1096,
+        "largestContentfulPaint": 1096,
+        "loadMs": 1065.199999999255
+      },
+      {
+        "base": "http://127.0.0.1:4179",
+        "sample": 2,
+        "bodyBytes": 1771657,
+        "imageBytes": 1545225,
+        "imageDurationMs": 8310.5,
+        "firstContentfulPaint": 1096,
+        "largestContentfulPaint": 1096,
+        "loadMs": 1062.9000000003725
+      },
+      {
+        "base": "http://127.0.0.1:4180",
+        "sample": 0,
+        "bodyBytes": 242900,
+        "imageBytes": 16460,
+        "imageDurationMs": 589.3000000007451,
+        "firstContentfulPaint": 1096,
+        "largestContentfulPaint": 1096,
+        "loadMs": 1065.699999999255
+      },
+      {
+        "base": "http://127.0.0.1:4180",
+        "sample": 1,
+        "bodyBytes": 242900,
+        "imageBytes": 16460,
+        "imageDurationMs": 583.1999999992549,
+        "firstContentfulPaint": 1100,
+        "largestContentfulPaint": 1100,
+        "loadMs": 1072.300000000745
+      },
+      {
+        "base": "http://127.0.0.1:4180",
+        "sample": 2,
+        "bodyBytes": 242900,
+        "imageBytes": 16460,
+        "imageDurationMs": 555.0999999996275,
+        "firstContentfulPaint": 1104,
+        "largestContentfulPaint": 1104,
+        "loadMs": 1070.9000000003725
+      }
+    ]
+  },
+  "boundaries": {
+    "browser": "Production Vite builds with synthetic authenticated sessions and intercepted responses; 200ms controlled latency per API request; no real staff JWT accepted by Supabase",
+    "sql": "Live PostgreSQL, SET LOCAL ROLE authenticated and scoped claims, one representative six-enrolment/five-assessment class; temporary candidate definition rolled back",
+    "image": "Cold Chromium cache, local server, 150ms simulated latency, 200000 bytes/s; three samples per build",
+    "production": "Final deployment verification reported separately"
+  }
+}

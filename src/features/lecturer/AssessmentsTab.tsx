@@ -26,7 +26,7 @@ function saveResultIsUncertain(reason: unknown) {
     || (!failure?.code && typeof failure?.message === "string" && /fetch|network|timeout|timed out|abort|gateway/i.test(failure.message));
 }
 
-export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string; subjectCode: string }) {
+export function AssessmentsTab({ offeringId, subjectCode, onChanged }: { offeringId: string; subjectCode: string; onChanged?: () => void }) {
   const [carryMax, setCarryMax] = useState<number | null>(null);
   const [weightInput, setWeightInput] = useState("");
   const [savingWeight, setSavingWeight] = useState(false);
@@ -60,7 +60,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const saveTotalWeight = async (event: React.FormEvent) => {
     event.preventDefault(); if (savingWeight || loading || saveInFlight.current || refreshWarning) return;
     setSavingWeight(true); setError("");
-    try { await saveOfferingWeightage(offeringId, Number(weightInput)); setCarryMax(Number(weightInput)); }
+    try { await saveOfferingWeightage(offeringId, Number(weightInput)); onChanged?.(); setCarryMax(Number(weightInput)); }
     catch (reason) { setError(userError(reason, "Unable to save total weightage.")); }
     finally { setSavingWeight(false); }
   };
@@ -118,7 +118,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
     assessmentDiagnostic(`${operation} started`, { rpc: "mutate_my_subject_assessment_structure" });
     try {
       try {
-        await persistAssessment(offeringId, values, editingId ?? undefined);
+        await persistAssessment(offeringId, values, editingId ?? undefined); onChanged?.();
       } catch (reason) {
         assessmentDiagnostic(`${operation} request failed`, { ...requestFailureDetails(reason), elapsedMs: Math.round(performance.now() - started) });
         if (saveResultIsUncertain(reason)) {
@@ -146,7 +146,7 @@ export function AssessmentsTab({ offeringId, subjectCode }: { offeringId: string
   const removeAssessment = async (item: Assessment) => {
     if (saveInFlight.current || refreshWarning) return;
     const confirmed = window.confirm(`Remove “${item.name}” from every class in this Subject Hub?\n\nThis shared assessment component and its configuration will be deleted. Components with student marks or released classes cannot be removed. This action cannot be undone.`);
-    if (confirmed) try { await deleteAssessment(offeringId, item.id); await reload(); } catch (reason) { setError(userError(reason, "Unable to remove assessment.")); }
+    if (confirmed) try { await deleteAssessment(offeringId, item.id); onChanged?.(); await reload(); } catch (reason) { setError(userError(reason, "Unable to remove assessment.")); }
   };
 
   const mutationDisabled = savingAssessment || Boolean(refreshWarning);

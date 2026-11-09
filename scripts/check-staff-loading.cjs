@@ -26,7 +26,7 @@ async function start(browser, role, mode, dark, held = true) {
   const context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   const page = await context.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  const control = { held, pending: [], mode, failures: new Set(), calls: [] };
+  const control = { held, pending: [], mode, score: 50, failures: new Set(), calls: [], results: [] };
   control.release = () => { control.held = false; control.pending.splice(0).forEach(resolve => resolve()); };
   const user = { id: uid(role === 'admin' ? 1 : 2), aud: 'authenticated', role: 'authenticated', email: 'fixture@example.invalid', app_metadata: { provider: 'email' }, user_metadata: {} };
   const token = [Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'), Buffer.from(JSON.stringify({ sub: user.id, role: 'authenticated', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url'), Buffer.from('fixture-only').toString('base64url')].join('.');
@@ -34,6 +34,9 @@ async function start(browser, role, mode, dark, held = true) {
     sessionStorage.setItem('sb-cueiilftoyqzvlrnmgfe-auth-token', JSON.stringify({ access_token: token, refresh_token: 'fixture-only', expires_at: Math.floor(Date.now() / 1000) + 3600, expires_in: 3600, token_type: 'bearer', user }));
   }, { user, token });
   await page.route('https://*.supabase.co/**', async route => {
+    const started = performance.now();
+    const delay = Number(process.env.CAMS_FIXTURE_LATENCY_MS || 0);
+    if (delay) await new Promise(resolve => setTimeout(resolve, delay));
     const url = new URL(route.request().url()); const name = url.pathname.split('/').pop();
     control.calls.push(name);
     let data;
@@ -51,11 +54,16 @@ async function start(browser, role, mode, dark, held = true) {
       else if (name === 'get_academic_semester_summaries') data = [{ ...history, ...term, is_current: true, status: 'active' }];
       else if (name === 'get_my_lecturer_subject_dashboard') data = { term, current: empty ? [] : [subject], archived: [] };
       else if (name === 'get_my_subject_assessment_structure') data = { carryMax: empty ? null : 50, assessments: empty ? [] : assessments.map(a => ({ id: a.id, name: a.name, type: a.assessment_type, maxMarks: a.max_score, weightage: a.carry_weight, position: a.position })) };
+      else if (name === 'get_staff_class_detail') {
+        const section = sections.find(s => s.id === route.request().postDataJSON().target_section) || sections[0];
+        data = { settings: { carryMax: 50, eligibleThreshold: 40 }, data: { assessments: assessments.map(a => ({ id: a.id, name: a.name, type: a.assessment_type, maxMarks: a.max_score, weightage: a.carry_weight, position: a.position })), sections: [{ id: section.id, programmeId: programme.id, programmeCode: programme.code, programmeName: programme.name, label: section.label, capacity: section.capacity, joinCode: section.join_code, finalised: false, students: empty ? [] : [{ enrolmentId: uid(300), studentId: uid(400), matrixNo: 'FIXTURE1', name: 'Fixture Student', scores: { [uid(1000)]: control.score }, totalCarry: control.score/2, eligible: false }] }] } };
+      }
       else if (name === 'class_sections') data = empty ? [] : sections;
       else if (name === 'assessments') data = empty ? [] : assessments;
       else if (name === 'subject_offerings') data = { carry_max: 50, academic_terms: { eligible_threshold: 40 } };
       else if (name === 'enrolments') data = empty ? [] : enrolments;
       else if (name === 'submissions') data = [];
+      else if (name === 'marks' && route.request().method() === 'POST') { control.score = route.request().postDataJSON()[0].score; data = null; }
       else if (name === 'marks') data = empty ? [] : [{ enrolment_id: uid(300), assessment_id: uid(1000), score: 50, enrolments: { section_id: uid(200), status: 'enrolled' } }];
       else if (name === 'get_offering_student_totals') data = empty ? [] : [{ enrolment_id: uid(300), total_carry: 25, eligible: false }];
       else if (name === 'programmes') data = empty ? [] : [programme];
@@ -65,7 +73,9 @@ async function start(browser, role, mode, dark, held = true) {
       else if (name === 'subjects') data = [{ code: 'ITT550', name: 'Fixture Subject', is_active: true }];
       else { errors.push('Unexpected Supabase request: ' + name); return route.abort(); }
     }
-    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data) });
+    const response = JSON.stringify(data);
+    control.results.push({name, bytes:Buffer.byteLength(response), ms:performance.now()-started});
+    return route.fulfill({ status: 200, contentType: 'application/json', body: response });
   });
   await page.goto(base + '/' + role + '/dashboard');
   await page.getByRole('heading', { name: role === 'admin' ? 'Academic Operations' : 'My Subjects', exact: true }).waitFor();
@@ -159,6 +169,12 @@ async function lecturerScenario(browser, mode, dark, held) {
   await page.getByRole('status').filter({ hasText: 'Refreshing class data' }).waitFor();
   assert.match(await body(page), /Fixture Student/); assert.doesNotMatch(await body(page), /This class has no student roster/); control.release();
   await page.getByRole('button', { name: 'Draft Synced', exact: true }).waitFor();
+  // Optimisation regression: queued edits settle before a cached Export read.
+  await page.getByRole('spinbutton', { name: 'Fixture Quiz mark for Fixture Student', exact: true }).fill('76');
+  await page.getByRole('button', { name: /Export Carry Marks/ }).click();
+  await page.getByRole('button', { name: /Open e-Res Preview/ }).first().click();
+  await page.getByRole('heading', { name: 'e-Res Export', exact: true }).waitFor();
+  assert.match(await body(page), /76/);
   control.held = held;
   await page.getByRole('button', { name: /Mark Issues/ }).click();
   await page.getByRole('heading', { name: 'Mark Issues', exact: true }).waitFor();
@@ -173,8 +189,10 @@ async function lecturerScenario(browser, mode, dark, held) {
   assert.match(await body(page), /Please review fixture/); control.failures.add('get_staff_mark_issues'); control.release();
   await page.getByRole('alert').first().waitFor(); assert.match(await body(page), /Please review fixture/);
   // A successful empty class result and a failed first request remain distinct.
+  await page.clock.install(); await page.clock.fastForward(31000);
   control.mode = 'empty'; await page.getByRole('button', { name: /Export Carry Marks/ }).click();
   await page.getByText('No class sections are available to export.', { exact: true }).waitFor();
+  await page.clock.fastForward(31000);
   control.failures.add('class_sections'); await page.getByRole('button', { name: /Marks Entry & Eligibility/ }).click();
   await page.getByRole('alert').first().waitFor(); assert.doesNotMatch(await body(page), /has 0 class|No class sections yet/);
   control.failures.delete('class_sections'); await page.getByRole('button', { name: 'Try again', exact: true }).click();
@@ -198,7 +216,8 @@ async function lecturerScenario(browser, mode, dark, held) {
   assert.doesNotMatch(await body(page), /No mark issues have been reported/);
   assert.deepEqual(s.errors, []); outcomes.push({ role: 'lecturer', mode, dark, held, passed: true }); await s.context.close();
 }
-(async () => {
+module.exports = { start, chromium };
+if (require.main === module) (async () => {
   const browser = await chromium.launch({ headless: true, ...(process.env.CAMS_BROWSER_EXECUTABLE ? { executablePath: process.env.CAMS_BROWSER_EXECUTABLE } : {}) });
   try {
     for (const dark of [false, true]) {

@@ -209,26 +209,12 @@ function mapOfferingData(assessments: AssessmentRecord[], sectionRows: any[], en
   })) };
 }
 
-// Class IDs are already available from the summary list. Query independent
-// resources together instead of waiting for section -> enrolment -> mark IDs.
-export async function loadSubjectClassDetail(section: ClassSectionSummary) {
-  const db = requireSupabase();
-  const [assessments, settings, enrolments, submissions, marks, totals] = await Promise.all([
-    listAssessments(section.offeringId),
-    loadOfferingWeightage(section.offeringId),
-    db.from("enrolments").select("id,section_id,student_id,students!inner(matrix_no,full_name)").eq("section_id", section.id).eq("status", "enrolled"),
-    db.from("submissions").select("section_id,status").eq("section_id", section.id),
-    db.from("marks").select("enrolment_id,assessment_id,score,enrolments!inner(section_id,status)").eq("enrolments.section_id", section.id).eq("enrolments.status", "enrolled"),
-    db.rpc("get_offering_student_totals", { target_offering: section.offeringId }),
-  ]);
-  for (const response of [enrolments, submissions, marks, totals]) if (response.error) throw response.error;
-  const rawSection = {
-    id: section.id, programme_id: section.programmeId, label: section.label,
-    day_of_week: section.dayOfWeek, starts_at: section.startsAt, ends_at: section.endsAt,
-    room: section.room, capacity: section.capacity, join_code: section.joinCode,
-    programmes: { code: section.programmeCode, name: section.programmeName },
-  };
-  return { data: mapOfferingData(assessments, [rawSection], enrolments.data ?? [], submissions.data ?? [], marks.data ?? [], totals.data ?? []), settings };
+// The server keeps the original class/offering assessment IDs and table RLS.
+export async function loadSubjectClassDetail(section: ClassSectionSummary): Promise<{ data: { assessments: AssessmentRecord[]; sections: SectionRecord[] }; settings: { carryMax: number | null; eligibleThreshold: number } }> {
+  const { data, error } = await requireSupabase().rpc("get_staff_class_detail", { target_section: section.id });
+  if (error) throw error;
+  if (!data) throw new Error("Class details are unavailable.");
+  return data as unknown as { data: { assessments: AssessmentRecord[]; sections: SectionRecord[] }; settings: { carryMax: number | null; eligibleThreshold: number } };
 }
 
 // Combine only the class selector; assessment IDs and settings stay owned by

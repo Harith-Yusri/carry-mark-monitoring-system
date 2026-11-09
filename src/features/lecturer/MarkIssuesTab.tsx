@@ -7,7 +7,7 @@ export const correctionLabels: Record<CorrectionStatus, string> = {
   pending: "Awaiting Admin Approval", approved: "Correction Approved", rejected: "Correction Rejected",
   corrected: "Corrected · awaiting release", released: "Resolved · updated mark released",
 };
-export function MarkIssuesTab({ offeringId }: { offeringId: string }) {
+export function MarkIssuesTab({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {
   const [listData, setItems] = useState<MarkIssue[] | null>(null);
   const items = listData ?? [];
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ export function MarkIssuesTab({ offeringId }: { offeringId: string }) {
     if (inFlight.current) return;
     inFlight.current = true; setBusy(true); setError(""); setNotice("");
     try {
-      await operation(); setNotice(message);
+      await operation(); onChanged?.(); setNotice(message);
       try { await reload(); } catch { setError("Action saved, but the list could not be refreshed. Select Refresh before continuing."); }
     } catch (reason) { setError(correctionError(reason)); }
     finally { inFlight.current = false; setBusy(false); }

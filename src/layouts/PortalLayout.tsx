@@ -51,7 +51,7 @@ export function PortalLayout() {
       <header className="staff-branded-header portal-typography sticky top-0 z-40 border-b border-white/20 shadow-sm">
         <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-8 lg:px-12">
           <div className="flex items-center gap-3">
-            <img className="h-11 w-11 shrink-0 object-contain rounded-lg bg-white shadow-sm" src="/assets/branding/cmms-logo-mark.png" alt="" aria-hidden="true" />
+            <img className="h-11 w-11 shrink-0 object-contain rounded-lg bg-white shadow-sm" src="/assets/branding/cams-portal-144.webp" alt="" aria-hidden="true" />
             <div><div className="text-base font-bold tracking-tight text-white">CAMS</div><div className="mt-1 hidden text-xs font-medium text-[#DDD2EB] sm:block">{user?.role === "admin" ? "Faculty Academic Operations" : "Lecturer Assessment Workspace"}</div></div>
           </div>
           <div className="flex flex-wrap items-center gap-2">

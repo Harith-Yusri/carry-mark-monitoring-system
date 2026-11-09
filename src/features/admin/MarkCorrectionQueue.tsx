@@ -4,7 +4,7 @@ import { workspace as W } from "../lecturer/workspaceStyles";
 import { correctionError, loadCorrectionQueue, reviewCorrection, type Correction } from "../../services/markCorrectionApi";
 
 const labels = { pending: "Pending Approval", approved: "Approved for Correction", rejected: "Rejected", corrected: "Corrected · awaiting release", released: "Completed · Released" };
-export function MarkCorrectionQueue({ onChanged }: { onChanged: () => void }) {
+export function MarkCorrectionQueue({ onChanged }: { onChanged: (knownCount?: number) => void }) {
   const [listData, setItems] = useState<Correction[] | null>(null);
   const items = listData ?? [];
   const [error, setError] = useState(""); const [loading, setLoading] = useState(true);
@@ -12,9 +12,9 @@ export function MarkCorrectionQueue({ onChanged }: { onChanged: () => void }) {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const reload = useCallback(async () => {
     setLoading(true); setError("");
-    try { const data = await loadCorrectionQueue(); setItems(data); setError(""); }
+    try { const data = await loadCorrectionQueue(); setItems(data); setError(""); onChanged(data.filter(item => item.status === "pending" && item.editable).length); }
     finally { setLoading(false); }
-  }, []);
+  }, [onChanged]);
   useEffect(() => { void reload().catch(reason => setError(correctionError(reason))).finally(() => setLoading(false));
     const focus = () => { if (!guard.current) void reload().catch(reason => setError(correctionError(reason))); };
     window.addEventListener("focus", focus); return () => window.removeEventListener("focus", focus);
@@ -23,15 +23,15 @@ export function MarkCorrectionQueue({ onChanged }: { onChanged: () => void }) {
     if (guard.current || !window.confirm(`${approve ? "Approve" : "Reject"} correction for ${request.snapshot.student_number}, ${request.snapshot.assessment_name}? Approval grants a single-cell draft correction and does not change the mark.`)) return;
     guard.current = true; setBusy(true); setError("");
     try {
-      await reviewCorrection(request.id, approve, notes[request.id] ?? ""); onChanged();
-      try { await reload(); } catch { setError("Decision saved, but the queue could not be refreshed. Select Refresh."); }
+      await reviewCorrection(request.id, approve, notes[request.id] ?? "");
+      try { await reload(); } catch { onChanged(); setError("Decision saved, but the queue could not be refreshed. Select Refresh."); }
     } catch (reason) { setError(correctionError(reason)); }
     finally { guard.current = false; setBusy(false); }
   };
   if (listData === null) return <InitialDataState title="Mark Correction Requests" label="Loading correction requests…" error={error} layout="table" onRetry={() => void reload().catch(reason => setError(correctionError(reason)))} />;
 
   return <section className={W.panel}>
-    <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h1 className={W.title}>Mark Correction Requests</h1><p className={W.muted}>Each approval applies to one student and one assessment. Released classes remain locked.</p></div><button disabled={busy} className={W.secondary} onClick={() => void reload().then(onChanged).catch(reason => setError(correctionError(reason)))}>Refresh</button></div>
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h1 className={W.title}>Mark Correction Requests</h1><p className={W.muted}>Each approval applies to one student and one assessment. Released classes remain locked.</p></div><button disabled={busy} className={W.secondary} onClick={() => void reload().catch(reason => setError(correctionError(reason)))}>Refresh</button></div>
     {loading && <RefreshStatus label="Refreshing correction requests…" />}{error && <p role="alert" className={W.error}>{error}</p>}
     {!items.length && !error && <p className={W.muted}>No mark correction requests.</p>}
     <div className="space-y-4">{items.map(request => <article key={request.id} className="staff-content-card rounded-xl border border-slate-200 p-5">

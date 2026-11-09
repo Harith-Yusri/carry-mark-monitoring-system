@@ -337,6 +337,8 @@ export function StudentProvider({ children }: PropsWithChildren) {
       setState(current => ({ ...current, actionLoading: true, error: null }));
       try {
         await api.setNotificationAlertsEnabled(enabled);
+        const push = await import("@/lib/pushNotifications");
+        await push.invalidatePushRegistration();
         applyPayload(await api.loadPortal());
         return true;
       } catch (reason) {

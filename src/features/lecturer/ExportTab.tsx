@@ -1,3 +1,4 @@
+import type { SubjectClassCache } from "../../services/subjectClassCache";
 import { InitialDataState, LoadingState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useState } from "react";
 import { CheckCircle, ChevronLeft, ChevronRight, Download, Users } from "lucide-react";
@@ -6,8 +7,8 @@ import { downloadText } from "../../utils/download";
 import { escapeCsv } from "../../utils/csv";
 import { useSubjectClassData } from "../../hooks/useSubjectClassData";
 
-export function ExportTab({ offeringId, offeringIds, subjectCode, subjectName, academicYear, programmeSemester }: { offeringId: string; offeringIds?: string[]; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
-  const { sections, selectedId, setSelectedId, selected, assessments, carryMax, loading, hasLoaded, detailLoading, error, reload } = useSubjectClassData(offeringId, offeringIds);
+export function ExportTab({ cache, offeringId, offeringIds, subjectCode, subjectName, academicYear, programmeSemester }: { cache?: SubjectClassCache; offeringId: string; offeringIds?: string[]; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
+  const { sections, selectedId, setSelectedId, selected, assessments, carryMax, loading, hasLoaded, detailLoading, error, reload } = useSubjectClassData(offeringId, offeringIds, cache);
   const [downloaded, setDownloaded] = useState(false);
 
   if (!hasLoaded) return <InitialDataState title="Select a Class to Export" label="Loading class sections…" error={error} onRetry={() => void reload().catch(() => undefined)} />;

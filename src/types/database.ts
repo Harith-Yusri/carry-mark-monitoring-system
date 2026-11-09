@@ -867,6 +867,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_staff_class_detail: { Args: { target_section: string }; Returns: Json }
       get_staff_mark_issues: { Args: { target_offering: string }; Returns: Json };
       get_mark_correction_queue: { Args: never; Returns: Json };
       get_mark_correction_pending_count: { Args: never; Returns: number };

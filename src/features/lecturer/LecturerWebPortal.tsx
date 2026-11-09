@@ -1,5 +1,6 @@
+import { SubjectClassCache } from "../../services/subjectClassCache";
 import { LoadingState } from "../../components/StaffDataState";
-import React, { lazy, Suspense, useState } from "react";
+import React, { lazy, Suspense, useMemo, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { workspace as W } from "./workspaceStyles";
 import type { LecturerSubject } from "./LecturerDashboard";
@@ -19,6 +20,7 @@ export function LecturerWebPortal() {
   const [activeTab, setActiveTab] = useState<LecturerTab>("assessments");
 
   const currentSubj = selectedSubj;
+  const classCache = useMemo(() => new SubjectClassCache(), [user?.authId, currentSubj?.offeringId]);
 
   return (
     <div className="lecturer-workspace w-full min-w-0 px-5 pb-12 font-sans text-sm text-slate-800 dark:text-slate-100 sm:px-8 lg:px-12">
@@ -40,10 +42,10 @@ export function LecturerWebPortal() {
               { key: "issues", step: "04", label: "Mark Issues" },
             ].map(t => <button key={t.key} onClick={() => setActiveTab(t.key as LecturerTab)} aria-pressed={activeTab === t.key} className={"flex min-h-11 items-center gap-2 rounded-t-lg border-b-2 px-4 py-3 text-sm transition-colors " + (activeTab === t.key ? "border-[var(--staff-brand-border)] bg-[var(--staff-brand-surface)] font-semibold text-[var(--staff-brand-text)]" : "border-transparent font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-[var(--staff-row-hover)]")}><span className="text-xs">{t.step}</span>{t.label}</button>)}
           </nav>
-          {activeTab === "assessments" && <AssessmentsTab key={currentSubj.offeringId} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
-          {activeTab === "marks" && <MarksEntryTab offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
-          {activeTab === "export" && <ExportTab offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
-          {activeTab === "issues" && <MarkIssuesTab key={currentSubj.offeringId} offeringId={currentSubj.offeringId} />}
+          {activeTab === "assessments" && <AssessmentsTab onChanged={() => classCache.invalidate()} key={currentSubj.offeringId} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
+          {activeTab === "marks" && <MarksEntryTab cache={classCache} offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
+          {activeTab === "export" && <ExportTab cache={classCache} offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
+          {activeTab === "issues" && <MarkIssuesTab onChanged={() => classCache.invalidate()} key={currentSubj.offeringId} offeringId={currentSubj.offeringId} />}
         </div> : null}
       </Suspense>
     </div>

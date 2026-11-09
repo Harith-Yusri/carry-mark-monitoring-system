@@ -123,6 +123,7 @@ function provider(providerName, bootstrapError = null) {
     "@/lib/errors": { friendlyError: () => "Unable to load", joinClassError: () => "Unable to join" },
     "@/lib/startupLog": quiet, "@/lib/sessionDiagnostics": quiet, "@/lib/oauthDiagnostics": quiet,
     "@/services/studentApi": api,
+    "@/services/markIssues": { markIssueError: () => "Unable to report", submitStudentMarkIssue: async () => "fixture-issue" },
     "@/lib/supabase": { supabase: { auth: {
       async getSession() { counters.getSession++; return { data: { session }, error: null }; },
       onAuthStateChange(callback) { listener = callback; return { data: { subscription: { unsubscribe() {} } } }; },

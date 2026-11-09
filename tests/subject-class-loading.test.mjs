@@ -71,7 +71,12 @@ function apiFixture(errorTable=null){
     enrolments:[{id:'enrolment-a',student_id:'student-a',section_id:'a',students:{matrix_no:'FIXTURE',full_name:'Fixture'}}],
     submissions:[{section_id:'a',status:'finalised'}],marks:[{enrolment_id:'enrolment-a',assessment_id:'assessment-a',score:80}],
   };
-  const db={from(table){const call={table,filters:[]};const query={};for(const method of ['select','eq','in','order','single'])query[method]=(...args)=>{if(method==='select')call.select=args[0];else call.filters.push([method,...args]);return query};query.then=resolve=>{calls.push(call);return Promise.resolve({data:rows[table],error:table===errorTable?new Error('backend error'):null}).then(resolve)};return query},async rpc(name,args){calls.push({table:name,args});return {data:[{enrolment_id:'enrolment-a',total_carry:40,eligible:true}],error:null}}};
+  const db={from(table){const call={table,filters:[]};const query={};for(const method of ['select','eq','in','order','single'])query[method]=(...args)=>{if(method==='select')call.select=args[0];else call.filters.push([method,...args]);return query};query.then=resolve=>{calls.push(call);return Promise.resolve({data:rows[table],error:table===errorTable?new Error('backend error'):null}).then(resolve)};return query},async rpc(name,args){calls.push({table:name,args});return {
+    data: name === 'get_staff_class_detail' ? {
+      data:{assessments:[{id:'assessment-a',name:'Test',type:'Test',maxMarks:100,weightage:50,position:0}],sections:[{...summary('a','offering-a'),finalised:true,students:[{enrolmentId:'enrolment-a',scores:{'assessment-a':80},totalCarry:40,eligible:true}]}]},
+      settings:{carryMax:50,eligibleThreshold:40}
+    } : [{enrolment_id:'enrolment-a',total_carry:40,eligible:true}],
+    error:name===errorTable?new Error('backend error'):null}}};
   const module={exports:{}};new Function('module','require',apiCode)(module,name=>name.includes('lecturerSubjectGroups')?{groupLecturerSubjects:x=>x}:{requireSupabase:()=>db});
   return {api:module.exports,calls};
 }
@@ -86,16 +91,16 @@ test('summary query returns only class metadata, aggregate enrolment count and t
 
 test('selected-class fast path preserves assessment IDs, marks, totals and finalisation without querying other classes',async()=>{
   const {api,calls}=apiFixture();const result=await api.loadSubjectClassDetail({...summary('a','offering-a'),programmeName:'Programme'});
-  assert.equal(calls.length,6);assert.equal(calls.some(call=>call.table==='class_sections'),false);
+  assert.equal(calls.length,1);assert.equal(calls.some(call=>call.table==='class_sections'),false);
   assert.equal(result.data.sections.length,1);assert.equal(result.data.sections[0].id,'a');assert.equal(result.data.sections[0].finalised,true);
   assert.equal(result.data.sections[0].students[0].scores['assessment-a'],80);
   assert.equal(result.data.sections[0].students[0].totalCarry,40);assert.equal(result.data.sections[0].students[0].eligible,true);
-  assert.ok(calls.find(call=>call.table==='marks').filters.some(filter=>filter[1]==='enrolments.section_id'&&filter[2]==='a'));
+  assert.deepEqual(calls[0],{table:'get_staff_class_detail',args:{target_section:'a'}});
 });
 
 test('summary and selected-class loader errors propagate rather than producing fake empty data',async()=>{
   await assert.rejects(apiFixture('class_sections').api.loadSubjectClassSummaries(['offering-a']),/backend error/);
-  await assert.rejects(apiFixture('marks').api.loadSubjectClassDetail(summary('a','offering-a')),/backend error/);
+  await assert.rejects(apiFixture('get_staff_class_detail').api.loadSubjectClassDetail(summary('a','offering-a')),/backend error/);
 });
 
 test('pending summaries remain unknown until even an empty response succeeds', async () => {

@@ -307,6 +307,15 @@ export async function setNotificationAlertsEnabled(enabled: boolean) {
   return data;
 }
 
+// Only an identity cache key; server RPCs still authenticate and authorize.
+export async function getPushRegistrationAccount() {
+  await requireSession();
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  if (!data.session) throw new Error("Your session has expired.");
+  return data.session.user.id;
+}
+
 export async function registerPushDevice(installationId: string, expoPushToken: string, platform: "android" | "ios") {
   await requireSession();
   const { data, error } = await supabase.rpc("register_my_push_device", {

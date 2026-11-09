@@ -21,24 +21,29 @@ export function AdminWebPortal() {
   const [pendingCorrections, setPendingCorrections] = useState<number | null>(null);
   const [correctionCountError, setCorrectionCountError] = useState(false);
   const correctionCountRequest = useRef(0);
-  const correctionTerm = useRef(context?.termId);
-  const refreshCorrectionCount = useCallback(() => {
+  const correctionCountFlight = useRef<Promise<void> | null>(null);
+  const refreshCorrectionCount = useCallback((knownCount?: number) => {
+    if (knownCount !== undefined) {
+      correctionCountRequest.current++;
+      setPendingCorrections(knownCount); setCorrectionCountError(false);
+      return;
+    }
+    if (correctionCountFlight.current) return;
     const request = ++correctionCountRequest.current;
-    void loadCorrectionPendingCount().then(count => {
+    const flight = loadCorrectionPendingCount().then(count => {
       if (request === correctionCountRequest.current) { setPendingCorrections(count); setCorrectionCountError(false); }
-    }).catch(() => { if (request === correctionCountRequest.current) setCorrectionCountError(true); });
+    }).catch(() => { if (request === correctionCountRequest.current) setCorrectionCountError(true); })
+      .finally(() => { if (correctionCountFlight.current === flight) correctionCountFlight.current = null; });
+    correctionCountFlight.current = flight;
   }, []);
   useEffect(() => {
-    // A previous semester's count is not a loaded count for the new semester.
-    if (correctionTerm.current !== context?.termId) {
-      correctionTerm.current = context?.termId;
-      setPendingCorrections(null);
-    }
-    refreshCorrectionCount();
-    window.addEventListener("focus", refreshCorrectionCount);
-    const timer = window.setInterval(refreshCorrectionCount, 60000);
-    return () => { correctionCountRequest.current++; window.removeEventListener("focus", refreshCorrectionCount); window.clearInterval(timer); };
-  }, [context?.termId, activeTab, refreshCorrectionCount]);
+    // One bootstrap per actual term; unrelated tab navigation/renders do not poll.
+    correctionCountRequest.current++;
+    correctionCountFlight.current = null;
+    setPendingCorrections(null);
+    if (context?.termId) refreshCorrectionCount();
+    return () => { correctionCountRequest.current++; };
+  }, [context?.termId, refreshCorrectionCount]);
   const pendingSubmissions = useMemo(
     () => submissionAllocations(records).filter(requiresSubmissionAction).length,
     [records],

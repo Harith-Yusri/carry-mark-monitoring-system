@@ -18,8 +18,8 @@ test('multi-programme Hub has one assessment editor and retains every offering f
   const states = ['subject-hub', subject, 'assessments'];
   let cursor = 0;
   const useState = initial => { const i = cursor++; return [states[i] ?? initial, value => { states[i] = value; }]; };
-  const Portal = new Function('React', 'useState', 'lazy', 'Suspense', 'ChevronLeft', 'W', 'useAuth', 'LoadingState', portalCode + ';return LecturerWebPortal;')(
-    React, useState, () => () => null, ({ children }) => children, () => null, {}, () => ({ user: { name: 'Lecturer' } }), LoadingState,
+  const Portal = new Function('React', 'useState', 'lazy', 'Suspense', 'ChevronLeft', 'W', 'useAuth', 'LoadingState', 'useMemo', 'SubjectClassCache', portalCode + ';return LecturerWebPortal;')(
+    React, useState, () => () => null, ({ children }) => children, () => null, {}, () => ({ user: { name: 'Lecturer' } }), LoadingState, fn => fn(), class { invalidate() {} },
   );
   const render = () => { cursor = 0; return Portal(); };
   const tree = render();

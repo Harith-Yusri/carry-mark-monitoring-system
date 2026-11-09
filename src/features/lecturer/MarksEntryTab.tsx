@@ -1,3 +1,4 @@
+import type { SubjectClassCache } from "../../services/subjectClassCache";
 import { InitialDataState, LoadingState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useRef, useState } from "react";
 import { Check, CheckCircle, ChevronLeft, ChevronRight, Copy, KeyRound, MoreVertical, Plus, RefreshCw, Users, X } from "lucide-react";
@@ -14,11 +15,11 @@ type ClassSection = Omit<SectionRecord, "students"> & { students: StudentRecord[
 const blankForm = { label: "", capacity: "", programmeId: "" };
 type ClassForm = typeof blankForm;
 
-export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, subjectCode }: { offeringId: string; offeringIds?: string[]; offeringProgrammeId: string; subjectCode: string }) {
+export function MarksEntryTab({ cache, offeringId, offeringIds, offeringProgrammeId, subjectCode }: { cache?: SubjectClassCache; offeringId: string; offeringIds?: string[]; offeringProgrammeId: string; subjectCode: string }) {
   const C = useColors();
   const { user } = useAuth();
   const { sections, selectedId, setSelectedId, selected: selectedRecord, assessments, carryMax, eligibleThreshold,
-    loading, hasLoaded, detailLoading, error: loadError, reload, updateDetailedSections } = useSubjectClassData(offeringId, offeringIds);
+    loading, hasLoaded, detailLoading, error: loadError, reload, updateDetailedSections } = useSubjectClassData(offeringId, offeringIds, cache);
   const selected = selectedRecord ? { ...selectedRecord, students: selectedRecord.students.map(student => ({ ...student, id: student.enrolmentId })) } : null;
   const [programmes, setProgrammes] = useState<ProgrammeOption[]>([]);
   const [modal, setModal] = useState<"add" | "edit" | null>(null);
@@ -59,13 +60,13 @@ export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, su
     await reload(); closeModal();
   };
   const removeSection = async (section: ClassSectionSummary) => { setMenuId(null); if (window.confirm(`Remove “${section.label}”?\n\nThe class section and its mark-entry records will be deleted. This cannot be undone.`)) { await deleteSection(section.id); await reload(); if (selectedId === section.id) setSelectedId(null); } };
-  const flushPendingMarks = async () => {
+  const flushPendingMarks = async (sectionId: string | null = selectedId) => {
     if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
     saveTimer.current = null;
     const rows = [...pendingMarks.current.values()];
     pendingMarks.current.clear();
     if (!rows.length) return;
-    try { await upsertMarks(rows); }
+    try { if (cache && sectionId) await cache.write(sectionId, () => upsertMarks(rows)); else await upsertMarks(rows); }
     catch (reason) {
       for (const row of rows) {
         const key = `${row.enrolmentId}:${row.assessmentId}`;
@@ -75,6 +76,19 @@ export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, su
       throw reason;
     }
   };
+  const flushRef = useRef(flushPendingMarks);
+  flushRef.current = flushPendingMarks;
+  useEffect(() => {
+    if (!cache || !selectedId) return;
+    const flush = () => flushRef.current(selectedId);
+    const remove = cache.setFlusher(selectedId, flush);
+    return () => {
+      // A tab change must commit queued draft edits before Export reads them.
+      const pending = flush();
+      void pending.catch(() => undefined);
+      remove();
+    };
+  }, [cache, selectedId]);
   const updateMark = (studentId: string, assessmentId: string, rawValue: string) => {
     if (!selected || selected.finalised || !user?.authId) return;
     const assessment = assessments.find(item => item.id === assessmentId);
@@ -91,7 +105,7 @@ export function MarksEntryTab({ offeringId, offeringIds, offeringProgrammeId, su
     }) }));
   };
   const finalise = async () => { if (selected && !selected.finalised && window.confirm(`Release carry marks for ${selected.label}?\n\nMarks will be locked, released to students, and students will be notified.`)) { await finaliseSection(selected.id); await reload(); } };
-  const syncMarks = async () => { await flushPendingMarks(); await reload(); setSynced(true); window.setTimeout(() => setSynced(false), 2200); };
+  const syncMarks = async () => { await flushPendingMarks(); await reload("detail"); setSynced(true); window.setTimeout(() => setSynced(false), 2200); };
   const copyJoinCode = async (section: Pick<SectionRecord, "id" | "joinCode">) => {
     if (!section.joinCode) return;
     await navigator.clipboard.writeText(section.joinCode);
