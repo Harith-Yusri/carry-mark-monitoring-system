@@ -46,4 +46,12 @@ Browser checks pass for private save, duplicate click, draft resume, release/rel
 
 ## Deployment
 
-Pending verified publication of the one forward migration and the existing `cams-staff` Worker. No mobile, Edge Function, semester lifecycle or unrelated Admin deployment change is required. Unrelated local drafts are excluded from the release checkout.
+Released on 18 November 2026:
+
+- Source commit `cf9329686b1aaa465bd5ae2eb0d08b3b0ea008ad`, pushed to main.
+- Supabase project `cueiilftoyqzvlrnmgfe`: only forward migration `202611180003` applied transactionally and recorded in migration history. New public RPCs grant authenticated execution and deny anonymous access; shared private staging is not callable by API users.
+- Existing Worker `cams-staff`, https://unicams.online, version `17107f2c-2ebb-44f4-a3a4-061fbdbc304d`.
+- Root/Lecturer/Admin routes return 200 with `index-nJLAEmVj.js`. Entry, Marks Entry and Mark Issues JavaScript hash-match the isolated release build.
+- Direct-correction SQL regression passed again against deployed definitions in a rolled-back fixture transaction. Live anonymous RPC smoke test returns 401/42501 permission denied, confirming the new endpoint is present and protected.
+- Live-hosted Edit Mark, existing Student issue outcomes and ten staff loading scenarios passed using intercepted REST/WebSocket fixtures. Actual database permissions, privacy, score updates and audit are checked by the authenticated-role SQL fixtures. No real academic mark was changed by testing; no physical-device push receipt was manually exercised.
+- No mobile OTA, Edge Function, semester lifecycle, scoring/weightage or unrelated Admin change was deployed. Unrelated local drafts remain in the original workspace and were excluded from the release checkout.
