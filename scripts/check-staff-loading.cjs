@@ -26,8 +26,26 @@ async function start(browser, role, mode, dark, held = true) {
   const context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   const page = await context.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  const control = { held, pending: [], mode, score: 50, failures: new Set(), calls: [], results: [] };
+  const control = { held, pending: [], mode, notifications: [{ id: uid(600), title: 'New student mark issue', body: 'Fixture report', read_at: null, created_at: issue.created_at,
+    data: { studentName: 'Fixture Student', subjectCode: 'ITT550', classLabel: 'Class A', assessmentName: 'Fixture Quiz', submittedAt: issue.created_at } }], issue: structuredClone(issue), score: 50, failures: new Set(), calls: [], results: [] };
   control.release = () => { control.held = false; control.pending.splice(0).forEach(resolve => resolve()); };
+  // Terminate every test WebSocket locally; fixture JWTs never reach Realtime.
+  await page.routeWebSocket('wss://*.supabase.co/**', socket => {
+    let joined;
+    socket.onMessage(raw => {
+      const message = JSON.parse(String(raw));
+      const [joinRef, ref, topic, event, payload] = message;
+      if (event === 'phx_join') {
+        const filters = (payload.config?.postgres_changes || []).map((filter, i) => ({ ...filter, id: i + 1 }));
+        joined = {joinRef, topic, filters};
+        socket.send(JSON.stringify([joinRef, ref, topic, 'phx_reply', {status:'ok',response:{postgres_changes:filters}}]));
+        control.emitNotification = record => {
+          const filter = joined.filters.find(filter => filter.event === 'INSERT');
+          socket.send(JSON.stringify([joined.joinRef, null, joined.topic, 'postgres_changes', {ids:[filter.id],data:{schema:'public',table:'notifications',type:'INSERT',commit_timestamp:new Date().toISOString(),columns:[],record:{...record,type:'mark_issue_submitted'},old_record:{}}}]));
+        };
+      } else if (event === 'heartbeat' || event === 'phx_leave') socket.send(JSON.stringify([joinRef,ref,topic,'phx_reply',{status:'ok',response:{}}]));
+    });
+  });
   const user = { id: uid(role === 'admin' ? 1 : 2), aud: 'authenticated', role: 'authenticated', email: 'fixture@example.invalid', app_metadata: { provider: 'email' }, user_metadata: {} };
   const token = [Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'), Buffer.from(JSON.stringify({ sub: user.id, role: 'authenticated', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url'), Buffer.from('fixture-only').toString('base64url')].join('.');
   await context.addInitScript(({ user, token }) => {
@@ -47,9 +65,30 @@ async function start(browser, role, mode, dark, held = true) {
       if (control.held) await new Promise(resolve => control.pending.push(resolve));
       if (control.mode === 'failure' || control.failures.has(name)) return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ code: 'FIXTURE_ERROR', message: 'Fixture request failed' }) });
       if (name === 'get_admin_current_overview') data = { term, programmes: empty ? [] : [programme], lecturers: empty ? [] : [{ auth_id: uid(2), staff_no: 'LECT-FIXTURE', full_name: 'Fixture Lecturer', allocations: sections.map(s => ({ offering_id: offering, offering_status: 'active', offering_updated_at: '2026-11-01T00:00:00Z', subject_code: 'ITT550', subject_name: 'Fixture Subject', section_id: s.id, class_label: s.label, programme_id: programme.id, programme_code: programme.code, programme_name: programme.name, section_updated_at: '2026-11-01T00:00:00Z', student_count: 1, deadline_at: term.default_deadline, submission_status: 'draft', submission_updated_at: null })) }] };
-      else if (name === 'get_mark_correction_pending_count') data = empty ? 0 : 1;
-      else if (name === 'get_mark_correction_queue') data = empty ? [] : [correction];
-      else if (name === 'get_staff_mark_issues') data = empty ? [] : [issue];
+      else if (name === 'get_my_lecturer_notifications') data = { items: empty ? [] : control.notifications, unread_count: empty ? 0 : control.notifications.filter(n=>!n.read_at).length, has_more: false };
+      else if (name === 'open_my_mark_issue_notification') {
+        const item = control.notifications.find(n=>n.id===route.request().postDataJSON().target_notification);
+        if (!item) return route.fulfill({ status:400, contentType:'application/json',body:JSON.stringify({message:'CAMS: This notification is not available to your account.'}) });
+        item.read_at ||= new Date().toISOString();
+        data = {notification_id:item.id,read_at:item.read_at,unread_count:control.notifications.filter(n=>!n.read_at).length,issue_id:control.issue.id,subject_rows:[subject]};
+      }
+      else if (name === 'get_staff_mark_issues') data = empty ? [] : [control.issue];
+      else if (name === 'stage_mark_issue_correction') {
+        const args = route.request().postDataJSON();
+        assert.equal(args.target_issue, control.issue.id);
+        control.issue.corrections = [{ ...correction, status: 'corrected', corrected_score: args.new_score, reason: args.correction_reason }]; data = correction.id;
+      }
+      else if (name === 'respond_to_mark_issue') {
+        const args = route.request().postDataJSON();
+        assert.equal(args.target_issue, control.issue.id); assert.equal(args.decision, 'rejected');
+        Object.assign(control.issue, {status:'rejected',response:args.lecturer_response}); data = null;
+      }
+      else if (name === 'release_corrected_mark') {
+        assert.equal(route.request().postDataJSON().target_request, correction.id);
+        const draft = control.issue.corrections[0]; draft.status='released';
+        Object.assign(control.issue,{status:'resolved',response:draft.reason,current_score:draft.corrected_score}); data = null;
+      }
+      else if (name === 'lecturer_contacts') data = [];
       else if (name === 'get_admin_semester_history') data = empty ? [] : [history];
       else if (name === 'get_academic_semester_summaries') data = [{ ...history, ...term, is_current: true, status: 'active' }];
       else if (name === 'get_my_lecturer_subject_dashboard') data = { term, current: empty ? [] : [subject], archived: [] };
@@ -89,7 +128,7 @@ async function loading(page, forbidden) {
 }
 async function adminScenario(browser, mode, dark, held) {
   const s = await start(browser, 'admin', mode, dark, held); const { page, control } = s;
-  const tabs = [['Submission Monitor', 'Submission Monitor'], ['Lecturer Directory', 'Lecturer Directory'], ['Reports & Exports', 'Reports & Exports'], ['Past Semesters', 'Past Semesters'], ['System Settings', 'System Settings'], ['Mark Corrections', 'Mark Correction Requests']];
+  const tabs = [['Submission Monitor', 'Submission Monitor'], ['Lecturer Directory', 'Lecturer Directory'], ['Reports & Exports', 'Reports & Exports'], ['Past Semesters', 'Past Semesters'], ['System Settings', 'System Settings']];
   if (held) {
     await loading(page, [/All lecturer submissions are released/, /0 Open/, /0 lecturer records/]);
     await page.screenshot({ path: path.join(out, `admin-${dark ? 'dark' : 'light'}-loading.png`) });
@@ -109,18 +148,8 @@ async function adminScenario(browser, mode, dark, held) {
       assert.doesNotMatch(await body(page), /All lecturer submissions are released|No submissions match|No archived semesters|No mark correction requests/);
     }
   }
-  if (mode !== 'failure') {
-    assert.match(await body(page), mode === 'empty' ? /No mark correction requests/ : /Fixture Student/);
-    // Both a successful and failed background refresh must retain visible prior data.
-    control.held = true;
-    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-    await page.getByRole('status').filter({ hasText: 'Refreshing correction requests' }).waitFor();
-    assert.match(await body(page), mode === 'empty' ? /No mark correction requests/ : /Fixture Student/);
-    control.failures.add('get_mark_correction_queue'); control.release();
-    await page.getByRole('alert').first().waitFor();
-    if (mode !== 'empty') assert.match(await body(page), /Fixture Student/);
-    else assert.doesNotMatch(await body(page), /No mark correction requests/);
-  }
+  assert.equal(await page.getByRole('button', { name: /Mark Corrections/ }).count(), 0);
+  assert.equal(control.calls.some(name => /mark_correction_(queue|pending_count)/.test(name)), false);
   assert.deepEqual(s.errors, []); outcomes.push({ role: 'admin', mode, dark, held, passed: true }); await s.context.close();
 }
 async function lecturerScenario(browser, mode, dark, held) {
@@ -180,8 +209,10 @@ async function lecturerScenario(browser, mode, dark, held) {
   await page.getByRole('heading', { name: 'Mark Issues', exact: true }).waitFor();
   if (held) { await loading(page, [/No mark issues have been reported/]); control.release(); }
   await page.getByText('Please review fixture', { exact: true }).waitFor();
-  // Pending correction must never momentarily present edit/release permissions.
-  assert.equal(await page.getByRole('button', { name: 'Save Correction', exact: true }).count(), 0);
+  // A legacy pending request can be corrected directly; it cannot be released before staging.
+  assert.equal(await page.getByRole('button', { name: 'Correct Mark', exact: true }).count(), 1);
+  assert.equal(await page.getByRole('button', { name: 'Correct Mark', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Request Mark Correction', exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: 'Release Updated Mark', exact: true }).count(), 0);
   control.held = true;
   await page.getByRole('button', { name: 'Refresh', exact: true }).click();

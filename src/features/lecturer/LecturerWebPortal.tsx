@@ -1,11 +1,15 @@
 import { SubjectClassCache } from "../../services/subjectClassCache";
-import { LoadingState } from "../../components/StaffDataState";
-import React, { lazy, Suspense, useMemo, useState } from "react";
+import { InitialDataState, LoadingState } from "../../components/StaffDataState";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { workspace as W } from "./workspaceStyles";
 import type { LecturerSubject } from "./LecturerDashboard";
 import { LecturerTab, LecturerScreen } from "../../types";
 import { useAuth } from "../../context/AuthContext";
+
+import { useLocation, useSearchParams } from "react-router";
+import { useLecturerNotificationStore } from "./LecturerNotifications";
+import { correctionError } from "../../services/markCorrectionApi";
 
 const LecturerDashboard = lazy(() => import("./LecturerDashboard").then((module) => ({ default: module.LecturerDashboard })));
 const AssessmentsTab = lazy(() => import("./AssessmentsTab").then((module) => ({ default: module.AssessmentsTab })));
@@ -19,15 +23,43 @@ export function LecturerWebPortal() {
   const [selectedSubj, setSelectedSubj] = useState<LecturerSubject | null>(null);
   const [activeTab, setActiveTab] = useState<LecturerTab>("assessments");
 
+  const store = useLecturerNotificationStore();
+  const locationKey = useLocation().key;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const notificationId = searchParams.get("markIssueNotification");
+  const [target, setTarget] = useState<{ notificationId: string; issueId: string } | null>(null);
+  const [opening, setOpening] = useState(false);
+  const [openError, setOpenError] = useState("");
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (!notificationId || !store) return;
+    let active = true;
+    setOpening(true); setOpenError("");
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(notificationId)) {
+      setOpening(false); setOpenError("This notification link is invalid."); return;
+    }
+    store.open(notificationId).then(result => {
+      if (!active) return;
+      setSelectedSubj(result.subject); setScreen("subject-hub"); setActiveTab("issues");
+      setTarget({ notificationId, issueId: result.issueId });
+    }).catch(reason => { if (active) setOpenError(correctionError(reason, "Unable to open this mark issue. Try again.")); })
+      .finally(() => { if (active) setOpening(false); });
+    return () => { active = false; };
+  }, [notificationId, locationKey, store, retry]);
+
   const currentSubj = selectedSubj;
   const classCache = useMemo(() => new SubjectClassCache(), [user?.authId, currentSubj?.offeringId]);
 
+  if (notificationId && (opening || openError || target?.notificationId !== notificationId)) return <div className="px-5 sm:px-8 lg:px-12">
+    <InitialDataState title="Open mark issue" label="Opening the reported mark issue…" error={openError} onRetry={() => setRetry(value => value + 1)} />
+    <button className={W.secondary} onClick={() => { setSearchParams({}); setScreen("dashboard"); }}>Back to My Subjects</button>
+  </div>;
   return (
     <div className="lecturer-workspace w-full min-w-0 px-5 pb-12 font-sans text-sm text-slate-800 dark:text-slate-100 sm:px-8 lg:px-12">
       <Suspense fallback={<LoadingState layout={activeTab === "assessments" || activeTab === "issues" ? "table" : "cards"} />}>
         {screen === "dashboard" ? <LecturerDashboard onSelectSubject={subj => { setSelectedSubj(subj); setScreen("subject-hub"); setActiveTab("assessments"); }} /> : currentSubj ? <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <button onClick={() => setScreen("dashboard")} className={W.secondary}><ChevronLeft size={16} /> Back to My Subjects</button>
+            <button onClick={() => { setSearchParams({}); setTarget(null); setScreen("dashboard"); }} className={W.secondary}><ChevronLeft size={16} /> Back to My Subjects</button>
             <span className={W.muted}>Subject Hub · {currentSubj.code}</span>
           </div>
           <section className={W.panel + " border-l-4 border-l-purple-900"}>
@@ -45,7 +77,7 @@ export function LecturerWebPortal() {
           {activeTab === "assessments" && <AssessmentsTab onChanged={() => classCache.invalidate()} key={currentSubj.offeringId} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
           {activeTab === "marks" && <MarksEntryTab cache={classCache} offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
           {activeTab === "export" && <ExportTab cache={classCache} offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
-          {activeTab === "issues" && <MarkIssuesTab onChanged={() => classCache.invalidate()} key={currentSubj.offeringId} offeringId={currentSubj.offeringId} />}
+          {activeTab === "issues" && <MarkIssuesTab focusedIssueId={notificationId ? target?.issueId : undefined} onChanged={() => classCache.invalidate()} key={currentSubj.offeringId} offeringId={currentSubj.offeringId} />}
         </div> : null}
       </Suspense>
     </div>

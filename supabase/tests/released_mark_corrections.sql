@@ -6,7 +6,7 @@ declare
   lect uuid; other_lect uuid; admin uuid; student uuid; student_auth uuid; second_student uuid;
   term uuid; programme uuid; subject uuid; offering uuid; section uuid; second_section uuid;
   enrol uuid; enrol2 uuid; assessment uuid; assessment2 uuid; mark uuid; issue uuid; issue2 uuid; req uuid; rejected_req uuid;
-  result jsonb; before_total numeric; original_release uuid:=gen_random_uuid(); bad boolean;
+  result jsonb; before_total numeric; original_release uuid:=gen_random_uuid(); invalid_score numeric; legacy_status text;
   fixture text:='CORR'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,12));
 begin
   select id into lect from public.profiles where role='lecturer' and is_active limit 1;
@@ -52,35 +52,52 @@ begin
   exception when others then if sqlerrm not like 'CAMS: Only the assigned lecturer%' then raise; end if; end;
   perform set_config('request.jwt.claim.sub',lect::text,true);
   if jsonb_array_length(public.get_staff_mark_issues(offering))<>1 then raise exception 'Assigned lecturer cannot see issue'; end if;
-  perform public.respond_to_mark_issue(issue,'reviewing','Review underway.');
-  -- A correct mark can be resolved without Admin involvement.
+  -- Only Reject or Correct Mark are valid lecturer outcomes.
+  begin perform public.respond_to_mark_issue(issue,'reviewing','Review underway.'); raise exception 'Reviewing outcome still allowed';
+  exception when others then if sqlerrm not like 'CAMS: Reject requires%' then raise; end if; end;
+  begin perform public.respond_to_mark_issue(issue,'resolved','Checked.'); raise exception 'Resolve outcome still allowed';
+  exception when others then if sqlerrm not like 'CAMS: Reject requires%' then raise; end if; end;
+  begin perform public.respond_to_mark_issue(issue,'rejected',' '); raise exception 'Blank rejection allowed';
+  exception when others then if sqlerrm not like 'CAMS: Reject requires%' then raise; end if; end;
   perform set_config('request.jwt.claim.sub',student_auth::text,true);
   issue2:=public.submit_student_mark_issue(enrol,assessment2,'Check this assessment.',gen_random_uuid());
   perform set_config('request.jwt.claim.sub',lect::text,true);
-  perform public.respond_to_mark_issue(issue2,'resolved','Checked; this mark is correct.');
-  if (select status from public.mark_disputes where id=issue2)<>'resolved' then raise exception 'Direct resolution failed'; end if;
-  rejected_req:=public.request_mark_correction(issue,'Incorrect initial entry.');
-  begin perform public.update_approved_mark(rejected_req,43); raise exception 'Pending correction editable';
-  exception when others then if sqlerrm not like 'CAMS: This mark is not approved%' then raise; end if; end;
-  begin perform public.request_mark_correction(issue,'Duplicate request'); raise exception 'Duplicate correction allowed';
-  exception when others then if sqlerrm not like 'CAMS: An active correction request%' then raise; end if; end;
-  begin perform public.review_mark_correction(rejected_req,true,'Self approval'); raise exception 'Lecturer approval allowed';
-  exception when others then if sqlerrm<>'CAMS: Administrator approval is required.' then raise; end if; end;
+  perform public.respond_to_mark_issue(issue2,'rejected','Checked; the existing mark is correct.');
+  if not exists(select 1 from public.mark_disputes where id=issue2 and status='rejected' and responded_by=lect
+    and responded_at is not null and response='Checked; the existing mark is correct.') then raise exception 'Rejection audit incomplete'; end if;
+  if not exists(select 1 from public.mark_correction_events where dispute_id=issue2 and action='report_rejected' and actor_id=lect) then raise exception 'Rejection event missing'; end if;
+  if (select score from public.marks where enrolment_id=enrol and assessment_id=assessment2)<>6.6 then raise exception 'Reject changed score'; end if;
+  perform set_config('request.jwt.claim.sub',student_auth::text,true);
+  if not exists(select 1 from jsonb_array_elements(public.get_my_mark_issue_workspace(offering)->'issues') q
+    where q->>'id'=issue2::text and q->>'status'='rejected' and q->>'response'='Checked; the existing mark is correct.') then raise exception 'Student cannot see rejection response'; end if;
+  begin perform public.stage_mark_issue_correction(issue,43,'Student attempt'); raise exception 'Student correction allowed';
+  exception when others then if sqlerrm not like 'CAMS: This mark issue is not available%' then raise; end if; end;
   perform set_config('request.jwt.claim.sub',admin::text,true);
-  if public.get_mark_correction_pending_count()<1 then raise exception 'Admin pending count missing'; end if;
-  if not exists(select 1 from jsonb_array_elements(public.get_mark_correction_queue()) q where q->>'id'=rejected_req::text) then raise exception 'Admin request missing'; end if;
-  perform public.review_mark_correction(rejected_req,false,'Evidence needed.');
+  begin perform public.respond_to_mark_issue(issue,'rejected','Admin attempt'); raise exception 'Admin rejection allowed';
+  exception when others then if sqlerrm not like 'CAMS: This mark issue is not available%' then raise; end if; end;
+  begin perform public.stage_mark_issue_correction(issue,43,'Admin attempt'); raise exception 'Admin correction allowed';
+  exception when others then if sqlerrm not like 'CAMS: This mark issue is not available%' then raise; end if; end;
+  begin perform public.review_mark_correction(gen_random_uuid(),true,'Admin attempt'); raise exception 'Admin approval still available';
+  exception when others then if sqlerrm not like 'CAMS: This approval workflow has retired%' then raise; end if; end;
+  perform set_config('request.jwt.claim.sub',other_lect::text,true);
+  begin perform public.stage_mark_issue_correction(issue,43,'Other lecturer attempt'); raise exception 'Other lecturer correction allowed';
+  exception when others then if sqlerrm not like 'CAMS: This mark issue is not available%' then raise; end if; end;
   perform set_config('request.jwt.claim.sub',lect::text,true);
-  begin perform public.update_approved_mark(rejected_req,43); raise exception 'Rejected correction editable';
-  exception when others then if sqlerrm not like 'CAMS: This mark is not approved%' then raise; end if; end;
-  req:=public.request_mark_correction(issue,'Evidence verified; initial score incorrect.');
-  perform set_config('request.jwt.claim.sub',admin::text,true);
-  perform public.review_mark_correction(req,true,'Approved for this cell only.');
-  begin perform public.review_mark_correction(req,true,'Race'); raise exception 'Double approval allowed';
-  exception when others then if sqlerrm not like 'CAMS: This request has already been reviewed%' then raise; end if; end;
-  perform set_config('request.jwt.claim.sub',lect::text,true);
-  -- Bare approval is not a direct-table unlock, even for a privileged runner.
-  begin update public.marks set score=43 where id=mark; raise exception 'Approved direct write allowed';
+  begin perform public.stage_mark_issue_correction(issue,43,' '); raise exception 'Blank correction reason allowed';
+  exception when others then if sqlerrm not like 'CAMS: A correction reason%' then raise; end if; end;
+  foreach invalid_score in array array[null::numeric,-1,51,43.001,'NaN'::numeric,'Infinity'::numeric,'-Infinity'::numeric] loop
+    begin perform public.stage_mark_issue_correction(issue,invalid_score,'Verified entry error.'); raise exception 'Invalid score allowed';
+    exception when others then if sqlerrm not like 'CAMS: Enter a score from 0%' then raise; end if; end;
+  end loop;
+  begin perform public.stage_mark_issue_correction(issue,33,'Unchanged entry'); raise exception 'Unchanged score allowed';
+  exception when others then if sqlerrm not like 'CAMS: The corrected score must differ%' then raise; end if; end;
+  req:=public.stage_mark_issue_correction(issue,43,'Evidence verified; initial score incorrect.');
+  if public.stage_mark_issue_correction(issue,43,'Evidence verified; initial score incorrect.')<>req then raise exception 'Draft retry not idempotent'; end if;
+  begin perform public.stage_mark_issue_correction(issue,44,'Different stale action'); raise exception 'Stale draft overwrite allowed';
+  exception when others then if sqlerrm not like 'CAMS: A correction is already awaiting release%' then raise; end if; end;
+  if not exists(select 1 from public.mark_correction_requests where id=req and status='corrected' and reviewed_by is null and reviewed_at is null) then raise exception 'Correction still requires review'; end if;
+  -- Drafts and client flags are never direct-table unlocks.
+  begin update public.marks set score=43 where id=mark; raise exception 'Draft direct write allowed';
   exception when others then if sqlerrm not like 'CAMS: Released marks are locked%' then raise; end if; end;
   begin update public.marks set score=8 where enrolment_id=enrol and assessment_id=assessment2; raise exception 'Other assessment unlocked';
   exception when others then if sqlerrm not like 'CAMS: Released marks are locked%' then raise; end if; end;
@@ -88,76 +105,97 @@ begin
   exception when others then if sqlerrm not like 'CAMS: Released marks are locked%' then raise; end if; end;
   begin perform set_config('cams.correction_approved','true',true); update public.marks set score=43 where id=mark; raise exception 'Client flag unlocked marks';
   exception when others then if sqlerrm not like 'CAMS: Released marks are locked%' then raise; end if; end;
-  perform set_config('request.jwt.claim.sub',other_lect::text,true);
-  begin perform public.update_approved_mark(req,43); raise exception 'Other lecturer correction allowed';
-  exception when others then if sqlerrm not like 'CAMS: This mark issue is not available%' then raise; end if; end;
-  perform set_config('request.jwt.claim.sub',lect::text,true);
-  begin perform public.update_approved_mark(req,51); raise exception 'Score exceeds maximum';
-  exception when others then if sqlerrm not like 'CAMS: Enter a score from 0%' then raise; end if; end;
-  perform public.update_approved_mark(req,43);
-  if (select score from public.marks where id=mark)<>33 then raise exception 'Draft correction leaked into Released mark'; end if;
-  begin perform public.update_approved_mark(req,44); raise exception 'Approval consumed twice';
-  exception when others then if sqlerrm not like 'CAMS: This mark is not approved%' then raise; end if; end;
+  if (select score from public.marks where id=mark)<>33 then raise exception 'Draft score published'; end if;
   perform set_config('request.jwt.claim.sub',student_auth::text,true);
   result:=public.get_my_mark_issue_workspace(offering);
-  if result::text like '%corrected_score%' or result::text like '%decision_note%' or result::text like '%Evidence verified%' then raise exception 'Student draft/internal data leaked'; end if;
-  if not exists(select 1 from jsonb_array_elements(result->'issues') q where q->>'id'=issue::text and q->>'correction_status'='corrected') then raise exception 'Student correction status missing'; end if;
+  if result::text like '%corrected_score%' or result::text like '%decision_note%' or result::text like '%Evidence verified%' then raise exception 'Private draft data leaked'; end if;
+  if not exists(select 1 from jsonb_array_elements(result->'issues') q where q->>'id'=issue::text and q->>'correction_status'='corrected') then raise exception 'Draft progress missing'; end if;
   if not exists(select 1 from jsonb_array_elements(public.get_my_mobile_portal()->'subjects') q
-    where q->>'offering_id'=offering::text and (q->>'carry_mark')::numeric=33 and (q->>'eligible')::boolean=false) then
-    raise exception 'Student portal leaked draft corrected carry total';
-  end if;
-  perform set_config('request.jwt.claim.sub',lect::text,true);
-  -- Admin can revoke an unused approval without touching the Released score.
-  perform set_config('request.jwt.claim.sub',student_auth::text,true);
-  issue2:=public.submit_student_mark_issue(enrol,assessment2,'New evidence on this mark.',gen_random_uuid());
-  perform set_config('request.jwt.claim.sub',lect::text,true);
-  rejected_req:=public.request_mark_correction(issue2,'Review new evidence.');
+    where q->>'offering_id'=offering::text and (q->>'carry_mark')::numeric=33 and (q->>'eligible')::boolean=false) then raise exception 'Student portal leaked draft total'; end if;
+  -- A rejected private draft cannot be released. Also exercise legacy pending
+  -- and approved requests without deleting their original review history.
+  foreach legacy_status in array array['pending','approved','corrected'] loop
+    issue2:=public.submit_student_mark_issue(enrol,assessment2,'New evidence on this mark.',gen_random_uuid());
+    perform set_config('request.jwt.claim.sub',lect::text,true);
+    rejected_req:=public.stage_mark_issue_correction(issue2,7,'Review new evidence.');
+    update public.mark_correction_requests set status=legacy_status,
+      reviewed_by=case when legacy_status='approved' then admin else null end,
+      reviewed_at=case when legacy_status='approved' then now() else null end,
+      decision_note=case when legacy_status='approved' then 'Historical approval' else null end,
+      corrected_score=case when legacy_status='corrected' then 7 else null end where id=rejected_req;
+    if legacy_status<>'corrected' then
+      if public.stage_mark_issue_correction(issue2,7,'Confirmed entry error.')<>rejected_req then raise exception 'Legacy request not reused'; end if;
+      if legacy_status='approved' and not exists(select 1 from public.mark_correction_requests where id=rejected_req and reviewed_by=admin and decision_note='Historical approval') then raise exception 'Historical review lost'; end if;
+    end if;
+    perform public.respond_to_mark_issue(issue2,'rejected','Further checks confirm the existing score.');
+    begin perform public.release_corrected_mark(rejected_req); raise exception 'Rejected draft released';
+    exception when others then if sqlerrm not like 'CAMS: This report is already closed%' then raise; end if; end;
+    perform set_config('request.jwt.claim.sub',student_auth::text,true);
+  end loop;
   perform set_config('request.jwt.claim.sub',admin::text,true);
-  perform public.review_mark_correction(rejected_req,true,null);
+  begin perform public.release_corrected_mark(req); raise exception 'Admin release allowed';
+  exception when others then if sqlerrm not like 'CAMS: Only the assigned lecturer%' then raise; end if; end;
   perform set_config('request.jwt.claim.sub',lect::text,true);
-  perform public.update_approved_mark(rejected_req,7);
-  perform set_config('request.jwt.claim.sub',admin::text,true);
-  perform public.review_mark_correction(rejected_req,false,'Approval revoked pending more evidence.');
-  perform set_config('request.jwt.claim.sub',lect::text,true);
-  begin perform public.release_corrected_mark(rejected_req); raise exception 'Revoked draft was released';
-  exception when others then if sqlerrm not like 'CAMS: Save the approved correction%' then raise; end if; end;
-  if (select score from public.marks where enrolment_id=enrol and assessment_id=assessment2)<>6.6 then raise exception 'Revocation changed a mark'; end if;
-  -- Concurrency conflict: changed release identity invalidates the approval.
+  -- Reject stale class-release identities and stale mark versions atomically.
   begin
     update public.submissions set release_id=gen_random_uuid() where section_id=section;
-    begin perform public.release_corrected_mark(req); raise exception 'Stale release allowed';
+    begin perform public.release_corrected_mark(req); raise exception 'Stale class release allowed';
     exception when others then if sqlerrm not like 'CAMS: The class release has changed%' then raise; end if; end;
     raise sqlstate 'Z0001';
   exception when sqlstate 'Z0001' then null; end;
-  -- Archive protection applies to review, correction, and re-release.
+  begin
+    update public.mark_correction_requests set original_version=original_version+1 where id=req;
+    begin perform public.release_corrected_mark(req); raise exception 'Stale mark version allowed';
+    exception when others then if sqlerrm not like 'CAMS: The mark has changed%' then raise; end if; end;
+    raise sqlstate 'Z0001';
+  exception when sqlstate 'Z0001' then null; end;
   begin
     update public.academic_terms set is_current=false,status='closed' where id=term;
+    begin perform public.respond_to_mark_issue(issue,'rejected','Archived rejection'); raise exception 'Archived rejection allowed';
+    exception when others then if sqlerrm not like 'CAMS: Previous-semester%' then raise; end if; end;
+    begin perform public.stage_mark_issue_correction(issue,43,'Archived staging'); raise exception 'Archived staging allowed';
+    exception when others then if sqlerrm not like 'CAMS: Previous-semester%' then raise; end if; end;
     begin perform public.release_corrected_mark(req); raise exception 'Archived correction allowed';
     exception when others then if sqlerrm not like 'CAMS: Previous-semester%' then raise; end if; end;
     raise sqlstate 'Z0001';
   exception when sqlstate 'Z0001' then null; end;
   perform public.release_corrected_mark(req);
-  perform public.release_corrected_mark(req); -- retry must not notify twice
+  perform public.release_corrected_mark(req); -- Retry must not notify twice.
   if (select score from public.marks where id=mark)<>43 then raise exception 'Correction not released'; end if;
   if (select total_carry from public.student_carry_totals where enrolment_id=enrol)<>41 then raise exception 'Carry total not recalculated'; end if;
   if not (select eligible from public.student_carry_totals where enrolment_id=enrol) then raise exception 'Eligibility not recalculated'; end if;
-  if (select release_id from public.submissions where section_id=section)<>original_release then raise exception 'Class release was changed'; end if;
+  if (select release_id from public.submissions where section_id=section)<>original_release
+    or (select status from public.submissions where section_id=section)<>'finalised' then raise exception 'Class release was changed'; end if;
+  if (select score from public.marks where enrolment_id=enrol and assessment_id=assessment2)<>6.6
+    or (select score from public.marks where enrolment_id=enrol2 and assessment_id=assessment)<>20 then raise exception 'Other mark changed'; end if;
   if (select count(*) from public.notifications where release_id=req and student_id=student and type='marks_released')<>1 then raise exception 'Notification duplicated or missing'; end if;
-  if (select count(*) from public.mark_correction_events where request_id=req)<>4 then raise exception 'Audit events incomplete'; end if;
-  if not exists(select 1 from public.mark_correction_requests where id=req and original_score=33 and corrected_score=43 and status='released' and reviewed_by=admin and released_at is not null) then raise exception 'Audit request incomplete'; end if;
+  if (select count(*) from public.mark_correction_events where request_id=req)<>2 then raise exception 'Correction events incomplete/duplicated'; end if;
+  if not exists(select 1 from public.mark_correction_requests where id=req and original_score=33 and corrected_score=43 and status='released'
+    and lecturer_id=lect and reviewed_by is null and corrected_at is not null and released_at is not null) then raise exception 'Correction audit incomplete'; end if;
+  if not exists(select 1 from public.audit_logs where entity_id=req and actor_id=lect and action='released mark correction'
+    and (old_data->>'score')::numeric=33 and (new_data->>'score')::numeric=43 and new_data->>'reason'='Evidence verified; initial score incorrect.') then raise exception 'Release audit log incomplete'; end if;
   if exists(select 1 from cams_private.mark_release_permits) then raise exception 'Release permit survived'; end if;
   begin update public.marks set score=44 where id=mark; raise exception 'Mark stayed unlocked';
   exception when others then if sqlerrm not like 'CAMS: Released marks are locked%' then raise; end if; end;
   perform set_config('request.jwt.claim.sub',student_auth::text,true);
   if not exists(select 1 from jsonb_array_elements(public.get_my_mobile_portal()->'subjects') q
-    where q->>'offering_id'=offering::text and (q->>'carry_mark')::numeric=41 and (q->>'eligible')::boolean=true) then
-    raise exception 'Student portal did not return corrected carry/eligibility';
-  end if;
+    where q->>'offering_id'=offering::text and (q->>'carry_mark')::numeric=41 and (q->>'eligible')::boolean=true) then raise exception 'Student portal has wrong corrected total/eligibility'; end if;
+  if not exists(select 1 from jsonb_array_elements(public.get_my_mark_issue_workspace(offering)->'issues') q
+    where q->>'id'=issue::text and q->>'status'='resolved' and q->>'correction_status'='released'
+    and q->>'response'='Evidence verified; initial score incorrect.') then raise exception 'Student corrected outcome missing'; end if;
   perform set_config('request.jwt.claim.sub',lect::text,true);
   if has_table_privilege('authenticated','public.mark_correction_requests','UPDATE')
     or has_table_privilege('authenticated','public.mark_correction_events','INSERT')
     or has_table_privilege('authenticated','cams_private.mark_release_permits','INSERT')
-    or has_function_privilege('anon','public.release_corrected_mark(uuid)','EXECUTE') then raise exception 'Correction permissions too broad'; end if;
+    or has_function_privilege('anon','public.release_corrected_mark(uuid)','EXECUTE')
+    or has_function_privilege('anon','public.stage_mark_issue_correction(uuid,numeric,text)','EXECUTE')
+    or has_function_privilege('authenticated','public.review_mark_correction(uuid,boolean,text)','EXECUTE')
+    or has_function_privilege('authenticated','public.request_mark_correction(uuid,text)','EXECUTE')
+    or has_function_privilege('authenticated','public.update_approved_mark(uuid,numeric)','EXECUTE')
+    or has_function_privilege('authenticated','public.get_mark_correction_queue()','EXECUTE')
+    or has_function_privilege('authenticated','public.get_mark_correction_pending_count()','EXECUTE') then raise exception 'Correction permissions too broad'; end if;
+  perform set_config('cams.test.assessment2',assessment2::text,true);
+  perform set_config('cams.test.admin',admin::text,true);
   perform set_config('cams.test.mark',mark::text,true);
   perform set_config('cams.test.student',student_auth::text,true);
   perform set_config('cams.test.lecturer',lect::text,true);
@@ -179,5 +217,19 @@ do $$ begin
   if not exists(select 1 from public.marks where id=current_setting('cams.test.mark')::uuid and score=43) then raise exception 'Student cannot read corrected Released mark'; end if;
   begin perform 1 from public.mark_correction_requests; raise exception 'Student can read private correction drafts';
   exception when insufficient_privilege then null; end;
+end $$;
+-- Exercise the new write RPCs under the actual authenticated role as well.
+select set_config('cams.test.extra_issue',public.submit_student_mark_issue(
+  current_setting('cams.test.enrolment')::uuid,current_setting('cams.test.assessment2')::uuid,
+  'Authenticated role fixture',gen_random_uuid())::text,true);
+select set_config('request.jwt.claim.sub',current_setting('cams.test.lecturer'),true);
+select public.stage_mark_issue_correction(current_setting('cams.test.extra_issue')::uuid,0,'Authenticated lecturer checked script.');
+select public.respond_to_mark_issue(current_setting('cams.test.extra_issue')::uuid,'rejected','Further check confirms published score.');
+select set_config('request.jwt.claim.sub',current_setting('cams.test.admin'),true);
+do $$ begin
+  begin perform public.review_mark_correction(gen_random_uuid(),true,null); raise exception 'Authenticated Admin can still approve';
+  exception when insufficient_privilege then null; end;
+  begin perform public.stage_mark_issue_correction(current_setting('cams.test.extra_issue')::uuid,7,'Admin attempt'); raise exception 'Authenticated Admin can correct';
+  exception when others then if sqlerrm not like 'CAMS: This mark issue is not available%' then raise; end if; end;
 end $$;
 rollback;

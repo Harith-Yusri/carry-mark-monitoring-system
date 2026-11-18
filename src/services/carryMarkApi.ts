@@ -86,7 +86,7 @@ export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
   return groupLecturerSubjects(data.map(mapSubjectSummary));
 }
 
-function mapSubjectSummary(row: any): SubjectSummary {
+export function mapSubjectSummary(row: any): SubjectSummary {
   return {
     offeringId: row.offering_id,
     programmeId: row.programme_ids[0] ?? "",

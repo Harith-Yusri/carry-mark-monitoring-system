@@ -4,6 +4,8 @@ import { Sun, Moon, LogOut, AlertTriangle } from "lucide-react";
 import { useDark, useDarkToggle } from "../context/DarkModeContext";
 import { useAuth } from "../context/AuthContext";
 
+import { LecturerNotificationBell, LecturerNotificationsProvider } from "../features/lecturer/LecturerNotifications";
+
 type StaffTextScale = 1 | 1.12 | 1.24;
 const STAFF_TEXT_SCALE_KEY = "cmms-staff-text-scale-v2";
 const LEGACY_STAFF_TEXT_SCALE_KEY = "cmms-staff-text-scale";
@@ -47,7 +49,7 @@ export function PortalLayout() {
   };
 
   return (
-    <div className={"staff-portal min-h-screen bg-white font-sans text-slate-800 transition-colors dark:bg-[var(--staff-canvas)] dark:text-slate-50 " + (dark ? "dark " : "") + (user?.role === "admin" ? "admin-design" : "")} data-text-scale={textScale}>
+    <LecturerNotificationsProvider><div className={"staff-portal min-h-screen bg-white font-sans text-slate-800 transition-colors dark:bg-[var(--staff-canvas)] dark:text-slate-50 " + (dark ? "dark " : "") + (user?.role === "admin" ? "admin-design" : "")} data-text-scale={textScale}>
       <header className="staff-branded-header portal-typography sticky top-0 z-40 border-b border-white/20 shadow-sm">
         <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-8 lg:px-12">
           <div className="flex items-center gap-3">
@@ -66,6 +68,7 @@ export function PortalLayout() {
                 return <button key={option.label} type="button" title={option.title} aria-label={option.title} aria-pressed={active} onClick={() => changeTextScale(option.scale)} className={"inline-flex min-h-11 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors sm:min-w-11 " + (active ? "bg-[#E9DDF6] text-[#3D185A]" : "text-white hover:bg-white/15")}>{option.label}</button>;
               })}
             </div>
+            {user?.role === "lecturer" && <LecturerNotificationBell />}
             <button aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} title={dark ? "Switch to light theme" : "Switch to dark theme"} onClick={toggleDark} className="staff-theme-toggle inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white hover:bg-white/20">
               {dark ? <Sun size={19} /> : <Moon size={19} />}
             </button>
@@ -85,6 +88,6 @@ export function PortalLayout() {
           </div>
         </div>
       </div>}
-    </div>
+    </div></LecturerNotificationsProvider>
   );
 }

@@ -28,13 +28,11 @@ export async function submitStudentMarkIssue(enrolmentId: string, assessmentId: 
   return data as string;
 }
 export function markIssueStatus(issue: StudentMarkIssue) {
-  if (issue.status === "resolved") return "Resolved";
   if (issue.status === "rejected") return "Rejected";
-  if (issue.correction_status) return {
-    pending: "Correction Requested", approved: "Correction Approved", rejected: "Correction Rejected",
-    corrected: "Corrected · awaiting release", released: "Resolved",
-  }[issue.correction_status];
-  return issue.status === "reviewing" ? "Reviewing" : "Submitted";
+  if (issue.correction_status === "released") return "Corrected";
+  if (issue.status === "resolved") return "Closed"; // Historical response without a correction.
+  if (issue.correction_status === "corrected") return "Awaiting updated mark release";
+  return "Submitted"; // Includes legacy Reviewing / pending / approved records.
 }
 export function markIssueError(reason: unknown) {
   const message = (reason as { message?: unknown } | null)?.message;

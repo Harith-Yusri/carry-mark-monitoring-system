@@ -13,6 +13,7 @@ export type MarkIssue = {
   id: string; status: "submitted" | "reviewing" | "resolved" | "rejected";
   explanation: string; created_at: string; response: string | null; student_name: string; student_number: string;
   assessment_name: string; class_label: string; current_score: number | null; maximum_score: number | null;
+  events?: Correction["events"]; responded_by?: string | null; responded_at?: string | null;
   can_correct: boolean; editable: boolean; released: boolean; corrections: Correction[];
 };
 export async function loadMarkIssues(offeringId: string) {
@@ -20,30 +21,12 @@ export async function loadMarkIssues(offeringId: string) {
   if (error) throw error;
   return data as unknown as MarkIssue[];
 }
-export async function loadCorrectionQueue() {
-  const { data, error } = await requireSupabase().rpc("get_mark_correction_queue");
-  if (error) throw error;
-  return data as unknown as Correction[];
-}
-export async function loadCorrectionPendingCount() {
-  const { data, error } = await requireSupabase().rpc("get_mark_correction_pending_count");
-  if (error) throw error;
-  return Number(data);
-}
-export async function respondToIssue(id: string, decision: string, response: string) {
+export async function respondToIssue(id: string, decision: "rejected", response: string) {
   const { error } = await requireSupabase().rpc("respond_to_mark_issue", { target_issue: id, decision, lecturer_response: response.trim() });
   if (error) throw error;
 }
-export async function requestCorrection(id: string, reason: string) {
-  const { error } = await requireSupabase().rpc("request_mark_correction", { target_issue: id, correction_reason: reason.trim() });
-  if (error) throw error;
-}
-export async function reviewCorrection(id: string, approve: boolean, note: string) {
-  const { error } = await requireSupabase().rpc("review_mark_correction", { target_request: id, approve, admin_note: note.trim() });
-  if (error) throw error;
-}
-export async function saveCorrection(id: string, score: number) {
-  const { error } = await requireSupabase().rpc("update_approved_mark", { target_request: id, new_score: score });
+export async function correctIssue(id: string, score: number, reason: string) {
+  const { error } = await requireSupabase().rpc("stage_mark_issue_correction", { target_issue: id, new_score: score, correction_reason: reason.trim() });
   if (error) throw error;
 }
 export async function releaseCorrection(id: string) {

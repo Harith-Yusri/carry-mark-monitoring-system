@@ -55,7 +55,7 @@ function MarkIssueForm({ offeringId }: { offeringId: string }) {
   return <Screen><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
     <Pressable accessibilityRole="button" style={styles.back} onPress={() => router.back()}><Text style={[typography.bodyStrong, { color: colors.accent }]}>‹ Back to subject</Text></Pressable>
     <View><Heading>Report a mark issue</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>{subject.code} · {subject.name}</Text></View>
-    <Text style={[typography.body, { color: colors.muted }]}>Select the assessment and explain the issue. Your assigned lecturer will review it. A Released mark can only be corrected after Admin approval.</Text>
+    <Text style={[typography.body, { color: colors.muted }]}>Select the assessment and explain the issue. Your assigned lecturer will review it. Your lecturer will reject the report with a response or correct the exact mark. You will see the updated mark after the lecturer releases it.</Text>
     {loadingIssues && <Text accessibilityRole="progressbar" style={[typography.body, { color: colors.muted }]}>Loading reports…</Text>}
     {notice !== "" && <Text accessibilityRole="alert" style={[typography.bodyStrong, { color: colors.success }]}>{notice}</Text>}
     <View style={styles.options}><Text style={[typography.bodyStrong, { color: colors.text }]}>Assessment</Text>
@@ -71,7 +71,7 @@ function MarkIssueForm({ offeringId }: { offeringId: string }) {
     <View style={styles.historyHeader}><Heading size={22}>My reports</Heading><Pressable accessibilityRole="button" disabled={loadingIssues || actionLoading} style={styles.refresh} onPress={() => void refreshIssues()}><Text style={[typography.bodyStrong, { color: colors.accent }]}>Refresh reports</Text></Pressable></View>
     {workspace?.issues.map(issue => {
       const label = markIssueStatus(issue);
-      const tone = label.includes("Rejected") ? "danger" : label === "Resolved" || label === "Correction Approved" ? "success" : "warning";
+      const tone = label.includes("Rejected") ? "danger" : label === "Corrected" || label === "Closed" ? "success" : "warning";
       return <Card key={issue.id} style={styles.issueCard}>
         <Text style={[typography.bodyStrong, { color: colors.text }]}>{issue.assessment_name}{issue.class_label ? ` · ${issue.class_label}` : ""}</Text>
         <View style={[getGlassStyle(colors, "secondary", tone), styles.status]}><Text style={[typography.bodyStrong, { color: colors[tone] }]}>{label}</Text></View>

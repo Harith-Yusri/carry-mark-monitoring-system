@@ -19,16 +19,16 @@ const assert=require('node:assert/strict');
   await step('Same class Marks return',()=>page.getByRole('button',{name:'Enter marks for Class A',exact:true}).click(),()=>page.getByRole('heading',{name:'Mark Entry — Class A',exact:true}).waitFor());
   await step('Sync Draft (read refresh only)',()=>page.getByRole('button',{name:'Sync Draft',exact:true}).click(),()=>page.getByRole('button',{name:'Draft Synced',exact:true}).waitFor());
   assert.deepEqual(s.errors,[]);await s.context.close();
-  const admin=await start(browser,'admin','data',false,false);await admin.page.getByText('Fixture Lecturer',{exact:true}).first().waitFor();await admin.page.getByLabel('1 pending correction requests',{exact:true}).waitFor();
+  const admin=await start(browser,'admin','data',false,false);await admin.page.getByText('Fixture Lecturer',{exact:true}).first().waitFor();
   const firstCount=admin.control.calls.filter(n=>n==='get_mark_correction_pending_count').length;
   const before=admin.control.calls.length;
   for(const nav of ['Submission Monitor','Lecturer Directory','Reports & Exports','Past Semesters','Compliance Overview']){
    await admin.page.getByRole('button',{name:new RegExp(nav)}).first().click();await admin.page.waitForTimeout(350);
   }
   const navCount=admin.control.calls.slice(before).filter(n=>n==='get_mark_correction_pending_count').length;
-  await admin.page.getByRole('button',{name:/Mark Corrections/}).first().click();await admin.page.getByText('Fixture Student · FIXTURE1',{exact:true}).waitFor();
-  const refreshOffset=admin.control.calls.length;await admin.page.getByRole('button',{name:'Refresh',exact:true}).click();await admin.page.waitForTimeout(600);
-  report.correctionCounts={bootstrap:firstCount,unrelatedTabChanges:navCount,manualQueueRefresh:admin.control.calls.slice(refreshOffset).filter(n=>n==='get_mark_correction_pending_count').length};
+  assert.equal(await admin.page.getByRole('button',{name:/Mark Corrections/}).count(),0);
+  report.correctionCounts={bootstrap:firstCount,unrelatedTabChanges:navCount};
+  assert.deepEqual(report.correctionCounts,{bootstrap:0,unrelatedTabChanges:0});
   assert.deepEqual(admin.errors,[]);await admin.context.close();
   fs.writeFileSync(process.env.CAMS_PERF_OUTPUT||'/tmp/cams-perf-fixture.json',JSON.stringify(report,null,2));
   console.log(report.scenarios.map(({requests,...r})=>r),report.correctionCounts);
