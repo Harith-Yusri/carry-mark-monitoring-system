@@ -1,5 +1,7 @@
 # Student mark issues and lecturer corrections
 
+Lecturers can also start a correction from **Marks Entry & Eligibility → Edit Mark**, without a Student report. This reuses the same private correction records and release permit; see `docs/lecturer-initiated-mark-corrections.md`.
+
 The workflow is **Student reports issue → Lecturer reviews → Reject OR Correct Mark → Student sees outcome**. Admin has no individual correction action, queue or badge.
 
 1. Student opens **Report a mark issue**, selects the exact assessment/class, submits an explanation, and follows **My reports**.
@@ -13,7 +15,7 @@ The visible states are Submitted, Awaiting updated mark release, Rejected, and C
 ## Enforcement and history
 
 - Migration: `supabase/migrations/202611180001_lecturer_mark_issue_outcomes.sql`.
-- `respond_to_mark_issue` accepts only rejection. `stage_mark_issue_correction` derives every academic reference from the reported issue; callers supply no alternative student, enrolment or assessment. `release_corrected_mark` accepts the stored correction ID.
+- `respond_to_mark_issue` accepts only rejection. `stage_mark_issue_correction` derives every academic reference from the reported issue; direct `stage_released_mark_correction` validates the selected class/enrolment/assessment and expected version; callers supply no alternative student, enrolment or assessment. `release_corrected_mark` accepts the stored correction ID.
 - All actors come from `auth.uid()`. Writes require an active owning lecturer and current active semester. Students, Admin and other lecturers cannot reject, stage or release an issue correction.
 - Released classes remain finalised with their original release ID. No whole-class reopening or ordinary mark-grid unlocking occurs. No new table-write grant or permissive RLS policy is added.
 - Original mark score/version, class release ID and academic context are checked under locks. An exact, transaction-scoped private permit is consumed by `validate_mark` for the one published UPDATE. The trigger remains SECURITY INVOKER and owner execution remains `postgres`; do not independently change that arrangement.

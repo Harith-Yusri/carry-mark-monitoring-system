@@ -72,6 +72,19 @@ async function start(browser, role, mode, dark, held = true) {
         item.read_at ||= new Date().toISOString();
         data = {notification_id:item.id,read_at:item.read_at,unread_count:control.notifications.filter(n=>!n.read_at).length,issue_id:control.issue.id,subject_rows:[subject]};
       }
+      else if (name === 'get_released_mark_correction_context' || name === 'stage_released_mark_correction') {
+        const args=route.request().postDataJSON();
+        assert.equal(args.target_section,uid(200));assert.equal(args.target_enrolment,uid(300));assert.equal(args.target_assessment,uid(1000));
+        if(name==='stage_released_mark_correction') {
+          assert.equal(args.expected_version,1);
+          control.directDraft={...correction,id:uid(700),dispute_id:null,initiation_source:'lecturer',status:'corrected',reason:args.correction_reason,
+            original_score:control.score,corrected_score:args.new_score,corrected_at:new Date().toISOString()};
+          control.directHistory=[control.directDraft];
+        }
+        data={section_id:uid(200),enrolment_id:uid(300),assessment_id:uid(1000),mark_id:uid(800),version:control.directHistory?.[0]?.status==='released'?2:1,
+          current_score:control.score,maximum_score:100,student_name:'Fixture Student',student_number:'FIXTURE1',subject_code:'ITT550',class_label:'Class A',assessment_name:'Fixture Quiz',
+          correction:control.directDraft||null,history:control.directHistory||[]};
+      }
       else if (name === 'get_staff_mark_issues') data = empty ? [] : [control.issue];
       else if (name === 'stage_mark_issue_correction') {
         const args = route.request().postDataJSON();
@@ -84,9 +97,14 @@ async function start(browser, role, mode, dark, held = true) {
         Object.assign(control.issue, {status:'rejected',response:args.lecturer_response}); data = null;
       }
       else if (name === 'release_corrected_mark') {
+        if(route.request().postDataJSON().target_request===uid(700)) {
+          control.score=control.directDraft.corrected_score;control.directDraft.status='released';control.directDraft.released_at=new Date().toISOString();
+          control.directDraft=null;data=null;
+        } else {
         assert.equal(route.request().postDataJSON().target_request, correction.id);
         const draft = control.issue.corrections[0]; draft.status='released';
         Object.assign(control.issue,{status:'resolved',response:draft.reason,current_score:draft.corrected_score}); data = null;
+        }
       }
       else if (name === 'lecturer_contacts') data = [];
       else if (name === 'get_admin_semester_history') data = empty ? [] : [history];
@@ -95,9 +113,9 @@ async function start(browser, role, mode, dark, held = true) {
       else if (name === 'get_my_subject_assessment_structure') data = { carryMax: empty ? null : 50, assessments: empty ? [] : assessments.map(a => ({ id: a.id, name: a.name, type: a.assessment_type, maxMarks: a.max_score, weightage: a.carry_weight, position: a.position })) };
       else if (name === 'get_staff_class_detail') {
         const section = sections.find(s => s.id === route.request().postDataJSON().target_section) || sections[0];
-        data = { settings: { carryMax: 50, eligibleThreshold: 40 }, data: { assessments: assessments.map(a => ({ id: a.id, name: a.name, type: a.assessment_type, maxMarks: a.max_score, weightage: a.carry_weight, position: a.position })), sections: [{ id: section.id, programmeId: programme.id, programmeCode: programme.code, programmeName: programme.name, label: section.label, capacity: section.capacity, joinCode: section.join_code, finalised: false, students: empty ? [] : [{ enrolmentId: uid(300), studentId: uid(400), matrixNo: 'FIXTURE1', name: 'Fixture Student', scores: { [uid(1000)]: control.score }, totalCarry: control.score/2, eligible: false }] }] } };
+        data = { settings: { carryMax: 50, eligibleThreshold: 40 }, data: { assessments: assessments.map(a => ({ id: a.id, name: a.name, type: a.assessment_type, maxMarks: a.max_score, weightage: a.carry_weight, position: a.position })), sections: [{ id: section.id, programmeId: programme.id, programmeCode: programme.code, programmeName: programme.name, label: section.label, capacity: section.capacity, joinCode: section.join_code, finalised: Boolean(control.released && section.id===uid(200)), students: empty ? [] : [{ enrolmentId: uid(300), studentId: uid(400), matrixNo: 'FIXTURE1', name: 'Fixture Student', scores: { [uid(1000)]: control.score }, totalCarry: control.score/2, eligible: control.score/2>=40 }] }] } };
       }
-      else if (name === 'class_sections') data = empty ? [] : sections;
+      else if (name === 'class_sections') data = empty ? [] : sections.map(s=>({...s,submissions:control.released&&s.id===uid(200)?[{status:'finalised'}]:[]}));
       else if (name === 'assessments') data = empty ? [] : assessments;
       else if (name === 'subject_offerings') data = { carry_max: 50, academic_terms: { eligible_threshold: 40 } };
       else if (name === 'enrolments') data = empty ? [] : enrolments;

@@ -10,6 +10,9 @@ import { workspace as W } from "./workspaceStyles";
 import { userError } from "../../utils/errors";
 import { useSubjectClassData } from "../../hooks/useSubjectClassData";
 
+import { ReleasedMarkCorrectionPanel } from "./ReleasedMarkCorrectionPanel";
+import type { ReleasedMarkTarget } from "../../services/markCorrectionApi";
+
 type StudentRecord = SectionRecord["students"][number] & { id: string };
 type ClassSection = Omit<SectionRecord, "students"> & { students: StudentRecord[] };
 const blankForm = { label: "", capacity: "", programmeId: "" };
@@ -21,6 +24,8 @@ export function MarksEntryTab({ cache, offeringId, offeringIds, offeringProgramm
   const { sections, selectedId, setSelectedId, selected: selectedRecord, assessments, carryMax, eligibleThreshold,
     loading, hasLoaded, detailLoading, error: loadError, reload, updateDetailedSections } = useSubjectClassData(offeringId, offeringIds, cache);
   const selected = selectedRecord ? { ...selectedRecord, students: selectedRecord.students.map(student => ({ ...student, id: student.enrolmentId })) } : null;
+  const [correctionTarget, setCorrectionTarget] = useState<ReleasedMarkTarget | null>(null);
+  useEffect(() => { setCorrectionTarget(null); }, [selectedId]);
   const [programmes, setProgrammes] = useState<ProgrammeOption[]>([]);
   const [modal, setModal] = useState<"add" | "edit" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -148,7 +153,7 @@ export function MarksEntryTab({ cache, offeringId, offeringIds, offeringProgramm
     {!loading && !loadError && sections.length === 0 && <div className={W.panel + " py-12 text-center text-sm text-slate-500"}>No class sections yet. Select Add Class Section to create the first one.</div>}
     {modal && <ClassModal loading={programmeLoading} error={programmeError} C={C} mode={modal} form={form} setForm={setForm} close={closeModal} save={saveSection} valid={formValid} subjectCode={subjectCode} programmes={programmes} />}
   </div>;
-  return <div className="space-y-4">{(loading || detailLoading) && <RefreshStatus label="Refreshing class data…" />}{loadError && <p role="alert" className={W.error}>{loadError}</p>}<MarkGrid assessments={assessments} carryMax={carryMax} C={C} sections={sections} selected={selected} setSelectedId={setSelectedId} updateMark={updateMark} flushPendingMarks={flushPendingMarks} syncMarks={syncMarks} synced={synced} finalise={finalise} copyJoinCode={copyJoinCode} copiedId={copiedId} regenerateJoinCode={regenerateJoinCode} rotatingId={rotatingId} /></div>;
+  return <div className="space-y-4">{(loading || detailLoading) && <RefreshStatus label="Refreshing class data…" />}{loadError && <p role="alert" className={W.error}>{loadError}</p>}<MarkGrid onEditMark={(student: StudentRecord, assessmentId: string) => setCorrectionTarget({ sectionId: selected.id, enrolmentId: student.enrolmentId, assessmentId })} assessments={assessments} carryMax={carryMax} C={C} sections={sections} selected={selected} setSelectedId={setSelectedId} updateMark={updateMark} flushPendingMarks={flushPendingMarks} syncMarks={syncMarks} synced={synced} finalise={finalise} copyJoinCode={copyJoinCode} copiedId={copiedId} regenerateJoinCode={regenerateJoinCode} rotatingId={rotatingId} />{correctionTarget && <ReleasedMarkCorrectionPanel key={`${correctionTarget.sectionId}:${correctionTarget.enrolmentId}:${correctionTarget.assessmentId}`} target={correctionTarget} onClose={() => setCorrectionTarget(null)} onReleased={async () => { cache?.invalidate(correctionTarget.sectionId); await reload("detail"); }} />}</div>;
 }
 
 function ClassModal({ loading, error, C, mode, form, setForm, close, save, valid, subjectCode, programmes }: any) {
@@ -165,11 +170,11 @@ function ClassModal({ loading, error, C, mode, form, setForm, close, save, valid
   </div></div>;
 }
 
-function MarkGrid({ assessments, carryMax, C, sections, selected, setSelectedId, updateMark, flushPendingMarks, syncMarks, synced, finalise, copyJoinCode, copiedId, regenerateJoinCode, rotatingId }: any) {
+function MarkGrid({ onEditMark, assessments, carryMax, C, sections, selected, setSelectedId, updateMark, flushPendingMarks, syncMarks, synced, finalise, copyJoinCode, copiedId, regenerateJoinCode, rotatingId }: any) {
   const markFields = assessments.map((item: AssessmentRecord) => ({ key: item.id, label: item.name, max: item.maxMarks }));
   return <div className={W.panel + (selected.finalised ? " staff-card-success" : "")}>
     <div className="mb-6 flex flex-wrap items-start justify-between gap-6">
-      <div className="flex flex-wrap items-start gap-4"><button onClick={() => setSelectedId(null)} className={W.secondary}><ChevronLeft size={16} /> All Classes</button><div><h2 className={W.title}>Mark Entry — {selected.label}</h2><div className={W.muted}>{selected.programmeCode} · {selected.students.length} students · capacity {selected.capacity}</div><div className="staff-card-muted mt-1 text-xs text-slate-500 dark:text-slate-300">{selected.finalised ? "Marks are released to students." : "Draft marks remain private until release."}</div></div></div>
+      <div className="flex flex-wrap items-start gap-4"><button onClick={() => setSelectedId(null)} className={W.secondary}><ChevronLeft size={16} /> All Classes</button><div><h2 className={W.title}>Mark Entry — {selected.label}</h2><div className={W.muted}>{selected.programmeCode} · {selected.students.length} students · capacity {selected.capacity}</div><div className="staff-card-muted mt-1 text-xs text-slate-500 dark:text-slate-300">{selected.finalised ? "Marks are Released and locked. Use Edit Mark for an exact, privately saved correction." : "Draft marks remain private until release."}</div></div></div>
       <div className="flex flex-wrap gap-3"><button onClick={syncMarks} className={W.secondary}><RefreshCw size={16} /> {synced ? "Draft Synced" : "Sync Draft"}</button><button disabled={selected.finalised} onClick={finalise} className={selected.finalised ? W.success + " min-h-11 rounded-lg" : W.primary}><CheckCircle size={16} /> {selected.finalised ? "Carry Marks Released" : "Release Marks"}</button></div>
     </div>
     <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-purple-100 bg-purple-50/60 p-4">
@@ -183,7 +188,7 @@ function MarkGrid({ assessments, carryMax, C, sections, selected, setSelectedId,
     <div className="overflow-x-auto"><table className={W.table + " min-w-[900px]"}><thead className={W.tableHead}><tr><th scope="col">Student ID</th><th scope="col">Name</th>{markFields.map(field => <th scope="col" key={field.key}>{field.label} /{field.max}</th>)}<th scope="col">Carry Mark /{carryMax ?? "Not set"}</th><th scope="col">Eligibility</th></tr></thead>
       <tbody>{selected.students.map((student: StudentRecord) => { const rawTotal = student.totalCarry; return <tr key={student.id} className={W.tableRow}>
         <td className="staff-card-muted font-mono text-xs text-slate-500 dark:text-slate-300">{student.matrixNo}</td><td className="staff-card-primary font-semibold text-slate-800 dark:text-slate-50">{student.name}</td>
-        {markFields.map(field => <td key={field.key}><input aria-label={`${field.label} mark for ${student.name}`} disabled={selected.finalised} type="number" min="0" max={field.max} value={student.scores[field.key] ?? ""} onChange={event => updateMark(student.id, field.key, event.target.value)} onBlur={() => void flushPendingMarks().catch(() => undefined)} className="staff-card-field staff-card-primary min-h-11 w-16 rounded-lg border border-slate-400 bg-slate-50 px-2.5 py-1 text-center text-sm font-semibold text-slate-800 shadow-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 disabled:bg-slate-50 disabled:opacity-65 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-50" /></td>)}
+        {markFields.map(field => <td key={field.key}><input aria-label={`${field.label} mark for ${student.name}`} disabled={selected.finalised} type="number" min="0" max={field.max} value={student.scores[field.key] ?? ""} onChange={event => updateMark(student.id, field.key, event.target.value)} onBlur={() => void flushPendingMarks().catch(() => undefined)} className="staff-card-field staff-card-primary min-h-11 w-16 rounded-lg border border-slate-400 bg-slate-50 px-2.5 py-1 text-center text-sm font-semibold text-slate-800 shadow-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 disabled:bg-slate-50 disabled:opacity-65 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-50" />{selected.finalised && <button type="button" aria-label={`Edit released mark for ${student.name}: ${field.label}`} disabled={student.scores[field.key] == null} onClick={() => onEditMark(student, field.key)} className="staff-card-secondary mt-2 block min-h-9 rounded-md border border-slate-300 px-2 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">Edit Mark</button>}</td>)}
         <td className="staff-card-primary font-bold text-slate-800 dark:text-slate-50">{rawTotal}</td><td><span className={student.eligible ? W.success : W.danger}>{student.eligible ? "ELIGIBLE" : "NOT ELIGIBLE"}</span></td>
       </tr>; })}</tbody>
     </table>{selected.students.length === 0 && <div className="py-10 text-center text-sm text-slate-500">This class has no student roster yet.</div>}</div>
