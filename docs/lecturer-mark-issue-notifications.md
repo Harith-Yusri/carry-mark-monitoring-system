@@ -41,6 +41,16 @@ The previously requested lecturer-only correction workflow is included in this r
 
 ## Deployment
 
-Pending verified deployment. Release IDs and live checks are recorded here after publication.
+Released on 18 November 2026:
+
+- Source commit `3e2fe32709c0bf9b6547fbd92519ccc153c9aa81`, pushed to `main`.
+- Supabase project `cueiilftoyqzvlrnmgfe`: only migrations `202611180001` and `202611180002` applied together transactionally and recorded in migration history. Inbox RPC, notification trigger and Realtime publication verified after commit.
+- Existing Cloudflare Worker `cams-staff`, custom domain https://unicams.online, version `d3ed21db-a80f-474c-ba7c-19310bea814b`.
+- Root, Lecturer and Admin SPA routes return 200 with entry `index-C9vbA4JD.js`. Entry, bell and Mark Issues JavaScript hash-match the verified release build.
+- Notification SQL suite passed again against the deployed definitions in a rolled-back fixture transaction. Deployed grants deny anonymous RPC access, direct read_at updates and trigger execution; retired Admin review is inaccessible to authenticated API roles.
+- Live-hosted bell scenarios, ten loading scenarios and both correction outcome paths passed with all Supabase REST/WebSocket traffic intercepted. Real delivery is established by the database trigger/RLS tests plus the deployed publication/configuration checks; no real student's issue was submitted or real lecturer account impersonated in these browser fixtures.
+- Staff-only publishing: no Edge Function, mobile binary, EAS channel, authentication setting or mark-calculation change. The earlier student copy/status updates remain source changes; no mobile OTA was requested or published.
+
+Known limitation: an actual signed-in lecturer receiving a real student's report over the hosted WebSocket transport was not manually exercised. The compiled client uses the documented Supabase Postgres Changes API; recipient checks are exercised with the actual authenticated database role.
 
 Unrelated local dashboard, WhatsApp and mobile theme drafts are excluded from the release checkout and remain in the original workspace.
