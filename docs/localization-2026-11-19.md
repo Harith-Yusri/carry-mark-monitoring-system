@@ -8,7 +8,7 @@ Staff have a globe dropdown in the portal header and on sign-in/registration. St
 
 Auto matches browser preference tags, or the device's standard Intl default locale, against en/ms/zh/ta subtags (for example ms-MY, zh-Hans, ta-IN). Chinese variants use the available Simplified Chinese translation. Unsupported tags fall back to English; missing translations also use English. Browser language changes and native app foregrounding redetect only when Auto is selected. Manual preference wins over detection and delayed asynchronous storage restore. Rapid writes are serialized. Storage failure leaves the selected session language usable; mobile Settings reports the failed save.
 
-There are 762 entries per dictionary. CAMS-generated interface text is translated; names, programme/subject/assessment/class values, explanations, lecturer responses and correction reasons remain unchanged. Templates interpolate these values without recursively interpreting translation syntax. The notification formatter translates known CAMS sentence templates and retains their embedded dynamic values. Unknown messages keep an English/source fallback. Existing CSV formats and externally delivered push/email bodies remain unchanged. Native OS/browser permission and built-in validation dialogs follow the OS/browser language.
+There are 764 entries per dictionary. CAMS-generated interface text is translated; names, programme/subject/assessment/class values, explanations, lecturer responses and correction reasons remain unchanged. Templates interpolate these values without recursively interpreting translation syntax. The notification formatter matches complete CAMS sentence templates against existing subject/assessment data and retains their embedded dynamic values. Unknown messages keep an English/source fallback. Existing CSV formats and externally delivered push/email bodies remain unchanged. Native OS/browser permission and built-in validation dialogs follow the OS/browser language.
 
 ## Screens and files
 
@@ -32,4 +32,14 @@ Obsolete/unreachable Kotlin and legacy component screens were excluded. Unrelate
 - Existing browser loading regression: 10 scenarios. Existing exact Released mark edit and lecturer bell suites also pass, including both themes and narrow layouts. Requests/WebSockets in these browser tests are synthetic and intercepted, not live academic writes.
 - Native pixels/device receipt and native OS dialogs have not been tested on physical hardware. Translation copy has not had independent native-speaker review. Browser screenshot and native render/style checks do not claim full device accessibility certification.
 
-Final command counts, production artifact IDs and deployment evidence are recorded below after release.
+## Build and deployment results
+
+Implementation source commit: `be5e7e4c56b611c5764235fb7d168b78136f9436` (pushed to main). The complete implementation file manifest and artifact hashes are in `docs/localization-release-2026-11-19.json`.
+
+- `node --test tests/*.test.mjs`: **102/102** in the working tree, **87/87** in the isolated source release (the working tree also has pre-existing draft tests).
+- Staff no-emit TypeScript, mobile `npx tsc --noEmit`, mobile `npm run lint`: **pass**, lint with no warnings. Staff has no configured ESLint command; its source was checked with TypeScript, literal-text audit and browser suites.
+- Staff `npm run build`: **pass**. Entry JavaScript is 743,807 bytes / approximately 206.3 kB gzip, including all four offline dictionaries. Vite emits its normal >500 kB chunk advisory. Page modules remain lazy-loaded; the dictionaries are intentionally available without a runtime translation request.
+- Android `npx expo export --platform android`: **pass**; EAS also performed a successful Android bundle export for publication. No new native dependency or binary.
+- Staff Wrangler dry-run and deploy: **success**, existing Worker `cams-staff`, https://unicams.online. Version `bcea46b6-d0bb-433f-bfaf-e73ecd36d8ff`. Live sign-in/registration/dashboard SPA routes and entry JS/CSS were verified byte-for-byte against the isolated release. Live sign-in/registration dropdowns were exercised in every locale.
+- EAS Android **preview** publication: **success**. Update `01a1f3be-f9e5-706f-bb43-f8d6fe89e371`; group `4b12b9ef-1cee-4f93-8fc6-a52b84a58458`. The preview channel's newest group was independently queried after publication. Runtime `29797fbf5d8d4b0719c4a4c7ac7f9cff2d863c05` matches the existing Android preview build and the pre/post-localization fingerprints. No iOS/store/production-channel release or physical-device OTA receipt is claimed.
+- No Supabase migration was required or applied. Existing pending unrelated migrations were not deployed.

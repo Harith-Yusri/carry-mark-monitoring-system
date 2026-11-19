@@ -1,0 +1,178 @@
+{
+  "sourceCommit": "65461a592fc689d8c93195724de4d037bdac03aa",
+  "date": "2026-11-19",
+  "localization": {
+    "library": "i18next 27.2.1",
+    "preferences": [
+      "auto",
+      "en",
+      "ms",
+      "zh",
+      "ta"
+    ],
+    "entriesPerCatalogue": 764,
+    "storageKey": "cams.language.v1",
+    "staffStorage": "localStorage",
+    "nativeStudentStorage": "SecureStore",
+    "fallback": "English",
+    "externalTranslationService": false
+  },
+  "tests": {
+    "workspaceNodeTests": {
+      "passed": 102,
+      "failed": 0
+    },
+    "isolatedReleaseNodeTests": {
+      "passed": 87,
+      "failed": 0
+    },
+    "staffTypeScript": "passed",
+    "mobileTypeScript": "passed",
+    "mobileLint": "passed, no warnings",
+    "staffBuild": "passed; standard >500 kB chunk advisory",
+    "androidExport": "passed",
+    "staticUiAudit": "39 files passed (literal JSX/text attributes)",
+    "staffLocalizationLocalBrowserScenarios": 18,
+    "existingStaffLoadingBrowserScenarios": 10,
+    "releasedMarkEditBrowserSuite": "passed",
+    "lecturerBellBrowserSuite": "passed",
+    "syntheticBackendForAuthenticatedBrowserTests": true,
+    "physicalDeviceVerification": false,
+    "independentNativeSpeakerReview": false,
+    "nativeNotificationNameBoundaryCases": "passed: full names containing in/by/template separators remain intact"
+  },
+  "staffDeployment": {
+    "worker": "cams-staff",
+    "url": "https://unicams.online",
+    "version": "bcea46b6-d0bb-433f-bfaf-e73ecd36d8ff",
+    "result": "deployed",
+    "liveAssetVerification": [
+      {
+        "path": "/register",
+        "status": 200,
+        "spaMatchesRelease": true
+      },
+      {
+        "path": "/lecturer/dashboard",
+        "status": 200,
+        "spaMatchesRelease": true
+      },
+      {
+        "path": "/admin/dashboard",
+        "status": 200,
+        "spaMatchesRelease": true
+      },
+      {
+        "path": "/assets/index-CN3UP7Eb.js",
+        "status": 200,
+        "sha256": "63fcf224c0727c474fd566caf74856d4dd60ef7c758fd760de9f43ab7f67e4b3",
+        "bytes": 743807
+      },
+      {
+        "path": "/assets/index-B5cHvT3m.css",
+        "status": 200,
+        "sha256": "15615a00fc1ecd46806a18d835dd9620f41208ecba7b5c0311ada2d0e32f6cf1",
+        "bytes": 135000
+      }
+    ],
+    "livePublicLanguageSmoke": {
+      "routes": [
+        "/",
+        "/register"
+      ],
+      "languages": [
+        "en",
+        "ms",
+        "zh",
+        "ta"
+      ],
+      "passed": true
+    }
+  },
+  "studentDeployment": {
+    "id": "01a1f3be-f9e5-706f-bb43-f8d6fe89e371",
+    "createdAt": "2026-11-19T12:19:01.733Z",
+    "group": "4b12b9ef-1cee-4f93-8fc6-a52b84a58458",
+    "branch": "preview",
+    "message": "CAMS offline localization and exact notification names 65461a5",
+    "runtimeVersion": "29797fbf5d8d4b0719c4a4c7ac7f9cff2d863c05",
+    "platform": "android",
+    "manifestPermalink": "https://u.expo.dev/update/01a1f3be-f9e5-706f-bb43-f8d6fe89e371",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "65461a592fc689d8c93195724de4d037bdac03aa",
+    "channel": "preview",
+    "channelHeadIndependentlyVerified": true,
+    "physicalDeviceReceiptVerified": false
+  },
+  "filesChangedInImplementation": [
+    "docs/localization-2026-11-19.md",
+    "package-lock.json",
+    "package.json",
+    "scripts/audit-localization.cjs",
+    "scripts/check-localization.cjs",
+    "src/app/App.tsx",
+    "src/components/StaffDataState.tsx",
+    "src/features/admin/AdminDashboard.tsx",
+    "src/features/admin/AdminSettings.tsx",
+    "src/features/admin/AdminWebPortal.tsx",
+    "src/features/admin/ComplianceReports.tsx",
+    "src/features/admin/LecturerDirectory.tsx",
+    "src/features/admin/SessionHistory.tsx",
+    "src/features/admin/SubmissionMonitor.tsx",
+    "src/features/admin/adminStyles.tsx",
+    "src/features/auth/WebLogin.tsx",
+    "src/features/auth/WebRegister.tsx",
+    "src/features/lecturer/AssessmentsTab.tsx",
+    "src/features/lecturer/ExportTab.tsx",
+    "src/features/lecturer/LecturerDashboard.tsx",
+    "src/features/lecturer/LecturerNotifications.tsx",
+    "src/features/lecturer/LecturerWebPortal.tsx",
+    "src/features/lecturer/MarkIssuesTab.tsx",
+    "src/features/lecturer/MarksEntryTab.tsx",
+    "src/features/lecturer/ReleasedMarkCorrectionPanel.tsx",
+    "src/layouts/PortalLayout.tsx",
+    "src/localization/LanguageSelect.tsx",
+    "src/localization/react.tsx",
+    "src/types/database.ts",
+    "student-mobile-expo/package-lock.json",
+    "student-mobile-expo/package.json",
+    "student-mobile-expo/src/app/(tabs)/_layout.tsx",
+    "student-mobile-expo/src/app/(tabs)/index.tsx",
+    "student-mobile-expo/src/app/(tabs)/progress.tsx",
+    "student-mobile-expo/src/app/(tabs)/settings.tsx",
+    "student-mobile-expo/src/app/_layout.tsx",
+    "student-mobile-expo/src/app/auth/callback.tsx",
+    "student-mobile-expo/src/app/dispute/[offeringId].tsx",
+    "student-mobile-expo/src/app/onboarding.tsx",
+    "student-mobile-expo/src/app/subject/[offeringId].tsx",
+    "student-mobile-expo/src/components/OpeningScreen.tsx",
+    "student-mobile-expo/src/components/StudentAvatar.tsx",
+    "student-mobile-expo/src/components/StudentLanding.tsx",
+    "student-mobile-expo/src/components/SubjectCard.tsx",
+    "student-mobile-expo/src/components/charts.tsx",
+    "student-mobile-expo/src/components/ui.tsx",
+    "student-mobile-expo/src/locales/README.md",
+    "student-mobile-expo/src/locales/en.json",
+    "student-mobile-expo/src/locales/ms.json",
+    "student-mobile-expo/src/locales/ta.json",
+    "student-mobile-expo/src/locales/zh.json",
+    "student-mobile-expo/src/localization/LanguageSetting.tsx",
+    "student-mobile-expo/src/localization/core.ts",
+    "student-mobile-expo/src/localization/react.tsx",
+    "tests/assessment-component-type.test.mjs",
+    "tests/assessment-save-lifecycle.test.mjs",
+    "tests/helpers/localization.mjs",
+    "tests/lecturer-subject-creation.test.mjs",
+    "tests/lecturer-subject-groups.test.mjs",
+    "tests/lecturer-teaching-history.test.mjs",
+    "tests/localization-mobile.test.mjs",
+    "tests/localization.test.mjs",
+    "tests/mark-corrections-ui.test.mjs",
+    "tests/release-terminology.test.mjs",
+    "tests/released-mark-edit.test.mjs",
+    "tests/shared-assessment-structure.test.mjs",
+    "tests/subject-card-colors.test.mjs",
+    "tests/subject-weightage.test.mjs",
+    "tests/submission-groups.test.mjs"
+  ]
+}
