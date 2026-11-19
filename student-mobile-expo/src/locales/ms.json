@@ -760,5 +760,7 @@
   "{{subject}} carry marks finalized": "Markah berterusan {{subject}} dilepaskan",
   "{{subject}} results were finalised by {{lecturer}}.": "Keputusan {{subject}} dilepaskan oleh {{lecturer}}.",
   "{{subject}} results were finalized by {{lecturer}}.": "Keputusan {{subject}} dilepaskan oleh {{lecturer}}.",
-  "pending": "Belum Selesai"
+  "pending": "Belum Selesai",
+  "Your mark for {{assessment}} in {{subject}} has been updated and released.": "Markah anda untuk {{assessment}} dalam {{subject}} telah dikemas kini dan dilepaskan.",
+  "Your continuous assessment marks for {{subject}} have been released.": "Markah penilaian berterusan anda untuk {{subject}} telah dilepaskan."
 }

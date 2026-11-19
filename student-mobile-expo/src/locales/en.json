@@ -760,5 +760,7 @@
   "{{subject}} carry marks finalized": "{{subject}} carry marks released",
   "{{subject}} results were finalised by {{lecturer}}.": "{{subject}} results were released by {{lecturer}}.",
   "{{subject}} results were finalized by {{lecturer}}.": "{{subject}} results were released by {{lecturer}}.",
-  "pending": "pending"
+  "pending": "pending",
+  "Your mark for {{assessment}} in {{subject}} has been updated and released.": "Your mark for {{assessment}} in {{subject}} has been updated and released.",
+  "Your continuous assessment marks for {{subject}} have been released.": "Your continuous assessment marks for {{subject}} have been released."
 }

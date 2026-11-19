@@ -39,10 +39,15 @@ test('dynamic names and reasons survive interpolation, including strings resembl
   app.instance.addResource('en','translation','fallback_probe','English fallback');assert.equal(app.t('fallback_probe'),'English fallback');
   const data='Eligible $t(Reject) {{reason}} <A> தமிழ்';
   assert(app.t('Manage {{value0}}',{value0:data}).includes(data));
-  assert(app.notificationText('Finalised Studies results were finalised by Finalise Lecturer.').includes('Finalised Studies'));
-  assert(app.notificationText('Finalised Studies results were finalised by Finalise Lecturer.').includes('Finalise Lecturer'));
-  assert(app.notificationText('Your mark for Reject in Eligible has been updated and released.').includes('Reject'));
-  assert(app.notificationText('Your mark for Reject in Eligible has been updated and released.').includes('Eligible'));
+  const subjects=[{code:'Eligible',name:'Finalised Studies results were finalised by a lecturer',lecturer:'Finalise Lecturer',assessments:[{name:'Reject in English'}]}];
+  assert.equal(app.notificationText('Your continuous assessment marks for Eligible have been released.',subjects),app.t('Your continuous assessment marks for {{subject}} have been released.',{subject:'Eligible'}));
+  const regular=app.notificationText('Finalised Studies results were finalised by a lecturer results were finalised by Finalise Lecturer.',subjects);
+  assert.equal(regular,app.t('{{subject}} results were released by {{lecturer}}.',{subject:subjects[0].name,lecturer:subjects[0].lecturer}));
+  assert(regular.includes(subjects[0].name));assert(regular.includes(subjects[0].lecturer));
+  const corrected=app.notificationText('Your mark for Reject in English in Eligible has been updated and released.',subjects);
+  assert.equal(corrected,app.t('Your mark for {{assessment}} in {{subject}} has been updated and released.',{assessment:'Reject in English',subject:'Eligible'}));
+  assert(corrected.includes('Reject in English'));assert(corrected.includes('Eligible'));
+  assert.equal(app.notificationText('Your mark for Unknown in Unknown has been updated and released.',subjects),'Your mark for Unknown in Unknown has been updated and released.');
   assert.equal(app.notificationText('A custom message from a lecturer'),'A custom message from a lecturer');
  }
 });

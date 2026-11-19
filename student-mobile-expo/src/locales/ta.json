@@ -760,5 +760,7 @@
   "{{subject}} carry marks finalized": "{{subject}} தொடர் மதிப்பெண்கள் வெளியிடப்பட்டன",
   "{{subject}} results were finalised by {{lecturer}}.": "{{lecturer}} ஆல் {{subject}} முடிவுகள் வெளியிடப்பட்டன.",
   "{{subject}} results were finalized by {{lecturer}}.": "{{lecturer}} ஆல் {{subject}} முடிவுகள் வெளியிடப்பட்டன.",
-  "pending": "நிலுவையில்"
+  "pending": "நிலுவையில்",
+  "Your mark for {{assessment}} in {{subject}} has been updated and released.": "{{subject}} பாடத்தில் {{assessment}} மதிப்பெண் திருத்தப்பட்டு வெளியிடப்பட்டது.",
+  "Your continuous assessment marks for {{subject}} have been released.": "{{subject}} பாடத்திற்கான உங்கள் தொடர் மதிப்பீட்டு மதிப்பெண்கள் வெளியிடப்பட்டுள்ளன."
 }

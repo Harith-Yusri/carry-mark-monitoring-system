@@ -760,5 +760,7 @@
   "{{subject}} carry marks finalized": "{{subject}} 平时成绩已发布",
   "{{subject}} results were finalised by {{lecturer}}.": "{{subject}} 的成绩已由 {{lecturer}} 发布。",
   "{{subject}} results were finalized by {{lecturer}}.": "{{subject}} 的成绩已由 {{lecturer}} 发布。",
-  "pending": "待处理"
+  "pending": "待处理",
+  "Your mark for {{assessment}} in {{subject}} has been updated and released.": "您在 {{subject}} 中的 {{assessment}} 成绩已更新并发布。",
+  "Your continuous assessment marks for {{subject}} have been released.": "{{subject}} 的平时考核成绩已发布。"
 }

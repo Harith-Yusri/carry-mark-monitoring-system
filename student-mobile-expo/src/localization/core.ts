@@ -52,13 +52,23 @@ export function createLocalization(getLanguages: () => readonly string[] = devic
     }).join("");
     return { key, names, regex: new RegExp(`^${regex}$`) };
   });
-  const notificationText = (text: string): string => {
-    if (Object.prototype.hasOwnProperty.call(en, text)) return t(text);
-    for (const pattern of patterns) {
-      const match = pattern.regex.exec(text);
-      if (match) return t(pattern.key, Object.fromEntries(pattern.names.map((name, index) => [name, match[index + 1]])));
+  // Compare complete server templates against known data; never split names on
+  // English words such as "in" or "by", which may themselves occur in a name.
+  const notificationText = (text: string, subjects: readonly { code: string; name: string; lecturer: string; assessments: readonly { name: string }[] }[] = []): string => {
+    if (["Mark Updated", "Marks Released"].includes(text)) return t(text);
+    for (const subject of subjects) {
+      for (const key of ["Your carry marks for {{subject}} are now available.", "Your continuous assessment marks for {{subject}} have been released."]) {
+        if (text === key.replace("{{subject}}", subject.code)) return t(key, { subject: subject.code });
+      }
+      for (const verb of ["finalised", "finalized", "released"]) {
+        if (text === `${subject.code} carry marks ${verb}`) return t("{{subject}} carry marks released", { subject: subject.code });
+        if (text === `${subject.name} results were ${verb} by ${subject.lecturer}.`) return t("{{subject}} results were released by {{lecturer}}.", { subject: subject.name, lecturer: subject.lecturer });
+      }
+      for (const assessment of subject.assessments) {
+        if (text === `Your mark for ${assessment.name} in ${subject.code} has been updated and released.`) return t("Your mark for {{assessment}} in {{subject}} has been updated and released.", { assessment: assessment.name, subject: subject.code });
+      }
     }
-    return text;
+    return text; // Unknown/historical messages stay intact instead of guessing at their data boundaries.
   };
   const tx = (text: string | null | undefined): string => {
     if (!text) return text ?? "";
