@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +10,7 @@ import { fonts } from "@/theme/fonts";
 import { logOAuthError } from "@/lib/oauthDiagnostics";
 
 export default function AuthCallbackScreen() {
+  useLocale();
   const { colors } = useTheme();
   const { completeOAuth, error } = useStudent();
   const linkingUrl = Linking.useLinkingURL();
@@ -38,10 +40,10 @@ export default function AuthCallbackScreen() {
 
   return <Screen>
     <View style={styles.content}>
-      <Text style={[styles.title, { color: colors.text }]}>Google sign-in wasn’t completed</Text>
-      <ErrorBanner message={error ?? "Return to the login screen and try again with your UiTM student Google account."} />
+      <Text style={[styles.title, { color: colors.text }]}>{t("Google sign-in wasn’t completed")}</Text>
+      <ErrorBanner message={error ?? (t("Return to the login screen and try again with your UiTM student Google account."))} />
       <Pressable onPress={() => router.replace("/login")} style={styles.linkButton} accessibilityRole="button">
-        <Text style={[styles.linkText, { color: colors.accent }]}>Back to sign in</Text>
+        <Text style={[styles.linkText, { color: colors.accent }]}>{t("Back to sign in")}</Text>
       </Pressable>
     </View>
   </Screen>;

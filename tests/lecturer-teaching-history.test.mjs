@@ -1,3 +1,4 @@
+import { localizedFunction } from './helpers/localization.mjs';
 import { InitialDataState, RefreshStatus } from './helpers/staff-loading.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -6,8 +7,8 @@ import { transform } from 'esbuild';
 import React from 'react';
 
 const compile = async path => (await transform(await readFile(path, 'utf8'), { loader: path.endsWith('tsx') ? 'tsx' : 'ts', format: 'cjs' })).code;
-const { groupLecturerSubjects } = new Function('module', await compile('src/services/lecturerSubjectGroups.ts') + ';return module.exports;')({ exports: {} });
-const { workspace: W } = new Function('module', await compile('src/features/lecturer/workspaceStyles.ts') + ';return module.exports;')({ exports: {} });
+const { groupLecturerSubjects } = localizedFunction('module', await compile('src/services/lecturerSubjectGroups.ts') + ';return module.exports;')({ exports: {} });
+const { workspace: W } = localizedFunction('module', await compile('src/features/lecturer/workspaceStyles.ts') + ';return module.exports;')({ exports: {} });
 const apiCode = await compile('src/services/carryMarkApi.ts');
 const source = (await readFile('src/features/lecturer/LecturerDashboard.tsx', 'utf8')).replace(/^import .*;\n/gm, '').replace('export function LecturerDashboard','function LecturerDashboard');
 const { code } = await transform(source, { loader: 'tsx' });
@@ -23,7 +24,7 @@ function text(tree) {
 }
 function setup(dashboard=payload) {
   const states=[];let cursor=0,effectMounted=false;const effects=[],reads=[],writes=[],rpcCalls=[],selected=[];
-  const api = new Function('module','require',apiCode+';return module.exports;')({exports:{}},name=>name.includes('lecturerSubjectGroups')?{groupLecturerSubjects}:{requireSupabase:()=>({rpc:async name=>{rpcCalls.push(name);assert.equal(name,'get_my_lecturer_subject_dashboard');return {data:dashboard,error:null}}})});
+  const api = localizedFunction('module','require',apiCode+';return module.exports;')({exports:{}},name=>name.includes('lecturerSubjectGroups')?{groupLecturerSubjects}:{requireSupabase:()=>({rpc:async name=>{rpcCalls.push(name);assert.equal(name,'get_my_lecturer_subject_dashboard');return {data:dashboard,error:null}}})});
   const useState=initial=>{const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],value=>{states[i]=typeof value==='function'?value(states[i]):value}]};
   const useRef=initial=>{const i=cursor++;if(!(i in states))states[i]={current:initial};return states[i]};
   const icon=()=>null;
@@ -34,7 +35,7 @@ function setup(dashboard=payload) {
     loadSubjectCreationData:async()=>({catalogue:[],termLabel:'Semester 1 · 2026/2027'}),listProgrammes:async()=>[],
     listLecturerSubjects:async()=>[],createLecturerSubject:failWrite,updateLecturerSubject:failWrite,deleteLecturerSubject:failWrite,
     ...Object.fromEntries(['BookOpen','Plus','Users','Clock','ChevronRight','MoreVertical','Trash2','X'].map(k=>[k,icon]))};
-  const Component=new Function(...Object.keys(deps),code+';return LecturerDashboard;')(...Object.values(deps));
+  const Component=localizedFunction(...Object.keys(deps),code+';return LecturerDashboard;')(...Object.values(deps));
   const render=()=>{cursor=0;return Component({onSelectSubject:s=>selected.push(s)})};
   const all=()=>nodes(render());
   const field=label=>all().find(n=>n.props?.['aria-label']===label);

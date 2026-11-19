@@ -1,3 +1,4 @@
+import { t, tx, useLocale } from "@/localization/react";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -8,11 +9,13 @@ import { getGlassStyle } from "@/theme/glass";
 import { loadMyMarkIssues, markIssueError, markIssueStatus, type MarkIssueWorkspace } from "@/services/markIssues";
 
 export default function DisputeScreen() {
+  useLocale();
   const { offeringId } = useLocalSearchParams<{ offeringId: string }>();
   return <MarkIssueForm key={offeringId} offeringId={offeringId} />;
 }
 
 function MarkIssueForm({ offeringId }: { offeringId: string }) {
+  useLocale();
   const { initializing, student, subjects, dispute, actionLoading, error, clearError } = useStudent();
   const { colors } = useTheme();
   const subject = subjects.find(item => item.offering_id === offeringId);
@@ -32,7 +35,7 @@ function MarkIssueForm({ offeringId }: { offeringId: string }) {
   }, [offeringId]);
   if (initializing) return <LoadingView />;
   if (!student) return <Redirect href="/login" />;
-  if (!subject) return <Screen style={styles.center}><Text style={[typography.body, { color: colors.muted }]}>Subject not found.</Text></Screen>;
+  if (!subject) return <Screen style={styles.center}><Text style={[typography.body, { color: colors.muted }]}>{t("Subject not found.")}</Text></Screen>;
   const selected = workspace?.options.find(option => `${option.enrolment_id}:${option.assessment_id}` === selection);
   const refreshIssues = async () => {
     if (inFlight.current) return;
@@ -53,34 +56,34 @@ function MarkIssueForm({ offeringId }: { offeringId: string }) {
     } finally { inFlight.current = false; }
   };
   return <Screen><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-    <Pressable accessibilityRole="button" style={styles.back} onPress={() => router.back()}><Text style={[typography.bodyStrong, { color: colors.accent }]}>‹ Back to subject</Text></Pressable>
-    <View><Heading>Report a mark issue</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>{subject.code} · {subject.name}</Text></View>
-    <Text style={[typography.body, { color: colors.muted }]}>Select the assessment and explain the issue. Your assigned lecturer will review it. Your lecturer will reject the report with a response or correct the exact mark. You will see the updated mark after the lecturer releases it.</Text>
-    {loadingIssues && <Text accessibilityRole="progressbar" style={[typography.body, { color: colors.muted }]}>Loading reports…</Text>}
-    {notice !== "" && <Text accessibilityRole="alert" style={[typography.bodyStrong, { color: colors.success }]}>{notice}</Text>}
-    <View style={styles.options}><Text style={[typography.bodyStrong, { color: colors.text }]}>Assessment</Text>
+    <Pressable accessibilityRole="button" style={styles.back} onPress={() => router.back()}><Text style={[typography.bodyStrong, { color: colors.accent }]}>{t("‹ Back to subject")}</Text></Pressable>
+    <View><Heading>{t("Report a mark issue")}</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>{subject.code} · {subject.name}</Text></View>
+    <Text style={[typography.body, { color: colors.muted }]}>{t("Select the assessment and explain the issue. Your assigned lecturer will review it. Your lecturer will reject the report with a response or correct the exact mark. You will see the updated mark after the lecturer releases it.")}</Text>
+    {loadingIssues && <Text accessibilityRole="progressbar" style={[typography.body, { color: colors.muted }]}>{t("Loading reports…")}</Text>}
+    {notice !== "" && <Text accessibilityRole="alert" style={[typography.bodyStrong, { color: colors.success }]}>{tx(notice)}</Text>}
+    <View style={styles.options}><Text style={[typography.bodyStrong, { color: colors.text }]}>{t("Assessment")}</Text>
       {workspace?.options.map(option => {
         const key = `${option.enrolment_id}:${option.assessment_id}`;
         return <Pressable key={key} accessibilityRole="radio" accessibilityState={{ selected: key === selection }} disabled={actionLoading} onPress={() => { setSelection(key); clearError(); }} style={[getGlassStyle(colors, "secondary", key === selection ? "brand" : "neutral"), styles.option]}><Text style={[typography.body, { color: colors.text }]}>{option.name} · {option.class_label}</Text></Pressable>;
       })}
-      {workspace && !workspace.options.length && <Text style={[typography.body, { color: colors.muted }]}>No current assessment is available to report.</Text>}
+      {workspace && !workspace.options.length && <Text style={[typography.body, { color: colors.muted }]}>{t("No current assessment is available to report.")}</Text>}
     </View>
-    <Field label="Explanation" value={explanation} onChangeText={value => { setExplanation(value); clearError(); }} maxLength={2000} editable={!actionLoading} multiline numberOfLines={6} textAlignVertical="top" placeholder="Describe the issue clearly" style={styles.explanation} />
+    <Field label={t("Explanation")} value={explanation} onChangeText={value => { setExplanation(value); clearError(); }} maxLength={2000} editable={!actionLoading} multiline numberOfLines={6} textAlignVertical="top" placeholder={t("Describe the issue clearly")} style={styles.explanation} />
     <ErrorBanner message={localError ?? error} />
-    <PrimaryButton onPress={() => void submit()} disabled={!selected || !explanation.trim() || actionLoading || loadingIssues}><ButtonText>{actionLoading ? "Submitting…" : "Submit Report"}</ButtonText></PrimaryButton>
-    <View style={styles.historyHeader}><Heading size={22}>My reports</Heading><Pressable accessibilityRole="button" disabled={loadingIssues || actionLoading} style={styles.refresh} onPress={() => void refreshIssues()}><Text style={[typography.bodyStrong, { color: colors.accent }]}>Refresh reports</Text></Pressable></View>
+    <PrimaryButton onPress={() => void submit()} disabled={!selected || !explanation.trim() || actionLoading || loadingIssues}><ButtonText>{actionLoading ? t("Submitting…") : t("Submit Report")}</ButtonText></PrimaryButton>
+    <View style={styles.historyHeader}><Heading size={22}>{t("My reports")}</Heading><Pressable accessibilityRole="button" disabled={loadingIssues || actionLoading} style={styles.refresh} onPress={() => void refreshIssues()}><Text style={[typography.bodyStrong, { color: colors.accent }]}>{t("Refresh reports")}</Text></Pressable></View>
     {workspace?.issues.map(issue => {
       const label = markIssueStatus(issue);
       const tone = label.includes("Rejected") ? "danger" : label === "Corrected" || label === "Closed" ? "success" : "warning";
       return <Card key={issue.id} style={styles.issueCard}>
         <Text style={[typography.bodyStrong, { color: colors.text }]}>{issue.assessment_name}{issue.class_label ? ` · ${issue.class_label}` : ""}</Text>
-        <View style={[getGlassStyle(colors, "secondary", tone), styles.status]}><Text style={[typography.bodyStrong, { color: colors[tone] }]}>{label}</Text></View>
+        <View style={[getGlassStyle(colors, "secondary", tone), styles.status]}><Text style={[typography.bodyStrong, { color: colors[tone] }]}>{t(label)}</Text></View>
         <Text style={[typography.body, { color: colors.textSecondary }]}>{issue.explanation}</Text>
         <Text style={[typography.body, { color: colors.muted }]}>{new Date(issue.created_at).toLocaleString()}</Text>
-        {issue.response && <Text style={[typography.body, { color: colors.textSecondary }]}>Lecturer response: {issue.response}</Text>}
+        {issue.response && <Text style={[typography.body, { color: colors.textSecondary }]}>{t("Lecturer response: {{value0}}", { value0: (issue.response) })}</Text>}
       </Card>;
     })}
-    {workspace && !workspace.issues.length && <Text style={[typography.body, { color: colors.muted }]}>No reports for this subject yet.</Text>}
+    {workspace && !workspace.issues.length && <Text style={[typography.body, { color: colors.muted }]}>{t("No reports for this subject yet.")}</Text>}
   </ScrollView></Screen>;
 }
 const styles = StyleSheet.create({

@@ -1,3 +1,4 @@
+import { t, useLocale, semesterLabel } from "@/localization/react";
 import { AlertCircle, BarChart3, CheckCircle2, Clock3, LockKeyhole } from "lucide-react-native";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SubjectBarChart } from "@/components/charts";
@@ -6,6 +7,7 @@ import { useStudent } from "@/context/StudentContext";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function ProgressScreen() {
+  useLocale();
   const { subjects, student } = useStudent();
   const { colors } = useTheme();
   const released = subjects.filter(subject => subject.is_finalised && subject.carry_mark !== null).length;
@@ -15,33 +17,33 @@ export default function ProgressScreen() {
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.eyebrow, { color: colors.accent }]}>STUDY SNAPSHOT</Text>
-          <Heading>My Progress</Heading>
+          <Text style={[styles.eyebrow, { color: colors.accent }]}>{t("STUDY SNAPSHOT")}</Text>
+          <Heading>{t("My Progress")}</Heading>
         </View>
         <View style={[styles.semesterChip, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
-          <Text style={[typography.bodyStrong, { color: colors.accent }]} numberOfLines={1}>{student?.semester ?? "Current semester"}</Text>
+          <Text style={[typography.bodyStrong, { color: colors.accent }]} numberOfLines={1}>{semesterLabel(student?.semester ?? t("Current semester"))}</Text>
         </View>
       </View>
 
       <View style={[styles.releaseSummary, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <SummaryItem icon={<CheckCircle2 size={18} color={colors.success} />} value={released} label="Released" />
+        <SummaryItem icon={<CheckCircle2 size={18} color={colors.success} />} value={released} label={t("Released")} />
         <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
-        <SummaryItem icon={<Clock3 size={18} color={colors.warning} />} value={pending} label="Pending" />
+        <SummaryItem icon={<Clock3 size={18} color={colors.warning} />} value={pending} label={t("Pending")} />
         <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
-        <SummaryItem icon={<BarChart3 size={18} color={colors.accent} />} value={subjects.length} label="Subjects" />
+        <SummaryItem icon={<BarChart3 size={18} color={colors.accent} />} value={subjects.length} label={t("Subjects")} />
       </View>
 
       <SubjectBarChart subjects={subjects} />
 
       <View style={styles.sectionHeading}>
         <View>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Subject summary</Text>
-          <Text style={[typography.body, { color: colors.muted }]}>Your carry-mark release status at a glance</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("Subject summary")}</Text>
+          <Text style={[typography.body, { color: colors.muted }]}>{t("Your carry-mark release status at a glance")}</Text>
         </View>
       </View>
 
       {subjects.length === 0 ? <Card>
-        <Text style={[typography.body, { color: colors.muted }]}>No subject progress is available yet.</Text>
+        <Text style={[typography.body, { color: colors.muted }]}>{t("No subject progress is available yet.")}</Text>
       </Card> : <Card style={styles.subjectList}>
         {subjects.map((subject, index) => {
           const isReleased = subject.is_finalised && subject.carry_mark !== null;
@@ -65,7 +67,7 @@ export default function ProgressScreen() {
               <View style={styles.subjectHeadingRow}>
                 <Text style={[styles.subjectCode, { color: colors.accent }]}>{subject.code}</Text>
                 <View style={[styles.statusChip, { backgroundColor: isReleased ? `${resultColor}18` : `${colors.warning}18` }]}>
-                  <Text style={[styles.statusText, { color: isReleased ? resultColor : colors.warning }]}>{isIneligible ? "NOT ELIGIBLE" : isReleased ? "RELEASED" : "PENDING"}</Text>
+                  <Text style={[styles.statusText, { color: isReleased ? resultColor : colors.warning }]}>{isIneligible ? t("NOT ELIGIBLE") : isReleased ? t("RELEASED") : t("PENDING")}</Text>
                 </View>
               </View>
               <Text style={[styles.subjectName, { color: colors.textSecondary }]} numberOfLines={2}>{subject.name}</Text>
@@ -75,7 +77,7 @@ export default function ProgressScreen() {
                 {percentage === null ? "—" : `${percentage.toFixed(0)}%`}
               </Text>
               <Text style={[styles.markCaption, { color: isIneligible ? colors.danger : colors.muted }]}>
-                {isReleased ? `${subject.carry_mark}/${subject.carry_maximum}` : "Not released"}
+                {isReleased ? `${subject.carry_mark}/${subject.carry_maximum}` : t("Not released")}
               </Text>
             </View>
           </View>;
@@ -86,6 +88,7 @@ export default function ProgressScreen() {
 }
 
 function SummaryItem({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
+  useLocale();
   const { colors } = useTheme();
   return <View style={styles.summaryItem}>
     {icon}

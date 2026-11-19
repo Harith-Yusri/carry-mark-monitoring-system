@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import { Redirect, Tabs } from "expo-router";
 import { BarChart3, BookOpen, Settings, type LucideIcon } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
@@ -9,6 +10,7 @@ import { fonts } from "@/theme/fonts";
 const icons: Record<string, LucideIcon> = { index: BookOpen, progress: BarChart3, settings: Settings };
 
 export default function TabsLayout() {
+  useLocale();
   const { initializing, student, onboarding } = useStudent();
   const { colors } = useTheme();
   if (initializing) return <LoadingView />;
@@ -35,9 +37,9 @@ export default function TabsLayout() {
       </View>;
     },
   })}>
-    <Tabs.Screen name="index" options={{ title: "Subjects" }} />
-    <Tabs.Screen name="progress" options={{ title: "Progress" }} />
-    <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+    <Tabs.Screen name="index" options={{ title: t("Subjects") }} />
+    <Tabs.Screen name="progress" options={{ title: t("Progress") }} />
+    <Tabs.Screen name="settings" options={{ title: t("Settings") }} />
   </Tabs>;
 }
 

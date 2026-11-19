@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import { router, Redirect } from "expo-router";
 import { useRef, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -10,6 +11,7 @@ import { demoModeEnabled } from "@/services/studentApi";
 import { fonts } from "@/theme/fonts";
 
 export default function StudentLanding() {
+  useLocale();
   const colors = darkPalette;
   const { initializing, student, onboarding, loginWithGoogle, loginAsDemo, loading, error, clearError } = useStudent();
   const [demoRevealed, setDemoRevealed] = useState(false);
@@ -49,12 +51,12 @@ export default function StudentLanding() {
         <Pressable disabled={!demoModeEnabled} onPress={activateDemo} style={styles.logoStage}>
           <View pointerEvents="none" style={[styles.glowOuter, { backgroundColor: `${colors.primary}0D` }]} />
           <View pointerEvents="none" style={[styles.glowInner, { backgroundColor: `${colors.accent}12` }]} />
-          <Image source={require("../../assets/cmms-logo-mark.png")} resizeMode="contain" style={styles.logo} accessibilityLabel="Continuous Assessment Monitoring System" />
+          <Image source={require("../../assets/cmms-logo-mark.png")} resizeMode="contain" style={styles.logo} accessibilityLabel={t("Continuous Assessment Monitoring System")} />
         </Pressable>
-        <Text style={[styles.brandLine, { color: colors.accent }]}>YOUR ACADEMIC COMPANION</Text>
+        <Text style={[styles.brandLine, { color: colors.accent }]}>{t("YOUR ACADEMIC COMPANION")}</Text>
         <Text style={[styles.title, { color: colors.text }]}>CAMS</Text>
-        <Text style={[styles.systemName, { color: colors.text }]}>Continuous Assessment{"\n"}Monitoring System</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Monitor your continuous assessment, marks and academic progress.</Text>
+        <Text style={[styles.systemName, { color: colors.text }]}>{t("Continuous Assessment\nMonitoring System")}</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t("Monitor your continuous assessment, marks and academic progress.")}</Text>
       </View>
 
       <View style={styles.actionArea}>
@@ -62,7 +64,7 @@ export default function StudentLanding() {
         <View style={[styles.googleButtonDepth, { shadowColor: colors.primary }]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Continue with UiTM Google Account"
+            accessibilityLabel={t("Continue with UiTM Google Account")}
             accessibilityState={{ disabled: loading || Boolean(configurationError), busy: loading }}
             disabled={loading || Boolean(configurationError)}
             onPress={() => void submit()}
@@ -74,26 +76,26 @@ export default function StudentLanding() {
             ]}
           >
             <View style={styles.googleMark}><Text style={styles.googleLetter}>G</Text></View>
-            <Text style={[styles.googleLabel, { color: colors.white }]}>{loading ? "Connecting to Google…" : "Continue with UiTM Google"}</Text>
+            <Text style={[styles.googleLabel, { color: colors.white }]}>{loading ? t("Connecting to Google…") : t("Continue with UiTM Google")}</Text>
           </Pressable>
         </View>
-        <Text style={[styles.accountHint, { color: colors.muted }]}>Use your official @student.uitm.edu.my Google account.</Text>
+        <Text style={[styles.accountHint, { color: colors.muted }]}>{t("Use your official @student.uitm.edu.my Google account.")}</Text>
         {demoRevealed && <View style={[styles.demoArea, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-          <Text style={[styles.demoStatus, { color: colors.muted }]}>Demo mode enabled</Text>
+          <Text style={[styles.demoStatus, { color: colors.muted }]}>{t("Demo mode enabled")}</Text>
           <Pressable
             accessibilityRole="button"
             disabled={loading}
             onPress={() => void submitDemo()}
             style={({ pressed }) => [styles.demoButton, { borderColor: colors.accent }, pressed && styles.pressed, loading && styles.disabled]}
           >
-            <Text style={[styles.demoButtonText, { color: colors.accent }]}>{loading ? "Opening demo…" : "Continue as Demo Student"}</Text>
+            <Text style={[styles.demoButtonText, { color: colors.accent }]}>{loading ? t("Opening demo…") : t("Continue as Demo Student")}</Text>
           </Pressable>
         </View>}
       </View>
 
       <View style={styles.footer}>
         <View style={[styles.footerRule, { backgroundColor: colors.border }]} />
-        <Text style={[styles.footerText, { color: colors.muted }]}>UiTM Student Portal</Text>
+        <Text style={[styles.footerText, { color: colors.muted }]}>{t("UiTM Student Portal")}</Text>
       </View>
     </ScrollView>
   </Screen>;

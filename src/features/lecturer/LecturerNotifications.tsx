@@ -1,3 +1,4 @@
+import { t, tx, useLocale } from "../../localization/react";
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router";
 import { Bell, X } from "lucide-react";
@@ -30,10 +31,12 @@ export function LecturerNotificationsProvider({ children }: { children: React.Re
   return <NotificationsContext.Provider value={store}>{children}</NotificationsContext.Provider>;
 }
 export function LecturerNotificationBell() {
+  useLocale();
   const store = useLecturerNotificationStore();
   return store ? <NotificationBell store={store} /> : null;
 }
 function NotificationBell({ store }: { store: LecturerNotificationStore }) {
+  useLocale();
   const state = useSyncExternalStore(store.subscribe, store.snapshot);
   const [show, setShow] = useState(false);
   const [panelTop, setPanelTop] = useState(96);
@@ -49,28 +52,28 @@ function NotificationBell({ store }: { store: LecturerNotificationStore }) {
     return () => { window.removeEventListener("keydown", close); window.removeEventListener("pointerdown", outside); };
   }, [show]);
   return <div className="relative">
-    <button ref={bell} type="button" aria-label={count === undefined ? state.error ? "Notifications unavailable" : "Loading notifications" : `Notifications, ${count} unread`} aria-expanded={show} aria-controls="lecturer-notifications" onClick={() => { setPanelTop((bell.current?.getBoundingClientRect().bottom ?? 88) + 8); setShow(!show); if (!show) void store.refresh(); }} className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white hover:bg-white/20">
+    <button ref={bell} type="button" aria-label={count === undefined ? state.error ? t("Notifications unavailable") : t("Loading notifications") : t("Notifications, {{value0}} unread", { value0: (count) })} aria-expanded={show} aria-controls="lecturer-notifications" onClick={() => { setPanelTop((bell.current?.getBoundingClientRect().bottom ?? 88) + 8); setShow(!show); if (!show) void store.refresh(); }} className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white hover:bg-white/20">
       <Bell size={20} aria-hidden="true" />
       {count !== undefined && count > 0 && <span aria-hidden="true" className="absolute -right-1 -top-1 min-w-5 rounded-full bg-amber-200 px-1 text-xs font-bold text-slate-900">{count > 99 ? "99+" : count}</span>}
       {count === undefined && !state.error && <span aria-hidden="true" className="absolute right-1 top-1 h-2 w-2 rounded-full bg-white/70" />}
     </button>
-    {show && <section ref={panel} id="lecturer-notifications" aria-label="Lecturer notifications" style={{ "--inbox-top": `${panelTop}px` } as React.CSSProperties} className="staff-content-card fixed left-3 right-3 top-[var(--inbox-top)] z-50 max-h-[min(75dvh,calc(100dvh-var(--inbox-top)-12px))] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-[var(--staff-surface)] dark:text-slate-50 sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-[25rem]">
-      <div className="mb-3 flex items-center justify-between gap-2"><h2 className={W.title}>Notifications</h2><button type="button" aria-label="Close notifications" className={W.iconButton} onClick={() => { setShow(false); bell.current?.focus(); }}><X size={18} /></button></div>
-      {state.error && <p role="alert" className={W.error}>{state.error}</p>}
-      {state.page === null && state.loading && <LoadingState label="Loading notifications…" />}
-      {state.page && state.loading && <RefreshStatus label="Refreshing notifications…" />}
-      {state.liveReady === false && <p className={W.muted}>Live updates are reconnecting. You can refresh notifications.</p>}
-      <button type="button" className={W.secondary} disabled={state.loading} onClick={() => void store.refresh(true)}>Refresh notifications</button>
-      {state.page && !state.error && state.page.items.length === 0 && <p className={W.muted + " mt-4"}>No mark-issue notifications yet.</p>}
+    {show && <section ref={panel} id="lecturer-notifications" aria-label={t("Lecturer notifications")} style={{ "--inbox-top": `${panelTop}px` } as React.CSSProperties} className="staff-content-card fixed left-3 right-3 top-[var(--inbox-top)] z-50 max-h-[min(75dvh,calc(100dvh-var(--inbox-top)-12px))] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-[var(--staff-surface)] dark:text-slate-50 sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-[25rem]">
+      <div className="mb-3 flex items-center justify-between gap-2"><h2 className={W.title}>{t("Notifications")}</h2><button type="button" aria-label={t("Close notifications")} className={W.iconButton} onClick={() => { setShow(false); bell.current?.focus(); }}><X size={18} /></button></div>
+      {state.error && <p role="alert" className={W.error}>{tx(state.error)}</p>}
+      {state.page === null && state.loading && <LoadingState label={t("Loading notifications…")} />}
+      {state.page && state.loading && <RefreshStatus label={t("Refreshing notifications…")} />}
+      {state.liveReady === false && <p className={W.muted}>{t("Live updates are reconnecting. You can refresh notifications.")}</p>}
+      <button type="button" className={W.secondary} disabled={state.loading} onClick={() => void store.refresh(true)}>{t("Refresh notifications")}</button>
+      {state.page && !state.error && state.page.items.length === 0 && <p className={W.muted + " mt-4"}>{t("No mark-issue notifications yet.")}</p>}
       <ul className="mt-3 space-y-2">{state.page?.items.map(item => <li key={item.id}>
         <button type="button" disabled={state.openingId !== null} className={"w-full break-words rounded-lg border p-3 text-left disabled:opacity-60 " + (item.read_at ? "border-slate-200 dark:border-slate-700" : "border-purple-300 bg-purple-50 dark:border-purple-500 dark:bg-[var(--staff-brand-surface)]")} onClick={() => { setShow(false); navigate(`/lecturer/dashboard?markIssueNotification=${encodeURIComponent(item.id)}`); }}>
-          <span className="staff-card-title block font-semibold">{item.data.studentName} {!item.read_at && <span className="ml-2 text-xs">Unread</span>}</span>
+          <span className="staff-card-title block font-semibold">{item.data.studentName} {!item.read_at && <span className="ml-2 text-xs">{t("Unread")}</span>}</span>
           <span className={W.muted + " block"}>{item.data.subjectCode} · {item.data.classLabel}</span>
           <span className={W.muted + " block"}>{item.data.assessmentName}</span>
           <time className={W.muted + " block"} dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time>
         </button>
       </li>)}</ul>
-      {state.page?.has_more && <button type="button" className={W.secondary + " mt-3"} disabled={state.loading || state.loadingMore} onClick={() => void store.loadMore()}>{state.loadingMore ? "Loading older notifications…" : "Load older notifications"}</button>}
+      {state.page?.has_more && <button type="button" className={W.secondary + " mt-3"} disabled={state.loading || state.loadingMore} onClick={() => void store.loadMore()}>{state.loadingMore ? t("Loading older notifications…") : t("Load older notifications")}</button>}
     </section>}
   </div>;
 }

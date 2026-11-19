@@ -1,3 +1,4 @@
+import { t, tx, useLocale } from "../localization/react";
 import { LoadingState } from "../components/StaffDataState";
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
@@ -12,14 +13,16 @@ const LecturerWebPortal = lazy(() => import("../features/lecturer/LecturerWebPor
 const AdminWebPortal = lazy(() => import("../features/admin/AdminWebPortal").then((module) => ({ default: module.AdminWebPortal })));
 
 function RouteFallback() {
+  useLocale();
   return (
     <div role="status" aria-live="polite" style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-      <LoadingState label="Loading CAMS…" />
+      <LoadingState label={t("Loading CAMS…")} />
     </div>
   );
 }
 
 function MainApp() {
+  useLocale();
   return (
     <BrowserRouter>
       <Suspense fallback={<RouteFallback />}>
@@ -66,6 +69,7 @@ function MainApp() {
 }
 
 export default function App() {
+  useLocale();
   return (
     <DarkModeProvider>
       <AuthProvider>

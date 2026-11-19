@@ -1,3 +1,4 @@
+import { t, tx, useLocale } from "@/localization/react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -11,6 +12,7 @@ import { startupError, startupLog } from "@/lib/startupLog";
 startupLog("Root layout module evaluated");
 
 export default function RootLayout() {
+  useLocale();
   useEffect(() => {
     startupLog("Root layout mounted; first React route can render");
   }, []);
@@ -63,6 +65,7 @@ function PushCoordinator() {
 }
 
 function Navigation() {
+  useLocale();
   const { mode, colors } = useTheme();
   const { initializing, restoreFailed, student, onboarding, error, restoreSession, logout } = useStudent();
   // Keep the navigator mounted for OAuth/deep-link callbacks during restoration.
@@ -83,11 +86,11 @@ function Navigation() {
     </View>}
     {!initializing && restoreFailed && !student && !onboarding && <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]} accessibilityViewIsModal>
       <Screen style={{ justifyContent: "center", padding: 24, gap: 18 }}>
-        <Heading>Unable to open CAMS</Heading>
-        <Text style={[typography.body, { color: colors.textSecondary }]}>Your saved sign-in has been kept. Check your connection and try again.</Text>
-        <ErrorBanner message={error} />
-        <PrimaryButton onPress={() => void restoreSession()}><ButtonText>Try again</ButtonText></PrimaryButton>
-        <PrimaryButton onPress={() => void logout()}><ButtonText>Sign out</ButtonText></PrimaryButton>
+        <Heading>{t("Unable to open CAMS")}</Heading>
+        <Text style={[typography.body, { color: colors.textSecondary }]}>{t("Your saved sign-in has been kept. Check your connection and try again.")}</Text>
+        <ErrorBanner message={tx(error)} />
+        <PrimaryButton onPress={() => void restoreSession()}><ButtonText>{t("Try again")}</ButtonText></PrimaryButton>
+        <PrimaryButton onPress={() => void logout()}><ButtonText>{t("Sign out")}</ButtonText></PrimaryButton>
       </Screen>
     </View>}
   </View>;

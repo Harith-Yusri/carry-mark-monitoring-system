@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../localization/react";
 import React from "react";
 import { submissionStatusLabel } from "../../utils/releaseTerminology";
 import { useColors as usePortalColors, useDark } from "../../context/DarkModeContext";
@@ -19,10 +20,11 @@ export function useColors() {
 export const useCardColors = useColors;
 
 export function AdminStatus({ status, children }: { status: string; children?: React.ReactNode }) {
+  useLocale();
   const value = status.toLowerCase();
   const tone = ["finalised", "active", "completed"].includes(value) ? "success"
     : ["overdue", "action required", "require action"].includes(value) ? "danger"
     : ["archived", "inactive", "neutral"].includes(value) ? "neutral" : "pending";
   const label = submissionStatusLabel(status).toLowerCase().replace(/\b\w/g, character => character.toUpperCase());
-  return <span className={`admin-status admin-status-${tone}`}>{children}{label}</span>;
+  return <span className={`admin-status admin-status-${tone}`}>{children}{t(label)}</span>;
 }

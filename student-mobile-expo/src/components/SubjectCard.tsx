@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import { AlertCircle, ChevronRight, CheckCircle2, Clock3, LockKeyhole, UserRound, UsersRound } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Card, typography } from "@/components/ui";
@@ -6,13 +7,14 @@ import { SubjectResult } from "@/types/portal";
 import { fonts } from "@/theme/fonts";
 
 export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPress: () => void }) {
+  useLocale();
   const { colors } = useTheme();
   const released = subject.is_finalised && subject.carry_mark !== null;
   const ineligible = released && subject.eligible === false;
   const resultColor = ineligible ? colors.danger : colors.success;
   const statusColor = released ? resultColor : colors.warning;
 
-  return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`View ${subject.code} assessment details`}>
+  return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={t("View {{value0}} assessment details", { value0: (subject.code) })}>
     {({ pressed }) => <Card style={[styles.card, { opacity: pressed ? .86 : 1 }]}>
       <View style={styles.topRow}>
         <View style={[styles.codeBadge, { backgroundColor: colors.primarySoft, borderColor: `${colors.accent}55` }]}>
@@ -20,7 +22,7 @@ export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPr
         </View>
         <View style={[styles.status, { backgroundColor: `${statusColor}16`, borderColor: `${statusColor}55` }]}>
           {ineligible ? <AlertCircle size={13} color={statusColor} /> : released ? <CheckCircle2 size={13} color={statusColor} /> : <Clock3 size={13} color={statusColor} />}
-          <Text style={[styles.statusText, { color: statusColor }]}>{ineligible ? "NOT ELIGIBLE" : released ? "RELEASED" : "PENDING"}</Text>
+          <Text style={[styles.statusText, { color: statusColor }]}>{ineligible ? t("NOT ELIGIBLE") : released ? t("RELEASED") : t("PENDING")}</Text>
         </View>
       </View>
 
@@ -35,15 +37,15 @@ export function SubjectCard({ subject, onPress }: { subject: SubjectResult; onPr
         <View style={styles.resultCopy}>
           {ineligible ? <AlertCircle size={17} color={colors.danger} /> : released ? <CheckCircle2 size={17} color={colors.success} /> : <LockKeyhole size={17} color={colors.muted} />}
           <View>
-            <Text style={[styles.resultLabel, { color: colors.muted }]}>CARRY MARK</Text>
-            <Text style={[typography.bodyStrong, { color: released ? resultColor : colors.textSecondary }]}>{ineligible ? "Released · Not Eligible" : released ? "Released" : "Not released yet"}</Text>
+            <Text style={[styles.resultLabel, { color: colors.muted }]}>{t("CARRY MARK")}</Text>
+            <Text style={[typography.bodyStrong, { color: released ? resultColor : colors.textSecondary }]}>{ineligible ? t("Released · Not Eligible") : released ? t("Released") : t("Not released yet")}</Text>
           </View>
         </View>
         {released && <Text style={[styles.mark, { color: resultColor }]}>{subject.carry_mark!.toFixed(0)}<Text style={[styles.markMaximum, { color: colors.textSecondary }]}>/{subject.carry_maximum.toFixed(0)}</Text></Text>}
       </View>
 
       <View style={styles.actionRow}>
-        <Text style={[typography.bodyStrong, { color: colors.accent }]}>View assessment details</Text>
+        <Text style={[typography.bodyStrong, { color: colors.accent }]}>{t("View assessment details")}</Text>
         <ChevronRight size={18} color={colors.accent} />
       </View>
     </Card>}

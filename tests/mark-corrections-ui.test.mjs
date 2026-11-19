@@ -1,3 +1,4 @@
+import { localizedFunction } from './helpers/localization.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -24,7 +25,7 @@ async function lecturer(status, { editable = true, can_correct = true } = {}) {
     loadMarkIssues: async () => [item], window: { confirm: () => true },
   };
   for (const fn of ['correctIssue', 'respondToIssue', 'releaseCorrection']) dependencies[fn] = async (...args) => { calls.push([fn, ...args]); };
-  const Component = new Function(...Object.keys(dependencies), 'module', await compile('src/features/lecturer/MarkIssuesTab.tsx') + ';return module.exports.MarkIssuesTab;')(...Object.values(dependencies), { exports: {} });
+  const Component = localizedFunction(...Object.keys(dependencies), 'module', await compile('src/features/lecturer/MarkIssuesTab.tsx') + ';return module.exports.MarkIssuesTab;')(...Object.values(dependencies), { exports: {} });
   const render = () => { cursor = 0; return Component({ offeringId: 'owned-offering' }); };
   const button = label => nodes(render()).find(n => n.type === 'button' && text(n) === label);
   return { render, button, calls, item };
@@ -80,7 +81,7 @@ test('unlinked or unreleased reports permit rejection but cannot stage a correct
 });
 test('staff API stages only the reported issue with score and trimmed reason', async () => {
   const calls = [];
-  const api = new Function('requireSupabase', 'module', await compile('src/services/markCorrectionApi.ts') + ';return module.exports;')(
+  const api = localizedFunction('requireSupabase', 'module', await compile('src/services/markCorrectionApi.ts') + ';return module.exports;')(
     () => ({ rpc: async (...args) => { calls.push(args); return { error: null }; } }), { exports: {} });
   await api.correctIssue('issue-1', 0, '  Entry error confirmed  ');
   await api.respondToIssue('issue-2', 'rejected', '  Script checked  ');
@@ -99,7 +100,7 @@ test('Admin portal has no correction queue, badge reads, or review actions', asy
 });
 
 test('student status history exposes progress and own responses without private draft data', async () => {
-  const calls = []; const api = new Function('supabase', 'recordAuthActivity', '__DEV__', 'module', await compile('student-mobile-expo/src/services/markIssues.ts') + ';return module.exports;')({ rpc: async (...args) => { calls.push(args); return { data: 'report-id', error: null }; } }, async () => { throw new Error('Local storage unavailable'); }, false, { exports: {} });
+  const calls = []; const api = localizedFunction('supabase', 'recordAuthActivity', '__DEV__', 'module', await compile('student-mobile-expo/src/services/markIssues.ts') + ';return module.exports;')({ rpc: async (...args) => { calls.push(args); return { data: 'report-id', error: null }; } }, async () => { throw new Error('Local storage unavailable'); }, false, { exports: {} });
   await api.submitStudentMarkIssue('enrolment', 'assessment', '  Please review  ', 'request-key');
   assert.deepEqual(calls[0], ['submit_student_mark_issue', { target_enrolment: 'enrolment', target_assessment: 'assessment', explanation: 'Please review', request_key: 'request-key' }]);
   for (const [status, label] of [['pending', 'Submitted'], ['approved', 'Submitted'], ['rejected', 'Submitted'], ['corrected', 'Awaiting updated mark release'], ['released', 'Corrected']]) assert.equal(api.markIssueStatus({ status: 'reviewing', correction_status: status }), label);

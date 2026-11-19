@@ -1,3 +1,4 @@
+import { localizedFunction } from './helpers/localization.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -24,7 +25,7 @@ function setup(existingType) {
     return [states[i], value => { states[i] = typeof value === 'function' ? value(states[i]) : value; }];
   };
   const icon = () => null;
-  const Component = new Function('React', 'useState', 'useEffect', 'useMemo', 'W', 'userError',
+  const Component = localizedFunction('React', 'useState', 'useEffect', 'useMemo', 'W', 'userError',
     'CheckCircle', 'Edit3', 'Plus', 'Trash2', 'X', 'listAssessments', 'loadOfferingWeightage',
     'saveOfferingWeightage', 'deleteAssessment', 'persistAssessment', 'loadAssessmentStructure', 'useRef', code + '; return AssessmentsTab;')(
     React, useState, () => {}, fn => fn(), {}, (_, fallback) => fallback,

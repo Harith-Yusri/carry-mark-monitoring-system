@@ -1,3 +1,4 @@
+import { localizedFunction } from './helpers/localization.mjs';
 import { LoadingState } from './helpers/staff-loading.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,7 +19,7 @@ test('multi-programme Hub has one assessment editor and retains every offering f
   const states = ['subject-hub', subject, 'assessments'];
   let cursor = 0;
   const useState = initial => { const i = cursor++; return [states[i] ?? initial, value => { states[i] = value; }]; };
-  const Portal = new Function('React', 'useState', 'lazy', 'Suspense', 'ChevronLeft', 'W', 'useAuth', 'LoadingState', 'useMemo', 'SubjectClassCache', 'useLecturerNotificationStore', 'useSearchParams', 'useEffect', 'useLocation', portalCode + ';return LecturerWebPortal;')(
+  const Portal = localizedFunction('React', 'useState', 'lazy', 'Suspense', 'ChevronLeft', 'W', 'useAuth', 'LoadingState', 'useMemo', 'SubjectClassCache', 'useLecturerNotificationStore', 'useSearchParams', 'useEffect', 'useLocation', portalCode + ';return LecturerWebPortal;')(
     React, useState, () => () => null, ({ children }) => children, () => null, {}, () => ({ user: { name: 'Lecturer' } }), LoadingState, fn => fn(), class { invalidate() {} }, () => null, () => [new URLSearchParams(), () => {}], () => {}, () => ({ key: "test" }),
   );
   const render = () => { cursor = 0; return Portal(); };
@@ -38,7 +39,7 @@ const { code: apiCode } = await transform(apiSource, { loader: 'ts', format: 'cj
 function apiSetup(error = null) {
   const calls = [];
   const payload = { assessments: [{ id: 'original-assessment-id' }], carryMax: 70 };
-  const api = new Function('requireSupabase', 'module', apiCode + ';return module.exports;')(
+  const api = localizedFunction('requireSupabase', 'module', apiCode + ';return module.exports;')(
     () => ({ rpc: async (...args) => { calls.push(args); return { data: payload, error }; } }), { exports: {} },
   );
   return { api, calls, payload };

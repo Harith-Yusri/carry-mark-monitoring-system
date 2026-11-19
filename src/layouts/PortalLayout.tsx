@@ -1,3 +1,5 @@
+import { LanguageSelect } from "../localization/LanguageSelect";
+import { t, tx, useLocale } from "../localization/react";
 import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router";
 import { Sun, Moon, LogOut, AlertTriangle } from "lucide-react";
@@ -12,6 +14,7 @@ const LEGACY_STAFF_TEXT_SCALE_KEY = "cmms-staff-text-scale";
 const STAFF_TEXT_SCALES: StaffTextScale[] = [1, 1.12, 1.24];
 
 export function PortalLayout() {
+  useLocale();
   const dark = useDark();
   const toggleDark = useDarkToggle();
   const { user, logout } = useAuth();
@@ -54,25 +57,26 @@ export function PortalLayout() {
         <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-8 lg:px-12">
           <div className="flex items-center gap-3">
             <img className="h-11 w-11 shrink-0 object-contain rounded-lg bg-white shadow-sm" src="/assets/branding/cams-portal-144.webp" alt="" aria-hidden="true" />
-            <div><div className="text-base font-bold tracking-tight text-white">CAMS</div><div className="mt-1 hidden text-xs font-medium text-[#DDD2EB] sm:block">{user?.role === "admin" ? "Faculty Academic Operations" : "Lecturer Assessment Workspace"}</div></div>
+            <div><div className="text-base font-bold tracking-tight text-white">CAMS</div><div className="mt-1 hidden text-xs font-medium text-[#DDD2EB] sm:block">{user?.role === "admin" ? t("Faculty Academic Operations") : t("Lecturer Assessment Workspace")}</div></div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {user && <div className="mr-2 hidden border-r border-white/20 pr-4 lg:block"><div className="text-sm font-semibold">{user.name}</div><div className="mt-1 text-xs text-[#DDD2EB]">{user.id} · {user.role === "admin" ? "Administrator" : "Lecturer"}</div></div>}
-            <div role="group" aria-label="Text size" className="inline-flex items-center rounded-lg border border-white/25 bg-white/10 p-1">
+            {user && <div className="mr-2 hidden border-r border-white/20 pr-4 lg:block"><div className="text-sm font-semibold">{user.name}</div><div className="mt-1 text-xs text-[#DDD2EB]">{user.id} · {user.role === "admin" ? t("Administrator") : t("Lecturer")}</div></div>}
+            <LanguageSelect />
+            <div role="group" aria-label={t("Text size")} className="inline-flex items-center rounded-lg border border-white/25 bg-white/10 p-1">
               {([
-                { label: "A−", scale: 1 as StaffTextScale, title: "Small text size" },
-                { label: "A", scale: 1.12 as StaffTextScale, title: "Normal text size" },
-                { label: "A+", scale: 1.24 as StaffTextScale, title: "Large accessibility text size" },
+                { label: "A−", scale: 1 as StaffTextScale, title: t("Small text size") },
+                { label: "A", scale: 1.12 as StaffTextScale, title: t("Normal text size") },
+                { label: "A+", scale: 1.24 as StaffTextScale, title: t("Large accessibility text size") },
               ]).map(option => {
                 const active = textScale === option.scale;
                 return <button key={option.label} type="button" title={option.title} aria-label={option.title} aria-pressed={active} onClick={() => changeTextScale(option.scale)} className={"inline-flex min-h-11 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors sm:min-w-11 " + (active ? "bg-[#E9DDF6] text-[#3D185A]" : "text-white hover:bg-white/15")}>{option.label}</button>;
               })}
             </div>
             {user?.role === "lecturer" && <LecturerNotificationBell />}
-            <button aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} title={dark ? "Switch to light theme" : "Switch to dark theme"} onClick={toggleDark} className="staff-theme-toggle inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white hover:bg-white/20">
+            <button aria-label={dark ? t("Switch to light theme") : t("Switch to dark theme")} title={dark ? t("Switch to light theme") : t("Switch to dark theme")} onClick={toggleDark} className="staff-theme-toggle inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white hover:bg-white/20">
               {dark ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <button onClick={handleLogout} aria-label="Logout" className="staff-logout-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-rose-200/50 bg-rose-100/10 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-[#DC2626] hover:text-white"><LogOut size={18} /><span className="hidden sm:inline">Logout</span></button>
+            <button onClick={handleLogout} aria-label={t("Logout")} className="staff-logout-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-rose-200/50 bg-rose-100/10 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-[#DC2626] hover:text-white"><LogOut size={18} /><span className="hidden sm:inline">{t("Logout")}</span></button>
           </div>
         </div>
       </header>
@@ -80,11 +84,11 @@ export function PortalLayout() {
       {showLogoutConfirmation && <div role="dialog" aria-modal="true" aria-labelledby="logout-confirmation-title" className="portal-typography fixed inset-0 z-100 flex items-center justify-center overflow-y-auto bg-slate-950/50 p-5" onMouseDown={event => { if (!loggingOut && event.target === event.currentTarget) setShowLogoutConfirmation(false); }}>
         <div className="my-auto w-full max-w-md rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-xl dark:border-[var(--staff-border)] dark:bg-[var(--staff-input)]">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-rose-50 text-rose-700"><AlertTriangle size={23} /></div>
-          <h2 id="logout-confirmation-title" className="mb-2 text-xl font-bold">Confirm logout</h2>
-          <p className="mb-6 text-sm leading-relaxed text-slate-500 dark:text-slate-300">Are you sure you want to log out of the staff portal? You will need to enter your staff ID and password again to continue.</p>
+          <h2 id="logout-confirmation-title" className="mb-2 text-xl font-bold">{t("Confirm logout")}</h2>
+          <p className="mb-6 text-sm leading-relaxed text-slate-500 dark:text-slate-300">{t("Are you sure you want to log out of the staff portal? You will need to enter your staff ID and password again to continue.")}</p>
           <div className="grid grid-cols-2 gap-3">
-            <button type="button" disabled={loggingOut} onClick={() => setShowLogoutConfirmation(false)} className="min-h-11 rounded-lg border border-purple-900 bg-transparent px-4 py-2.5 text-sm font-semibold text-purple-900 hover:bg-purple-50 disabled:opacity-50 dark:border-purple-300 dark:text-purple-200 dark:hover:bg-[var(--staff-row-hover)]">Cancel</button>
-            <button type="button" disabled={loggingOut} onClick={confirmLogout} className="staff-primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors"><LogOut size={16} />{loggingOut ? "Logging out…" : "Log Out"}</button>
+            <button type="button" disabled={loggingOut} onClick={() => setShowLogoutConfirmation(false)} className="min-h-11 rounded-lg border border-purple-900 bg-transparent px-4 py-2.5 text-sm font-semibold text-purple-900 hover:bg-purple-50 disabled:opacity-50 dark:border-purple-300 dark:text-purple-200 dark:hover:bg-[var(--staff-row-hover)]">{t("Cancel")}</button>
+            <button type="button" disabled={loggingOut} onClick={confirmLogout} className="staff-primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors"><LogOut size={16} />{loggingOut ? t("Logging out…") : t("Log Out")}</button>
           </div>
         </div>
       </div>}

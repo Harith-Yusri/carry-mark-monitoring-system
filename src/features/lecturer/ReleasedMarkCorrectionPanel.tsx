@@ -1,3 +1,4 @@
+import { t, tx, useLocale } from "../../localization/react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { LoadingState, RefreshStatus } from "../../components/StaffDataState";
@@ -7,6 +8,7 @@ import { workspace as W } from "./workspaceStyles";
 export function ReleasedMarkCorrectionPanel({ target, onClose, onReleased }: {
   target: ReleasedMarkTarget; onClose: () => void; onReleased: () => Promise<void>;
 }) {
+  useLocale();
   const [context, setContext] = useState<ReleasedMarkContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,7 +51,7 @@ export function ReleasedMarkCorrectionPanel({ target, onClose, onReleased }: {
     finally { flight.current = false; setBusy(false); }
   };
   const release = async () => {
-    if (!draft || released || flight.current || !window.confirm("Release this updated mark to this student? Only this assessment mark will change; the class stays Released.")) return;
+    if (!draft || released || flight.current || !window.confirm(t("Release this updated mark to this student? Only this assessment mark will change; the class stays Released."))) return;
     flight.current = true; setBusy(true); setError("");
     try {
       await releaseCorrection(draft.id);
@@ -69,27 +71,27 @@ export function ReleasedMarkCorrectionPanel({ target, onClose, onReleased }: {
       else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panel.current)) { event.preventDefault(); first.focus(); }
     }
   }}><div ref={panel} tabIndex={-1} className={W.modal + " space-y-4"}>
-    <div className="flex items-start justify-between gap-3"><h2 id="released-mark-correction-title" className={W.title}>Edit Released Mark</h2><button type="button" aria-label="Close correction" disabled={busy} onClick={onClose} className={W.iconButton}><X size={20} /></button></div>
-    {loading && (context ? <RefreshStatus label="Refreshing correction…" /> : <LoadingState label="Loading the selected Released mark…" />)}
-    {error && <p role="alert" className={W.error}>{error}</p>}
-    {!context && !loading && <button className={W.secondary} onClick={() => void reload()}>Try again</button>}
-    {notice && <p role="status" className={W.muted}>{notice}</p>}
+    <div className="flex items-start justify-between gap-3"><h2 id="released-mark-correction-title" className={W.title}>{t("Edit Released Mark")}</h2><button type="button" aria-label={t("Close correction")} disabled={busy} onClick={onClose} className={W.iconButton}><X size={20} /></button></div>
+    {loading && (context ? <RefreshStatus label={t("Refreshing correction…")} /> : <LoadingState label={t("Loading the selected Released mark…")} />)}
+    {error && <p role="alert" className={W.error}>{tx(error)}</p>}
+    {!context && !loading && <button className={W.secondary} onClick={() => void reload()}>{t("Try again")}</button>}
+    {notice && <p role="status" className={W.muted}>{tx(notice)}</p>}
     {context && <>
-      <dl className="space-y-2 text-sm"><div><dt className={W.muted}>Student</dt><dd className="staff-card-title font-semibold">{context.student_name} · {context.student_number}</dd></div>
-        <div><dt className={W.muted}>Subject / Class</dt><dd>{context.subject_code} · {context.class_label}</dd></div>
-        <div><dt className={W.muted}>Assessment</dt><dd>{context.assessment_name}</dd></div>
-        <div><dt className={W.muted}>{released ? "Updated Released score" : "Current Released score"}</dt><dd>{released ? draft?.corrected_score : context.current_score} / {context.maximum_score}</dd></div></dl>
-      <p className={W.muted}>{context.correction?.dispute_id ? "This correction is linked to the student's mark issue." : "Lecturer-initiated correction for this student and assessment only."} Save Correction does not publish the new score.</p>
-      <label className={W.label} htmlFor="released-correction-score">Corrected score (maximum {context.maximum_score})</label>
+      <dl className="space-y-2 text-sm"><div><dt className={W.muted}>{t("Student")}</dt><dd className="staff-card-title font-semibold">{context.student_name} · {context.student_number}</dd></div>
+        <div><dt className={W.muted}>{t("Subject / Class")}</dt><dd>{context.subject_code} · {context.class_label}</dd></div>
+        <div><dt className={W.muted}>{t("Assessment")}</dt><dd>{context.assessment_name}</dd></div>
+        <div><dt className={W.muted}>{released ? t("Updated Released score") : t("Current Released score")}</dt><dd>{released ? draft?.corrected_score : context.current_score} / {context.maximum_score}</dd></div></dl>
+      <p className={W.muted}>{t("{{value0}} Save Correction does not publish the new score.", { value0: (context.correction?.dispute_id ? t("This correction is linked to the student's mark issue.") : t("Lecturer-initiated correction for this student and assessment only.")) })}</p>
+      <label className={W.label} htmlFor="released-correction-score">{t("Corrected score (maximum {{value0}})", { value0: (context.maximum_score) })}</label>
       <input id="released-correction-score" type="number" min="0" max={context.maximum_score} step="0.01" value={draft ? draft.corrected_score ?? "" : score} disabled={busy || loading || Boolean(context.correction) || released} onChange={event => setScore(event.target.value)} className={W.field} />
-      <label className={W.label} htmlFor="released-correction-reason">Correction reason (required)</label>
+      <label className={W.label} htmlFor="released-correction-reason">{t("Correction reason (required)")}</label>
       <textarea id="released-correction-reason" maxLength={2000} value={draft ? draft.reason : reason} disabled={busy || loading || Boolean(context.correction) || released} onChange={event => setReason(event.target.value)} className={W.field} />
-      {error && !released && <button className={W.secondary} disabled={busy || loading} onClick={() => void reload()}>Refresh correction</button>}
-      {context.correction && !draft && !released && <p className={W.muted}>A correction is already linked to this mark. Continue it in Mark Issues.</p>}
-      {draft && !released && <p className={W.muted}>Saved correction: {draft.corrected_score} / {context.maximum_score} · private until released. You can close this panel and return to release it later.</p>}
-      <div className="flex flex-wrap gap-3"><button className={W.secondary} disabled={busy || loading || !valid || Boolean(context.correction) || released} onClick={() => void save()}>Save Correction</button>
-        <button className={W.primary} disabled={busy || loading || !draft || released} onClick={() => void release()}>Release Updated Mark</button></div>
-      {context.history.length > 0 && <details><summary className={W.muted}>Correction history</summary>{context.history.map(row => <div key={row.id} className="my-3 space-y-1 text-sm"><p>{row.original_score} → {row.corrected_score} · {row.status === "released" ? "Released" : row.status === "corrected" ? "Awaiting release" : row.status}</p><p>{row.reason}</p><p className={W.muted}>{row.snapshot.lecturer_name} · {row.initiation_source === "lecturer" ? "Lecturer-initiated" : "Student issue"} · {new Date(row.requested_at).toLocaleString()}{row.released_at ? ` · Released ${new Date(row.released_at).toLocaleString()}` : ""}</p></div>)}</details>}
+      {error && !released && <button className={W.secondary} disabled={busy || loading} onClick={() => void reload()}>{t("Refresh correction")}</button>}
+      {context.correction && !draft && !released && <p className={W.muted}>{t("A correction is already linked to this mark. Continue it in Mark Issues.")}</p>}
+      {draft && !released && <p className={W.muted}>{t("Saved correction: {{value0}} / {{value1}} · private until released. You can close this panel and return to release it later.", { value0: (draft.corrected_score), value1: (context.maximum_score) })}</p>}
+      <div className="flex flex-wrap gap-3"><button className={W.secondary} disabled={busy || loading || !valid || Boolean(context.correction) || released} onClick={() => void save()}>{t("Save Correction")}</button>
+        <button className={W.primary} disabled={busy || loading || !draft || released} onClick={() => void release()}>{t("Release Updated Mark")}</button></div>
+      {context.history.length > 0 && <details><summary className={W.muted}>{t("Correction history")}</summary>{context.history.map(row => <div key={row.id} className="my-3 space-y-1 text-sm"><p>{row.original_score} → {row.corrected_score} · {row.status === "released" ? t("Released") : row.status === "corrected" ? t("Awaiting release") : t(row.status)}</p><p>{row.reason}</p><p className={W.muted}>{row.snapshot.lecturer_name} · {row.initiation_source === "lecturer" ? t("Lecturer-initiated") : t("Student issue")} · {new Date(row.requested_at).toLocaleString()}{row.released_at ? t(" · Released {{value0}}", { value0: (new Date(row.released_at).toLocaleString()) }) : ""}</p></div>)}</details>}
     </>}
   </div></div>;
 }

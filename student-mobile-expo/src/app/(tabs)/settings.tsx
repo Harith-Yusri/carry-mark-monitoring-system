@@ -1,3 +1,5 @@
+import { LanguageSetting } from "@/localization/LanguageSetting";
+import { t, tx, useLocale, semesterLabel } from "@/localization/react";
 import Constants from "expo-constants";
 import { useFocusEffect } from "expo-router";
 import {
@@ -17,6 +19,7 @@ const PUSH_TEST_TIMEOUT_MS = 30_000;
 const PUSH_TEST_TIMEOUT_MESSAGE = "The test request timed out. Delivery may still complete. Check your notifications before trying again.";
 
 export default function SettingsScreen() {
+  useLocale();
   const { colors, mode, toggle } = useTheme();
   const { student, notifications_enabled, actionLoading, setNotificationAlertsEnabled, logout, refresh } = useStudent();
   const [testingPush, setTestingPush] = useState(false);
@@ -26,15 +29,15 @@ export default function SettingsScreen() {
     void refresh();
   }, [refresh]));
 
-  const confirmLogout = () => Alert.alert("Sign out?", "You will need to sign in again to access your carry marks.", [
-    { text: "Cancel", style: "cancel" },
-    { text: "Sign out", style: "destructive", onPress: () => void logout() },
+  const confirmLogout = () => Alert.alert(t("Sign out?"), t("You will need to sign in again to access your carry marks."), [
+    { text: t("Cancel"), style: "cancel" },
+    { text: t("Sign out"), style: "destructive", onPress: () => void logout() },
   ]);
 
   const updateNotificationAlerts = async (enabled: boolean) => {
     const updated = await setNotificationAlertsEnabled(enabled);
     if (!updated) {
-      Alert.alert("Push notifications", "Unable to update your notification preference. Please try again.");
+      Alert.alert(t("Push notifications"), t("Unable to update your notification preference. Please try again."));
     }
   };
 
@@ -62,9 +65,9 @@ export default function SettingsScreen() {
       });
       const result = await Promise.race([request(), deadline]);
       if (!result?.sent) throw new Error("No active device token was available. Reopen Settings and try again.");
-      Alert.alert("Test notification sent", "Check your notification tray.");
+      Alert.alert(t("Test notification sent"), t("Check your notification tray."));
     } catch (reason) {
-      Alert.alert("Push notification test", reason instanceof Error ? reason.message : "Unable to send the test notification.");
+      Alert.alert(t("Push notification test"), reason instanceof Error ? tx(reason.message) : t("Unable to send the test notification."));
     } finally {
       clearTimeout(timeoutId);
       pushTestInFlight.current = false;
@@ -75,43 +78,41 @@ export default function SettingsScreen() {
   return <Screen>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={[styles.eyebrow, { color: colors.accent }]}>YOUR SPACE</Text>
-        <Heading>Settings</Heading>
+        <Text style={[styles.eyebrow, { color: colors.accent }]}>{t("YOUR SPACE")}</Text>
+        <Heading>{t("Settings")}</Heading>
       </View>
 
       <Card style={styles.profileCard}>
         <View style={styles.identityRow}>
           <StudentAvatar name={student?.name} />
           <View style={styles.identityCopy}>
-            <Text style={[styles.name, { color: colors.text }]}>{student?.name ?? "Student"}</Text>
-            <View style={styles.idRow}><Hash size={13} color={colors.muted} /><Text style={[styles.studentId, { color: colors.textSecondary }]}>{student?.matrix_number ?? "Not recorded"}</Text></View>
+            <Text style={[styles.name, { color: colors.text }]}>{student?.name ?? (t("Student"))}</Text>
+            <View style={styles.idRow}><Hash size={13} color={colors.muted} /><Text style={[styles.studentId, { color: colors.textSecondary }]}>{student?.matrix_number ?? (t("Not recorded"))}</Text></View>
           </View>
         </View>
 
         <View style={[styles.programmeBlock, { backgroundColor: colors.primarySoft }]}>
           <View style={[styles.detailIcon, { backgroundColor: `${colors.accent}1F` }]}><GraduationCap size={20} color={colors.accent} /></View>
           <View style={styles.detailCopy}>
-            <Text style={[styles.detailLabel, { color: colors.muted }]}>PROGRAMME</Text>
-            <Text style={[styles.programmeValue, { color: colors.text }]}>{student?.programme ?? "Not recorded"}</Text>
+            <Text style={[styles.detailLabel, { color: colors.muted }]}>{t("PROGRAMME")}</Text>
+            <Text style={[styles.programmeValue, { color: colors.text }]}>{student?.programme ?? (t("Not recorded"))}</Text>
           </View>
         </View>
 
         <View style={styles.profileDetails}>
-          <ProfileDetail icon={<Building2 size={18} color={colors.accent} />} label="Faculty" value={student?.faculty ?? "Not recorded"} />
-          <ProfileDetail icon={<CalendarDays size={18} color={colors.accent} />} label="Semester" value={student?.semester ?? "Not recorded"} />
-          <ProfileDetail icon={<Hash size={18} color={colors.accent} />} label="Semester Code" value={student?.semester_code ?? "Not recorded"} />
+          <ProfileDetail icon={<Building2 size={18} color={colors.accent} />} label={t("Faculty")} value={student?.faculty ?? t("Not recorded")} />
+          <ProfileDetail icon={<CalendarDays size={18} color={colors.accent} />} label={t("Semester")} value={semesterLabel(student?.semester ?? t("Not recorded"))} />
+          <ProfileDetail icon={<Hash size={18} color={colors.accent} />} label={t("Semester Code")} value={student?.semester_code ?? t("Not recorded")} />
         </View>
       </Card>
 
-      <SettingsSection title="Push Notifications" subtitle="Choose whether to receive continuous assessment alerts">
+      <SettingsSection title={t("Push Notifications")} subtitle={t("Choose whether to receive continuous assessment alerts")}>
         <InfoRow
           icon={<BellRing size={20} color={notifications_enabled === false ? colors.muted : colors.success} />}
-          title="Notification alerts"
-          detail={notifications_enabled === false
-            ? "Alerts are off. Your released marks remain available in the app."
-            : "Receive an alert when a lecturer releases your carry marks."}
+          title={t("Notification alerts")}
+          detail={notifications_enabled === false ? t("Alerts are off. Your released marks remain available in the app.") : t("Receive an alert when a lecturer releases your carry marks.")}
           trailing={<Switch
-            accessibilityLabel="Push notification alerts"
+            accessibilityLabel={t("Push notification alerts")}
             value={notifications_enabled !== false}
             onValueChange={value => void updateNotificationAlerts(value)}
             disabled={actionLoading}
@@ -123,8 +124,8 @@ export default function SettingsScreen() {
           <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
           <InfoRow
             icon={<Smartphone size={20} color={colors.accent} />}
-            title="Development push test"
-            detail="Send one secured test notification to your registered devices"
+            title={t("Development push test")}
+            detail={t("Send one secured test notification to your registered devices")}
             trailing={<Pressable
               accessibilityRole="button"
               disabled={testingPush || notifications_enabled === false}
@@ -134,35 +135,37 @@ export default function SettingsScreen() {
                 borderColor: colors.primary,
                 opacity: testingPush || notifications_enabled === false ? .45 : pressed ? .75 : 1,
               }]}
-            ><Text style={[styles.testButtonText, { color: colors.accent }]}>{testingPush ? "Sending…" : "Send test"}</Text></Pressable>}
+            ><Text style={[styles.testButtonText, { color: colors.accent }]}>{testingPush ? t("Sending…") : t("Send test")}</Text></Pressable>}
           />
         </>}
       </SettingsSection>
 
-      <SettingsSection title="App" subtitle="Appearance and app information">
+      <LanguageSetting />
+      <SettingsSection title={t("App")} subtitle={t("Appearance and app information")}>
         <InfoRow
           icon={<Moon size={20} color={colors.accent} />}
-          title="Dark appearance"
-          detail="Use the darker student app theme"
+          title={t("Dark appearance")}
+          detail={t("Use the darker student app theme")}
           trailing={<Switch value={mode === "dark"} onValueChange={toggle} trackColor={{ false: colors.border, true: colors.primary }} thumbColor={colors.white} />}
         />
         <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
         <InfoRow
           icon={<Smartphone size={20} color={colors.accent} />}
-          title="App information"
-          detail={`UiTM CAMS · Version ${Constants.expoConfig?.version ?? "1.0.0"} · Android & iOS`}
+          title={t("App information")}
+          detail={t("UiTM CAMS · Version {{value0}} · Android & iOS", { value0: (Constants.expoConfig?.version ?? "1.0.0") })}
         />
       </SettingsSection>
 
       <Pressable onPress={confirmLogout} style={({ pressed }) => [styles.logout, { backgroundColor: `${colors.danger}10`, borderColor: `${colors.danger}55`, opacity: pressed ? .78 : 1 }]}>
         <LogOut size={19} color={colors.danger} />
-        <Text style={[typography.bodyStrong, { color: colors.danger }]}>Sign out</Text>
+        <Text style={[typography.bodyStrong, { color: colors.danger }]}>{t("Sign out")}</Text>
       </Pressable>
     </ScrollView>
   </Screen>;
 }
 
 function SettingsSection({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+  useLocale();
   const { colors } = useTheme();
   return <View style={styles.section}>
     <View style={styles.sectionHeading}>
@@ -174,6 +177,7 @@ function SettingsSection({ title, subtitle, children }: { title: string; subtitl
 }
 
 function ProfileDetail({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  useLocale();
   const { colors } = useTheme();
   return <View style={styles.profileDetail}>
     <View style={[styles.smallIcon, { backgroundColor: colors.primarySoft }]}>{icon}</View>
@@ -185,6 +189,7 @@ function ProfileDetail({ icon, label, value }: { icon: ReactNode; label: string;
 }
 
 function InfoRow({ icon, title, detail, trailing }: { icon: ReactNode; title: string; detail: string; trailing?: ReactNode }) {
+  useLocale();
   const { colors } = useTheme();
   return <View style={styles.infoRow}>
     <View style={[styles.infoIcon, { backgroundColor: colors.elevated }]}>{icon}</View>

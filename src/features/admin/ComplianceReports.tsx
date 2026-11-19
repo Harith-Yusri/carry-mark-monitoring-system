@@ -1,3 +1,4 @@
+import { t, tx, useLocale, semesterLabel } from "../../localization/react";
 import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useState } from "react";
 import { CheckCircle, Download } from "lucide-react";
@@ -12,6 +13,7 @@ type ReportKey = string;
 interface ReportDefinition { key: ReportKey; title: string; description: string; scope: string; meta: string; filename: string; records: LecturerInfo[]; }
 
 export function ComplianceReports({ records, context, loading, error }: AdminRecordsViewProps) {
+  useLocale();
   const C = useColors();
   const CC = useCardColors();
   const [downloaded, setDownloaded] = useState<ReportKey | null>(null);
@@ -46,10 +48,10 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
   }, [context]);
 
   const reports: ReportDefinition[] = [
-    { key: "overall", title: "Overall Compliance Report", description: "Full lecturer submission status across the faculty.", scope: "Faculty", meta: `${records.length} lecturers`, filename: `Compliance_AllProgrammes_${termSlug}.csv`, records },
-    { key: "programme", title: "Programme Compliance Report", description: "Submission status for the selected academic programme.", scope: selectedProgramme?.code ?? "Select programme", meta: `${selectedProgrammeRecords.length} lecturers`, filename: `Compliance_${selectedProgramme?.code ?? "Programme"}_${termSlug}.csv`, records: selectedProgrammeRecords },
-    { key: "pending", title: "Pending Submissions List", description: "Lecturers requiring submission follow-up.", scope: "Exceptions", meta: `${pending.length} pending`, filename: `PendingList_${termSlug}.csv`, records: pending },
-    { key: "workload", title: "Lecturer Workload Summary", description: "Current-semester subject assignments, enrolment totals and submission progress.", scope: "Faculty", meta: `${studentTotal} enrolments`, filename: `LecturerWorkload_${termSlug}.csv`, records },
+    { key: "overall", title: t("Overall Compliance Report"), description: t("Full lecturer submission status across the faculty."), scope: t("Faculty"), meta: t("{{value0}} lecturers", { value0: (records.length) }), filename: `Compliance_AllProgrammes_${termSlug}.csv`, records },
+    { key: "programme", title: t("Programme Compliance Report"), description: t("Submission status for the selected academic programme."), scope: selectedProgramme?.code ?? t("Select programme"), meta: t("{{value0}} lecturers", { value0: (selectedProgrammeRecords.length) }), filename: `Compliance_${selectedProgramme?.code ?? "Programme"}_${termSlug}.csv`, records: selectedProgrammeRecords },
+    { key: "pending", title: t("Pending Submissions List"), description: t("Lecturers requiring submission follow-up."), scope: t("Exceptions"), meta: t("{{value0}} pending", { value0: (pending.length) }), filename: `PendingList_${termSlug}.csv`, records: pending },
+    { key: "workload", title: t("Lecturer Workload Summary"), description: t("Current-semester subject assignments, enrolment totals and submission progress."), scope: t("Faculty"), meta: t("{{value0}} enrolments", { value0: (studentTotal) }), filename: `LecturerWorkload_${termSlug}.csv`, records },
   ];
 
   const exportReport = (report: ReportDefinition) => {
@@ -60,28 +62,28 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
     window.setTimeout(() => setDownloaded(null), 2500);
   };
 
-  if (!context) return <InitialDataState title="Reports & Exports" label="Loading report data…" error={error} layout="table" />;
+  if (!context) return <InitialDataState title={t("Reports & Exports")} label={t("Loading report data…")} error={tx(error)} layout="table" />;
 
   return (
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px", alignItems: "flex-end" }}>
         <div>
-          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>Official Outputs</div>
-          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>Reports &amp; Exports</h1>
-          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Select a report by academic scope and download its current CSV record.</p>
+          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>{t("Official Outputs")}</div>
+          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>{t("Reports & Exports")}</h1>
+          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>{t("Select a report by academic scope and download its current CSV record.")}</p>
         </div>
-        <span style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{context?.termLabel ?? "Current Semester"}</span>
+        <span style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{semesterLabel(context?.termLabel ?? t("Current Semester"))}</span>
       </div>
 
-      {loading && <RefreshStatus label="Refreshing report data…" />}
-      {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
+      {loading && <RefreshStatus label={t("Refreshing report data…")} />}
+      {error && <p role="alert" style={{ color: C.red }}>{tx(error)}</p>}
 
       <div className="admin-table-panel"><div className="admin-table-scroll">
         <table className="admin-data-table" style={{ width: "100%", minWidth: "790px", borderCollapse: "collapse", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>
           <thead>
             <tr>
               {["Report", "Scope", "Included Records", "Format", "Action"].map((label, index) => (
-                <th scope="col" key={`${label}-${index}`}>{label}</th>
+                <th scope="col" key={`${label}-${index}`}>{t(label)}</th>
               ))}
             </tr>
           </thead>
@@ -97,13 +99,13 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
                   <td>
                     {report.key === "programme" ? (
                       <select
-                        aria-label="Programme for compliance report"
+                        aria-label={t("Programme for compliance report")}
                         value={selectedProgramme?.code ?? ""}
                         onChange={event => { setSelectedProgrammeCode(event.target.value); setDownloaded(null); }}
                         disabled={loading || !context?.programmes.length}
                         style={{ width: "100%", minWidth: "220px", maxWidth: "320px", padding: "8px 10px", background: CC.elevated, border: `1px solid ${CC.borderMid}`, borderRadius: "5px", color: CC.text, fontFamily: CC.sans, fontSize: "calc(0.75rem * var(--staff-text-scale))", cursor: loading ? "wait" : "pointer" }}
                       >
-                        {!context?.programmes.length && <option value="">No programmes available</option>}
+                        {!context?.programmes.length && <option value="">{t("No programmes available")}</option>}
                         {context?.programmes.map(programme => <option key={programme.id} value={programme.code}>{programme.code} — {programme.name}</option>)}
                       </select>
                     ) : report.scope}
@@ -113,7 +115,7 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
                   <td>
                     <button className={complete ? "admin-status admin-status-success" : "staff-primary-action admin-table-action"} disabled={report.key === "programme" && !selectedProgramme} onClick={() => exportReport(report)}>
                       {complete ? <CheckCircle size={13} /> : <Download size={13} />}
-                      {complete ? "Downloaded" : "Download CSV"}
+                      {complete ? t("Downloaded") : t("Download CSV")}
                     </button>
                   </td>
                 </tr>

@@ -1,3 +1,4 @@
+import { t, tx, useLocale, semesterLabel } from "../../localization/react";
 import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useRef, useState } from "react";
 import { BookOpen, Plus, Users, Clock, ChevronRight, MoreVertical, Trash2, X } from "lucide-react";
@@ -39,15 +40,16 @@ function assignSubjectThemes(subjects: Pick<LecturerSubject, 'code'>[]) {
 }
 
 function formatSubjectSync(value: string | null) {
-  if (!value) return 'Sync pending';
+  if (!value) return t("Sync pending");
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Sync unavailable';
+  if (Number.isNaN(date.getTime())) return t("Sync unavailable");
   const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(date);
   const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
-  return `Synced ${day}, ${time}`;
+  return t("Synced {{day}}, {{time}}", {day, time});
 }
 
 export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj: LecturerSubject) => void }) {
+  useLocale();
   const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<LecturerSubject | null>(null);
@@ -154,7 +156,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const deleteSubject = async (subject: LecturerSubject) => {
     setMenuOfferingId(null);
     setSubjectActionError("");
-    if (!window.confirm(`Delete ${subject.code} from ${subject.termLabel}? All classes, assessments, enrolments and draft marks linked to this offering will also be deleted. Released or archived records cannot be deleted.`)) return;
+    if (!window.confirm(t("Delete {{value0}} from {{value1}}? All classes, assessments, enrolments and draft marks linked to this offering will also be deleted. Released or archived records cannot be deleted.", { value0: (subject.code), value1: (semesterLabel(subject.termLabel)) }))) return;
     setDeletingOfferingId(subject.offeringId);
     try {
       await deleteLecturerSubject(subject.offeringId);
@@ -189,54 +191,54 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
     } finally { saveInFlight.current = false; setSaving(false); }
   };
 
-  if (!activeTerm) return <InitialDataState title="My Subjects" label="Loading your subjects…" error={loadError} />;
+  if (!activeTerm) return <InitialDataState title={t("My Subjects")} label={t("Loading your subjects…")} error={tx(loadError)} />;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-50">My Subjects</h1>
-          <p className={W.muted}>{user?.name} ({user?.id}) · {visibleSubjects[0]?.termLabel ?? creationTerm} · {visibleSubjects.length} assignment{visibleSubjects.length === 1 ? "" : "s"} across {programmeCount} programme{programmeCount === 1 ? "" : "s"}{!isCurrentSelection && visibleSubjects.length ? " · read-only" : ""}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-50">{t("My Subjects")}</h1>
+          <p className={W.muted}>{t("{{value0}} ({{value1}}) · {{value2}} · {{value3}} assignment{{value4}} across {{value5}} programme{{value6}}{{value7}}", { value0: (user?.name), value1: (user?.id), value2: (semesterLabel(visibleSubjects[0]?.termLabel ?? creationTerm)), value3: (visibleSubjects.length), value4: (visibleSubjects.length === 1 ? "" : t("pluralSuffix")), value5: (programmeCount), value6: (programmeCount === 1 ? "" : t("pluralSuffix")), value7: (!isCurrentSelection && visibleSubjects.length ? t(" · read-only") : "") })}</p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
-          <label className="min-w-36 flex-1"><span className={W.label}>Academic Year</span>
-            <select aria-label="Academic year" value={selectedAcademicYear} onChange={event => { const year = event.target.value; const available = [...new Set(availableTerms.filter(term => term.academicYear === year).map(term => term.semesterNo))].sort((a, b) => b - a); setSelectedAcademicYear(year); setSelectedSemesterNo(year === currentAcademicYear && currentSemesterNo !== null && available.includes(currentSemesterNo) ? currentSemesterNo : available[0] ?? null); setMenuOfferingId(null); }} className={W.field}>
+          <label className="min-w-36 flex-1"><span className={W.label}>{t("Academic Year")}</span>
+            <select aria-label={t("Academic year")} value={selectedAcademicYear} onChange={event => { const year = event.target.value; const available = [...new Set(availableTerms.filter(term => term.academicYear === year).map(term => term.semesterNo))].sort((a, b) => b - a); setSelectedAcademicYear(year); setSelectedSemesterNo(year === currentAcademicYear && currentSemesterNo !== null && available.includes(currentSemesterNo) ? currentSemesterNo : available[0] ?? null); setMenuOfferingId(null); }} className={W.field}>
               {academicYears.map(year => <option key={year} value={year}>{year}</option>)}
             </select>
           </label>
-          <label className="min-w-32 flex-1"><span className={W.label}>Semester</span>
-            <select aria-label="Semester" value={selectedSemesterNo ?? ""} onChange={event => { setSelectedSemesterNo(Number(event.target.value)); setMenuOfferingId(null); }} className={W.field}>
-              {semestersForYear.map(value => <option key={value} value={value}>Semester {value}</option>)}
+          <label className="min-w-32 flex-1"><span className={W.label}>{t("Semester")}</span>
+            <select aria-label={t("Semester")} value={selectedSemesterNo ?? ""} onChange={event => { setSelectedSemesterNo(Number(event.target.value)); setMenuOfferingId(null); }} className={W.field}>
+              {semestersForYear.map(value => <option key={value} value={value}>{t("Semester {{value0}}", { value0: (value) })}</option>)}
             </select>
           </label>
-          {isCurrentSelection && <button onClick={openCreateModal} className={W.primary}><Plus size={16} /> Create New Subject</button>}
+          {isCurrentSelection && <button onClick={openCreateModal} className={W.primary}><Plus size={16} /> {t(" Create New Subject")}</button>}
         </div>
       </div>
-      {archiveLoading && <RefreshStatus label="Loading archived subject details…" />}
-      {archiveError && <p role="alert" className={W.error}>{archiveError}</p>}
-      {subjectActionError && <p role="alert" className={W.error}>{subjectActionError}</p>}
+      {archiveLoading && <RefreshStatus label={t("Loading archived subject details…")} />}
+      {archiveError && <p role="alert" className={W.error}>{tx(archiveError)}</p>}
+      {subjectActionError && <p role="alert" className={W.error}>{tx(subjectActionError)}</p>}
 
-      {archivedDetail && <div role="dialog" aria-modal="true" aria-label="Archived subject details" className={W.overlay}>
+      {archivedDetail && <div role="dialog" aria-modal="true" aria-label={t("Archived subject details")} className={W.overlay}>
         <div className={W.modal + " max-w-2xl"}>
           <div className="mb-6 flex items-start justify-between gap-4">
-            <div><span className={W.code}>{archivedDetail.subject.code} · {archivedDetail.subject.termLabel}</span><h2 className={W.title + " mt-3"}>{archivedDetail.subject.name}</h2><span className={W.muted}>Archived record · read-only</span></div>
-            <button type="button" aria-label="Close archived details" onClick={() => setArchivedDetail(null)} className={W.iconButton}><X size={20} /></button>
+            <div><span className={W.code}>{archivedDetail.subject.code} · {semesterLabel(archivedDetail.subject.termLabel)}</span><h2 className={W.title + " mt-3"}>{archivedDetail.subject.name}</h2><span className={W.muted}>{t("Archived record · read-only")}</span></div>
+            <button type="button" aria-label={t("Close archived details")} onClick={() => setArchivedDetail(null)} className={W.iconButton}><X size={20} /></button>
           </div>
-          <h3 className="mb-3 font-semibold">Classes</h3>
-          {archivedDetail.data.sections.map(section => <div key={section.id} className="border-b border-slate-200 py-3 text-sm dark:border-slate-700"><strong>{section.programmeCode} · {section.label}</strong> · {section.students.length} students · {section.finalised ? "Released" : "Not released"}</div>)}
-          {!archivedDetail.data.sections.length && <p className={W.muted}>No classes were recorded.</p>}
-          <h3 className="mb-3 mt-6 font-semibold">Assessment Structure</h3>
-          {archivedDetail.data.assessments.map(assessment => <div key={assessment.id} className="border-b border-slate-200 py-3 text-sm dark:border-slate-700"><strong>{assessment.name}</strong> · {assessment.type} · {assessment.weightage}% carry weight</div>)}
-          {!archivedDetail.data.assessments.length && <p className={W.muted}>No assessments were recorded.</p>}
+          <h3 className="mb-3 font-semibold">{t("Classes")}</h3>
+          {archivedDetail.data.sections.map(section => <div key={section.id} className="border-b border-slate-200 py-3 text-sm dark:border-slate-700"><strong>{section.programmeCode} · {section.label}</strong> · {section.students.length} {t(" students · ")}{section.finalised ? t("Released") : t("Not released")}</div>)}
+          {!archivedDetail.data.sections.length && <p className={W.muted}>{t("No classes were recorded.")}</p>}
+          <h3 className="mb-3 mt-6 font-semibold">{t("Assessment Structure")}</h3>
+          {archivedDetail.data.assessments.map(assessment => <div key={assessment.id} className="border-b border-slate-200 py-3 text-sm dark:border-slate-700"><strong>{assessment.name}</strong> · {assessment.type} · {assessment.weightage}{t("% carry weight")}</div>)}
+          {!archivedDetail.data.assessments.length && <p className={W.muted}>{t("No assessments were recorded.")}</p>}
         </div>
       </div>}
-      {loading && <RefreshStatus label="Refreshing your subjects…" />}
-      {loadError && <p role="alert" className={W.error}>Unable to load your subjects. {loadError}</p>}
+      {loading && <RefreshStatus label={t("Refreshing your subjects…")} />}
+      {loadError && <p role="alert" className={W.error}>{t("Unable to load your subjects. {{value0}}", { value0: (loadError) })}</p>}
       {!loading && !loadError && visibleSubjects.length === 0 && <div role="status" className={W.panel + " py-12 text-center"}>
         <BookOpen size={32} aria-hidden="true" className="mx-auto mb-4 text-purple-800" />
-        <h2 className={W.title}>No Teaching Allocations</h2>
-        <p className={W.muted + " mx-auto mt-3 max-w-lg"}>{academicYears.length ? "No subjects are available for the selected semester." : "No current or archived teaching allocations were found."}</p>
-        {isCurrentSelection && <p className={W.muted + " mt-3"}>Select “Create New Subject” to add your first current-semester subject.</p>}
+        <h2 className={W.title}>{t("No Teaching Allocations")}</h2>
+        <p className={W.muted + " mx-auto mt-3 max-w-lg"}>{academicYears.length ? t("No subjects are available for the selected semester.") : t("No current or archived teaching allocations were found.")}</p>
+        {isCurrentSelection && <p className={W.muted + " mt-3"}>{t("Select “Create New Subject” to add your first current-semester subject.")}</p>}
       </div>}
 
       <div className="space-y-8">
@@ -244,7 +246,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
           const psSubs = visibleSubjects.filter(s => s.progSem === ps);
           return <section key={ps}>
             <h2 className="subject-semester-heading">
-              Programme Semester {ps}<span className="font-normal text-slate-500 dark:text-slate-300">· {psSubs.length} subject{psSubs.length !== 1 ? "s" : ""}</span>
+              {t("Programme Semester")}{ps}<span className="font-normal text-slate-500 dark:text-slate-300">{t("· {{value0}} subject{{value1}}", { value0: (psSubs.length), value1: (psSubs.length !== 1 ? "s" : "") })}</span>
             </h2>
             <div className="subject-card-grid">
               {psSubs.map(subj => {
@@ -256,7 +258,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                   '--subject-light-ink': theme.ink,
                 } as React.CSSProperties;
                 const openSubject = () => isCurrentSelection ? onSelectSubject(subj) : openArchivedDetail(subj);
-                return <article key={subj.offeringId} role="button" tabIndex={0} aria-label={`${isCurrentSelection ? "Open Subject Hub" : "View archived details"} for ${subj.code}: ${subj.name}`}
+                return <article key={subj.offeringId} role="button" tabIndex={0} aria-label={t("{{value0}} for {{value1}}: {{value2}}", { value0: (isCurrentSelection ? "Open Subject Hub" : "View archived details"), value1: (subj.code), value2: (subj.name) })}
                   onClick={openSubject}
                   onKeyDown={event => {
                     if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
@@ -269,22 +271,22 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
                   <div className="subject-card-body">
                     <div className="mb-4 flex flex-wrap items-center gap-2">
                       <span className="subject-code-chip">{subj.code}</span>
-                      <span title={subj.programmeCodes.join(", ") || "No classes"} aria-label={subj.programmeCodes.length ? `Programmes ${subj.programmeCodes.join(", ")}` : "No classes"} className="subject-neutral-chip">{subj.programmeCodes.length > 1 ? `${subj.programmeCodes[0]} +${subj.programmeCodes.length - 1}` : subj.programmeCodes[0] ?? "No classes"}</span>
-                      <span className="subject-neutral-chip">Sem {subj.progSem}</span>
-                      <span className={"subject-card-status" + (isSubmitted ? " is-finalised" : "")}><span aria-hidden="true" />{isSubmitted ? "Released" : "Pending"}</span>
-                      {isCurrentSelection ? <button aria-label={`Manage ${subj.code}`} aria-expanded={menuOfferingId === subj.offeringId} onClick={event => { event.stopPropagation(); setMenuOfferingId(menuOfferingId === subj.offeringId ? null : subj.offeringId); }} className={W.iconButton + " ml-auto"}><MoreVertical size={20} aria-hidden="true" /></button> : <span className="text-xs font-medium text-slate-500">Read-only</span>}
+                      <span title={subj.programmeCodes.join(", ") || (t("No classes"))} aria-label={subj.programmeCodes.length ? t("Programmes {{value0}}", { value0: (subj.programmeCodes.join(", ")) }) : t("No classes")} className="subject-neutral-chip">{subj.programmeCodes.length > 1 ? `${subj.programmeCodes[0]} +${subj.programmeCodes.length - 1}` : subj.programmeCodes[0] ?? (t("No classes"))}</span>
+                      <span className="subject-neutral-chip">{t("Sem {{value0}}", { value0: (subj.progSem) })}</span>
+                      <span className={"subject-card-status" + (isSubmitted ? " is-finalised" : "")}><span aria-hidden="true" />{isSubmitted ? t("Released") : t("Pending")}</span>
+                      {isCurrentSelection ? <button aria-label={t("Manage {{value0}}", { value0: (subj.code) })} aria-expanded={menuOfferingId === subj.offeringId} onClick={event => { event.stopPropagation(); setMenuOfferingId(menuOfferingId === subj.offeringId ? null : subj.offeringId); }} className={W.iconButton + " ml-auto"}><MoreVertical size={20} aria-hidden="true" /></button> : <span className="text-xs font-medium text-slate-500">{t("Read-only")}</span>}
                     </div>
                     {menuOfferingId === subj.offeringId && <div onClick={event => event.stopPropagation()} className={W.menu + " subject-card-menu"}>{(subj.offerings ?? [subj]).map(offering => <React.Fragment key={offering.offeringId}>
-                      <button onClick={() => openEditModal(offering)} className={W.menuItem}>Edit subject{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button>
-                      <button disabled={deletingOfferingId === offering.offeringId} onClick={() => deleteSubject(offering)} className={W.menuItem + " text-rose-700 disabled:opacity-50"}><Trash2 size={15} aria-hidden="true" />{deletingOfferingId === offering.offeringId ? "Deleting…" : "Delete subject"}{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button>
+                      <button onClick={() => openEditModal(offering)} className={W.menuItem}>{t("Edit subject{{value0}}", { value0: (subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : "") })}</button>
+                      <button disabled={deletingOfferingId === offering.offeringId} onClick={() => deleteSubject(offering)} className={W.menuItem + " text-rose-700 disabled:opacity-50"}><Trash2 size={15} aria-hidden="true" />{deletingOfferingId === offering.offeringId ? t("Deleting…") : t("Delete subject")}{subj.offerings ? ` · ${offering.programmeCode || "Unassigned"}` : ""}</button>
                     </React.Fragment>)}</div>}
                     <h3 className="subject-card-name">{subj.name}</h3>
                     <div className="subject-card-info">
-                      <span><Users size={12} aria-hidden="true" />{subj.students} students</span>
+                      <span><Users size={12} aria-hidden="true" />{subj.students} {t(" students")}</span>
                       <span title={subj.lastSync ? new Date(subj.lastSync).toLocaleString() : undefined}><Clock size={12} aria-hidden="true" />{formatSubjectSync(subj.lastSync)}</span>
                     </div>
                   </div>
-                  <button onClick={event => { event.stopPropagation(); openSubject(); }} className="subject-hub-button">{isCurrentSelection ? "Manage Subject Hub" : "View archived details"}<ChevronRight size={16} aria-hidden="true" /></button>
+                  <button onClick={event => { event.stopPropagation(); openSubject(); }} className="subject-hub-button">{isCurrentSelection ? t("Manage Subject Hub") : t("View archived details")}<ChevronRight size={16} aria-hidden="true" /></button>
                 </article>;
               })}
             </div>
@@ -292,21 +294,21 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
         })}
       </div>
 
-      {showCreateModal && <div role="dialog" aria-modal="true" aria-label={editingSubject ? "Edit Subject" : "Create New Subject"} className={W.overlay}>
+      {showCreateModal && <div role="dialog" aria-modal="true" aria-label={editingSubject ? t("Edit Subject") : t("Create New Subject")} className={W.overlay}>
         <div className={W.modal}>
-          <div className="mb-5 flex items-start justify-between gap-3"><h2 className={W.title}>{editingSubject ? "Edit Subject" : "Create New Subject"}</h2><button type="button" aria-label="Close" disabled={saving || catalogueLoading} onClick={closeSubjectModal} className={W.iconButton}><X size={20} /></button></div>
+          <div className="mb-5 flex items-start justify-between gap-3"><h2 className={W.title}>{editingSubject ? t("Edit Subject") : t("Create New Subject")}</h2><button type="button" aria-label={t("Close")} disabled={saving || catalogueLoading} onClick={closeSubjectModal} className={W.iconButton}><X size={20} /></button></div>
           <form onSubmit={createSubject}>
-            <p className={W.muted + " mb-6"}>{editingSubject ? `Update your ${editingSubject.code} subject details for ${editingSubject.termLabel}. Existing classes, assessments and marks will not be changed.` : catalogueLoading ? "Loading subject catalogue…" : creationTerm ? `Add a subject for ${creationTerm}. Select an existing code or enter a new one.` : "Subject creation is unavailable."}</p>
+            <p className={W.muted + " mb-6"}>{editingSubject ? t("Update your {{value0}} subject details for {{value1}}. Existing classes, assessments and marks will not be changed.", { value0: (editingSubject.code), value1: (semesterLabel(editingSubject.termLabel)) }) : catalogueLoading ? t("Loading subject catalogue…") : creationTerm ? t("Add a subject for {{value0}}. Select an existing code or enter a new one.", { value0: (semesterLabel(creationTerm)) }) : t("Subject creation is unavailable.")}</p>
             <div className="space-y-4">
-              <div><label htmlFor="lecturer-subject-code" className={W.label}>Subject Code</label><input id="lecturer-subject-code" aria-label="Subject code" list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { const nextCode = event.target.value.toUpperCase(); setCode(nextCode); setFormError(""); }} placeholder="e.g. ITT600" className={W.field} /></div>
+              <div><label htmlFor="lecturer-subject-code" className={W.label}>{t("Subject Code")}</label><input id="lecturer-subject-code" aria-label={t("Subject code")} list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { const nextCode = event.target.value.toUpperCase(); setCode(nextCode); setFormError(""); }} placeholder={t("e.g. ITT600")} className={W.field} /></div>
               <datalist id="subject-catalogue">{catalogue.filter(subject => subject.is_active).map(subject => <option key={subject.code} value={subject.code}>{subject.name}</option>)}</datalist>
-              {existingSubject && <p role="status" className={existingSubject.is_active ? W.muted : W.error}>{existingSubject.is_active ? "This subject is already registered. Its details will be reused for your own classes and assessments." : "This subject is inactive and cannot be added."}</p>}
-              <div><label htmlFor="lecturer-subject-name" className={W.label}>Subject Name</label><input id="lecturer-subject-name" aria-label="Subject name" required maxLength={200} disabled={(!editingSubject && Boolean(existingSubject)) || saving || catalogueLoading} value={!editingSubject && existingSubject ? existingSubject.name : name} onChange={event => setName(event.target.value)} placeholder="e.g. Cloud Computing & DevOps" className={W.field} /></div>
-              {editingSubject && <div><label htmlFor="lecturer-subject-programme" className={W.label}>Programme</label><select id="lecturer-subject-programme" aria-label="Programme" required disabled={saving || catalogueLoading} value={programmeId} onChange={event => { setProgrammeId(event.target.value); setFormError(""); }} className={W.field}><option value="" disabled>{catalogueLoading ? "Loading programmes…" : formError ? "Programmes unavailable" : programmes.length ? "Select programme" : "No programmes available"}</option>{programmes.map(programme => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>}
-              <div><label htmlFor="lecturer-subject-semester" className={W.label}>Programme Semester</label><select id="lecturer-subject-semester" aria-label="Programme semester" disabled={saving || catalogueLoading} value={semester} onChange={event => setSemester(event.target.value)} className={W.field}>{[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>Semester {value}</option>)}</select></div>
+              {existingSubject && <p role="status" className={existingSubject.is_active ? W.muted : W.error}>{existingSubject.is_active ? t("This subject is already registered. Its details will be reused for your own classes and assessments.") : t("This subject is inactive and cannot be added.")}</p>}
+              <div><label htmlFor="lecturer-subject-name" className={W.label}>{t("Subject Name")}</label><input id="lecturer-subject-name" aria-label={t("Subject name")} required maxLength={200} disabled={(!editingSubject && Boolean(existingSubject)) || saving || catalogueLoading} value={!editingSubject && existingSubject ? existingSubject.name : name} onChange={event => setName(event.target.value)} placeholder={t("e.g. Cloud Computing & DevOps")} className={W.field} /></div>
+              {editingSubject && <div><label htmlFor="lecturer-subject-programme" className={W.label}>{t("Programme")}</label><select id="lecturer-subject-programme" aria-label={t("Programme")} required disabled={saving || catalogueLoading} value={programmeId} onChange={event => { setProgrammeId(event.target.value); setFormError(""); }} className={W.field}><option value="" disabled>{catalogueLoading ? t("Loading programmes…") : formError ? t("Programmes unavailable") : programmes.length ? t("Select programme") : t("No programmes available")}</option>{programmes.map(programme => <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>)}</select></div>}
+              <div><label htmlFor="lecturer-subject-semester" className={W.label}>{t("Programme Semester")}</label><select id="lecturer-subject-semester" aria-label={t("Programme semester")} disabled={saving || catalogueLoading} value={semester} onChange={event => setSemester(event.target.value)} className={W.field}>{[1,2,3,4,5,6,7,8,9,10,11,12].map(value => <option key={value} value={value}>{t("Semester {{value0}}", { value0: (value) })}</option>)}</select></div>
               {formError && <div role="alert" className={W.error}>{formError}</div>}
             </div>
-            <div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={saving || catalogueLoading} onClick={closeSubjectModal} className={W.secondary}>Cancel</button><button type="submit" disabled={!validForm} className={W.primary}>{saving ? "Saving…" : editingSubject ? "Save Changes" : existingSubject ? "Add Subject" : "Create Subject"}</button></div>
+            <div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={saving || catalogueLoading} onClick={closeSubjectModal} className={W.secondary}>{t("Cancel")}</button><button type="submit" disabled={!validForm} className={W.primary}>{saving ? t("Saving…") : editingSubject ? t("Save Changes") : existingSubject ? t("Add Subject") : t("Create Subject")}</button></div>
           </form>
         </div>
       </div>}

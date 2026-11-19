@@ -1,9 +1,11 @@
+import { t, useLocale } from "@/localization/react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/lib/supabase";
 
 export const StudentAvatar = memo(function StudentAvatar({ name }: { name?: string }) {
+  useLocale();
   const { colors } = useTheme();
   const [uri, setUri] = useState<string | null>(null);
   const [failedUri, setFailedUri] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export const StudentAvatar = memo(function StudentAvatar({ name }: { name?: stri
       {source && uri !== failedUri && <Image
         source={source}
         resizeMode="cover"
-        accessibilityLabel="Your Google profile photo"
+        accessibilityLabel={t("Your Google profile photo")}
         style={styles.photo}
         onError={() => setFailedUri(uri)}
       />}

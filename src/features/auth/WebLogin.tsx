@@ -1,3 +1,5 @@
+import { LanguageSelect } from "../../localization/LanguageSelect";
+import { t, tx, useLocale } from "../../localization/react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
@@ -5,6 +7,7 @@ import { useColors } from "../../context/DarkModeContext";
 import { useAuth } from "../../context/AuthContext";
 
 export function WebLogin() {
+  useLocale();
   const C = useColors();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -41,52 +44,48 @@ export function WebLogin() {
             <img src="/assets/branding/cams-login-144.webp" alt="CAMS" style={{ width: "46px", height: "46px", objectFit: "contain", flexShrink: 0 }} />
             <div>
               <div style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700, lineHeight: 1.1 }}>UiTM</div>
-              <div style={{ marginTop: "3px", fontSize: "11px", letterSpacing: ".08em", opacity: .78 }}>ACADEMIC ASSESSMENT SYSTEM</div>
+              <div style={{ marginTop: "3px", fontSize: "11px", letterSpacing: ".08em", opacity: .78 }}>{t("ACADEMIC ASSESSMENT SYSTEM")}</div>
             </div>
           </div>
           <div style={{ maxWidth: "540px" }}>
-            <div style={{ fontFamily: C.mono, fontSize: "12px", letterSpacing: ".12em", opacity: .72, marginBottom: "14px" }}>CONTINUOUS ASSESSMENT OPERATIONS</div>
-            <h1 style={{ margin: 0, maxWidth: "520px", fontFamily: C.display, fontSize: "clamp(32px, 4.5vw, 58px)", lineHeight: 1.04, fontWeight: 700 }}>Continuous Assessment Monitoring System</h1>
-            <p style={{ margin: "22px 0 0", maxWidth: "470px", fontSize: "14px", lineHeight: 1.75, opacity: .82 }}>
-              A faculty workspace for assessment structures, mark entry, eligibility review, submission compliance, and e-Res export.
-            </p>
+            <div style={{ fontFamily: C.mono, fontSize: "12px", letterSpacing: ".12em", opacity: .72, marginBottom: "14px" }}>{t("CONTINUOUS ASSESSMENT OPERATIONS")}</div>
+            <h1 style={{ margin: 0, maxWidth: "520px", fontFamily: C.display, fontSize: "clamp(32px, 4.5vw, 58px)", lineHeight: 1.04, fontWeight: 700 }}>{t("Continuous Assessment Monitoring System")}</h1>
+            <p style={{ margin: "22px 0 0", maxWidth: "470px", fontSize: "14px", lineHeight: 1.75, opacity: .82 }}>{t("A faculty workspace for assessment structures, mark entry, eligibility review, submission compliance, and e-Res export.")}</p>
           </div>
         </div>
         <div className="login-identity-detail" style={{ paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,.24)" }}>
-          <div style={{ fontFamily: C.mono, fontSize: "11px", letterSpacing: ".08em", opacity: .68 }}>FACULTY OF COMPUTER AND MATHEMATICAL SCIENCES</div>
-          <div style={{ marginTop: "8px", fontSize: "13px", opacity: .86 }}>Lecturer marking · Faculty compliance · Academic records</div>
+          <div style={{ fontFamily: C.mono, fontSize: "11px", letterSpacing: ".08em", opacity: .68 }}>{t("FACULTY OF COMPUTER AND MATHEMATICAL SCIENCES")}</div>
+          <div style={{ marginTop: "8px", fontSize: "13px", opacity: .86 }}>{t("Lecturer marking · Faculty compliance · Academic records")}</div>
         </div>
       </section>
 
       <section className="login-form-region" style={{ background: C.surface }}>
-        <div className="login-form">
-          <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 700, letterSpacing: ".1em", marginBottom: "12px" }}>SECURE STAFF ACCESS</div>
-          <h2 style={{ fontFamily: C.display, fontSize: "29px", lineHeight: 1.15, fontWeight: 700, margin: "0 0 8px", color: C.text }}>Sign in to your portal</h2>
-          <p style={{ fontSize: "13px", color: C.textSub, lineHeight: 1.6, margin: "0 0 30px" }}>Use your registered staff credentials. Your lecturer or administrator workspace will open automatically.</p>
+        <div className="login-form"><div className="mb-4 flex justify-end"><LanguageSelect /></div>
+          <div style={{ fontFamily: C.mono, fontSize: "11px", color: C.maroon, fontWeight: 700, letterSpacing: ".1em", marginBottom: "12px" }}>{t("SECURE STAFF ACCESS")}</div>
+          <h2 style={{ fontFamily: C.display, fontSize: "29px", lineHeight: 1.15, fontWeight: 700, margin: "0 0 8px", color: C.text }}>{t("Sign in to your portal")}</h2>
+          <p style={{ fontSize: "13px", color: C.textSub, lineHeight: 1.6, margin: "0 0 30px" }}>{t("Use your registered staff credentials. Your lecturer or administrator workspace will open automatically.")}</p>
 
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            {searchParams.get("verified") === "1" && <div role="status" style={{ fontSize: "13px", color: C.green, background: C.greenLight, border: `1px solid ${C.green}44`, borderRadius: "6px", padding: "9px 10px" }}>Email verified. You can now sign in.</div>}
-            <div><label style={{ display: "block", fontFamily: C.mono, fontSize: "11px", letterSpacing: ".06em", fontWeight: 600, color: C.textMuted, marginBottom: "7px" }}>STAFF ID</label><input type="text" value={id} onChange={event => setId(event.target.value)} placeholder="Enter your staff ID" autoComplete="username" required style={{ width: "100%", minHeight: "44px", padding: "10px 12px", borderRadius: "5px", border: `1px solid ${C.borderMid}`, background: C.input, color: C.text, fontSize: "14px", boxSizing: "border-box" }} /></div>
+            {searchParams.get("verified") === "1" && <div role="status" style={{ fontSize: "13px", color: C.green, background: C.greenLight, border: `1px solid ${C.green}44`, borderRadius: "6px", padding: "9px 10px" }}>{t("Email verified. You can now sign in.")}</div>}
+            <div><label style={{ display: "block", fontFamily: C.mono, fontSize: "11px", letterSpacing: ".06em", fontWeight: 600, color: C.textMuted, marginBottom: "7px" }}>{t("STAFF ID")}</label><input type="text" value={id} onChange={event => setId(event.target.value)} placeholder={t("Enter your staff ID")} autoComplete="username" required style={{ width: "100%", minHeight: "44px", padding: "10px 12px", borderRadius: "5px", border: `1px solid ${C.borderMid}`, background: C.input, color: C.text, fontSize: "14px", boxSizing: "border-box" }} /></div>
             <div>
-              <label htmlFor="staff-password" style={{ display: "block", fontFamily: C.mono, fontSize: "11px", letterSpacing: ".06em", fontWeight: 600, color: C.textMuted, marginBottom: "7px" }}>PASSWORD</label>
+              <label htmlFor="staff-password" style={{ display: "block", fontFamily: C.mono, fontSize: "11px", letterSpacing: ".06em", fontWeight: 600, color: C.textMuted, marginBottom: "7px" }}>{t("PASSWORD")}</label>
               <div style={{ position: "relative" }}>
                 <input id="staff-password" type={showPassword ? "text" : "password"} value={password} onChange={event => setPassword(event.target.value)} placeholder="••••••••" autoComplete="current-password" required style={{ width: "100%", minHeight: "44px", padding: "10px 44px 10px 12px", borderRadius: "5px", border: `1px solid ${C.borderMid}`, background: C.input, color: C.text, fontSize: "14px", boxSizing: "border-box" }} />
-                <button type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} title={showPassword ? "Hide password" : "Show password"} style={{ position: "absolute", top: 0, right: 0, width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", border: 0, background: "transparent", color: C.textMuted, cursor: "pointer" }}>
+                <button type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? t("Hide password") : t("Show password")} aria-pressed={showPassword} title={showPassword ? t("Hide password") : t("Show password")} style={{ position: "absolute", top: 0, right: 0, width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", border: 0, background: "transparent", color: C.textMuted, cursor: "pointer" }}>
                   {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                 </button>
               </div>
             </div>
-          {error && <div role="alert" style={{ fontSize: "13px", color: C.red, background: C.redLight, border: `1px solid ${C.red}44`, borderRadius: "6px", padding: "9px 10px" }}>{error}</div>}
-            <button disabled={submitting} type="submit" style={{ marginTop: "4px", width: "100%", minHeight: "46px", padding: "12px", borderRadius: "5px", background: C.accentSolid, color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: submitting ? "wait" : "pointer", opacity: submitting ? .7 : 1 }}>{submitting ? "Signing In…" : "Continue to Staff Portal"}</button>
-            <button type="button" onClick={() => navigate("/register")} style={{ width: "100%", minHeight: "44px", padding: "11px", borderRadius: "5px", background: "transparent", color: C.accent, border: `1px solid ${C.borderMid}`, fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>Create Account</button>
+          {error && <div role="alert" style={{ fontSize: "13px", color: C.red, background: C.redLight, border: `1px solid ${C.red}44`, borderRadius: "6px", padding: "9px 10px" }}>{tx(error)}</div>}
+            <button disabled={submitting} type="submit" style={{ marginTop: "4px", width: "100%", minHeight: "46px", padding: "12px", borderRadius: "5px", background: C.accentSolid, color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: submitting ? "wait" : "pointer", opacity: submitting ? .7 : 1 }}>{submitting ? t("Signing In…") : t("Continue to Staff Portal")}</button>
+            <button type="button" onClick={() => navigate("/register")} style={{ width: "100%", minHeight: "44px", padding: "11px", borderRadius: "5px", background: "transparent", color: C.maroon, border: `1px solid ${C.borderMid}`, fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>{t("Create Account")}</button>
           </form>
 
           {!configured && (
-            <div style={{ marginTop: "18px", padding: "10px 12px", borderRadius: "5px", background: C.elevated, border: `1px solid ${C.border}`, fontSize: "12px", color: C.textMuted }}>
-              Supabase configuration is incomplete. Add the project URL to .env.local.
-            </div>
+            <div style={{ marginTop: "18px", padding: "10px 12px", borderRadius: "5px", background: C.elevated, border: `1px solid ${C.border}`, fontSize: "12px", color: C.textMuted }}>{t("Supabase configuration is incomplete. Add the project URL to .env.local.")}</div>
           )}
-          <p style={{ margin: "24px 0 0", color: C.textMuted, fontSize: "12px", lineHeight: 1.6 }}>Access is restricted to authorised UiTM lecturers and faculty administrators.</p>
+          <p style={{ margin: "24px 0 0", color: C.textMuted, fontSize: "12px", lineHeight: 1.6 }}>{t("Access is restricted to authorised UiTM lecturers and faculty administrators.")}</p>
         </div>
       </section>
     </div>

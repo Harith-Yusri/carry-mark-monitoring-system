@@ -867,6 +867,7 @@ export type Database = {
       }
     }
     Functions: {
+      delete_my_lecturer_subject: { Args: { target_offering: string }; Returns: undefined }
       get_released_mark_correction_context: { Args: { target_section: string; target_enrolment: string; target_assessment: string }; Returns: Json };
       stage_released_mark_correction: { Args: { target_section: string; target_enrolment: string; target_assessment: string; expected_version: number; new_score: number; correction_reason: string }; Returns: Json };
       get_my_lecturer_notifications: { Args: { before_created_at?: string; before_id?: string }; Returns: Json };

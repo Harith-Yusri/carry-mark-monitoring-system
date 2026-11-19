@@ -1,3 +1,4 @@
+import { localizedFunction } from './helpers/localization.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -6,7 +7,7 @@ import { transform } from 'esbuild';
 const source = await readFile(new URL('../src/features/lecturer/LecturerDashboard.tsx', import.meta.url), 'utf8');
 const helpers = source.slice(source.indexOf('const subjectThemes'), source.indexOf('function formatSubjectSync'));
 const { code } = await transform(helpers, { loader: 'ts' });
-const assign = new Function(code + '; return assignSubjectThemes;')();
+const assign = localizedFunction(code + '; return assignSubjectThemes;')();
 
 test('previously colliding subjects get distinct colors across semester groups', () => {
   const rows = ['ITT557', 'ITT588', 'ITT593', 'ITT569'].map(code => ({ code }));

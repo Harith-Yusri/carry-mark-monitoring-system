@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -10,6 +11,7 @@ import { loadAssignedLecturerWhatsApp } from "@/services/studentApi";
 import { fonts } from "@/theme/fonts";
 
 export default function SubjectDetailScreen() {
+  useLocale();
   const { offeringId } = useLocalSearchParams<{ offeringId: string }>();
   const { initializing, student, subjects } = useStudent();
   const { colors } = useTheme();
@@ -18,7 +20,7 @@ export default function SubjectDetailScreen() {
   if (initializing) return <LoadingView />;
   if (!student) return <Redirect href="/login" />;
   const subject = subjects.find(item => item.offering_id === offeringId);
-  if (!subject) return <Screen style={styles.center}><Text style={[typography.body, { color: colors.muted }]}>This subject is not available in the current semester.</Text><PrimaryButton onPress={() => router.back()}><ButtonText>Go back</ButtonText></PrimaryButton></Screen>;
+  if (!subject) return <Screen style={styles.center}><Text style={[typography.body, { color: colors.muted }]}>{t("This subject is not available in the current semester.")}</Text><PrimaryButton onPress={() => router.back()}><ButtonText>{t("Go back")}</ButtonText></PrimaryButton></Screen>;
   const isIneligible = subject.is_finalised && subject.eligible === false;
 
   const consultLecturer = async () => {
@@ -38,31 +40,31 @@ export default function SubjectDetailScreen() {
   };
 
   return <Screen><ScrollView contentContainerStyle={styles.content}>
-    <Pressable onPress={() => router.back()}><Text style={[typography.bodyStrong, { color: colors.primary }]}>‹ Back to subjects</Text></Pressable>
+    <Pressable onPress={() => router.back()}><Text style={[typography.bodyStrong, { color: colors.primary }]}>{t("‹ Back to subjects")}</Text></Pressable>
     <View style={{ gap: 5 }}><Text style={[styles.code, { color: colors.primary }]}>{subject.code}</Text><Heading>{subject.name}</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>{subject.group} · {subject.lecturer}</Text></View>
     <Card style={{ gap: 12 }}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Assessments</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("Assessments")}</Text>
       {subject.assessments.map((assessment, index) => <View key={`${assessment.name}-${index}`} style={[styles.assessment, index < subject.assessments.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
-        <View style={{ flex: 1, gap: 3 }}><Text style={[typography.bodyStrong, { color: colors.text }]}>{assessment.name}</Text><Text style={[typography.body, { color: colors.muted }]}>{assessment.assessment_type} · Weight {assessment.weight}%</Text></View>
-        <View style={{ alignItems: "flex-end" }}><Text style={[typography.bodyStrong, { color: subject.is_finalised ? colors.text : colors.muted }]}>{subject.is_finalised && assessment.score !== null ? `${assessment.score} / ${assessment.maximum}` : "Not released yet"}</Text></View>
+        <View style={{ flex: 1, gap: 3 }}><Text style={[typography.bodyStrong, { color: colors.text }]}>{assessment.name}</Text><Text style={[typography.body, { color: colors.muted }]}>{t("{{value0}} · Weight {{value1}}%", { value0: (assessment.assessment_type), value1: (assessment.weight) })}</Text></View>
+        <View style={{ alignItems: "flex-end" }}><Text style={[typography.bodyStrong, { color: subject.is_finalised ? colors.text : colors.muted }]}>{subject.is_finalised && assessment.score !== null ? `${assessment.score} / ${assessment.maximum}` : t("Not released yet")}</Text></View>
       </View>)}
-      {!subject.assessments.length && <Text style={[typography.body, { color: colors.muted }]}>No assessments have been created yet.</Text>}
+      {!subject.assessments.length && <Text style={[typography.body, { color: colors.muted }]}>{t("No assessments have been created yet.")}</Text>}
     </Card>
     <Card style={{ gap: 12 }}>
-      <View style={styles.summary}><Text style={[styles.sectionTitle, { color: colors.text }]}>Carry total</Text><Text style={[styles.total, { color: isIneligible ? colors.danger : subject.is_finalised ? colors.success : colors.muted }]}>{subject.is_finalised && subject.carry_mark !== null ? `${subject.carry_mark.toFixed(0)} / ${subject.carry_maximum.toFixed(0)}` : "Not released yet"}</Text></View>
-      <Text style={[typography.body, { color: colors.muted }]}>{subject.is_finalised ? `Eligibility threshold: ${subject.eligible_threshold}%` : "Your lecturer can sync draft marks without publishing them. Results appear only after release."}</Text>
-      {subject.is_finalised && <Text style={[typography.bodyStrong, { color: subject.eligible ? colors.success : colors.danger }]}>{subject.eligible ? "Eligible for Final Assessment" : "Not Eligible for Final Assessment"}</Text>}
+      <View style={styles.summary}><Text style={[styles.sectionTitle, { color: colors.text }]}>{t("Carry total")}</Text><Text style={[styles.total, { color: isIneligible ? colors.danger : subject.is_finalised ? colors.success : colors.muted }]}>{subject.is_finalised && subject.carry_mark !== null ? `${subject.carry_mark.toFixed(0)} / ${subject.carry_maximum.toFixed(0)}` : t("Not released yet")}</Text></View>
+      <Text style={[typography.body, { color: colors.muted }]}>{subject.is_finalised ? t("Eligibility threshold: {{value0}}%", { value0: (subject.eligible_threshold) }) : t("Your lecturer can sync draft marks without publishing them. Results appear only after release.")}</Text>
+      {subject.is_finalised && <Text style={[typography.bodyStrong, { color: subject.eligible ? colors.success : colors.danger }]}>{subject.eligible ? t("Eligible for Final Assessment") : t("Not Eligible for Final Assessment")}</Text>}
       {isIneligible && <View style={[styles.consult, { borderTopColor: colors.border }]}>
-        <Text style={[typography.body, { color: colors.muted }]}>Contact the lecturer assigned to your class to discuss your continuous assessment status. WhatsApp will open with a message for you to review and send.</Text>
+        <Text style={[typography.body, { color: colors.muted }]}>{t("Contact the lecturer assigned to your class to discuss your continuous assessment status. WhatsApp will open with a message for you to review and send.")}</Text>
         <Pressable accessibilityRole="button" disabled={consulting} onPress={() => void consultLecturer()}
           style={({ pressed }) => [styles.consultButton, { opacity: consulting ? .5 : pressed ? .82 : 1 }]}>
           <MessageCircle size={19} color="#FFFFFF" />
-          <ButtonText>{consulting ? "Opening WhatsApp…" : "Consult Lecturer"}</ButtonText>
+          <ButtonText>{consulting ? t("Opening WhatsApp…") : t("Consult Lecturer")}</ButtonText>
         </Pressable>
         <ErrorBanner message={consultError} />
       </View>}
     </Card>
-    <PrimaryButton onPress={() => router.push({ pathname: "/dispute/[offeringId]", params: { offeringId: subject.offering_id } })}><ButtonText>Report a mark issue</ButtonText></PrimaryButton>
+    <PrimaryButton onPress={() => router.push({ pathname: "/dispute/[offeringId]", params: { offeringId: subject.offering_id } })}><ButtonText>{t("Report a mark issue")}</ButtonText></PrimaryButton>
   </ScrollView></Screen>;
 }
 

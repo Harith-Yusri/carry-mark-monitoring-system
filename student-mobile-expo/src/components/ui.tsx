@@ -1,3 +1,4 @@
+import { tx, useLocale } from "@/localization/react";
 import { PropsWithChildren, ReactNode } from "react";
 import {
   ActivityIndicator, KeyboardTypeOptions, Pressable, StyleProp, StyleSheet, Text,
@@ -70,10 +71,11 @@ export function ButtonText({ children }: PropsWithChildren) {
 }
 
 export function ErrorBanner({ message }: { message: string | null }) {
+  useLocale();
   const { colors } = useTheme();
   if (!message) return null;
   return <View accessibilityRole="alert" style={[getGlassStyle(colors, "secondary", "danger"), styles.error]}>
-    <Text style={{ color: colors.danger, fontFamily: fonts.sansMedium, fontWeight: "600", lineHeight: 20 }}>{message}</Text>
+    <Text style={{ color: colors.danger, fontFamily: fonts.sansMedium, fontWeight: "600", lineHeight: 20 }}>{tx(message)}</Text>
   </View>;
 }
 

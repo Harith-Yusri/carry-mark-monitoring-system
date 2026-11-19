@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import { router, Redirect } from "expo-router";
 import { Check, ChevronDown, LogOut, Mail, UserRound } from "lucide-react-native";
 import { type ReactNode, useEffect, useState } from "react";
@@ -9,6 +10,7 @@ import { loadRegistrationProgrammes, RegistrationProgramme } from "@/services/st
 import { fonts } from "@/theme/fonts";
 
 export default function OnboardingScreen() {
+  useLocale();
   const { colors } = useTheme();
   const { student, onboarding, actionLoading, error, clearError, completeProfile, logout } = useStudent();
   const [programmes, setProgrammes] = useState<RegistrationProgramme[]>([]);
@@ -48,29 +50,29 @@ export default function OnboardingScreen() {
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={[styles.stepBadge, { backgroundColor: colors.primarySoft }]}><Check size={17} color={colors.accent} /></View>
-        <Heading>Complete Your Profile</Heading>
-        <Text style={[typography.body, styles.subtitle, { color: colors.textSecondary }]}>Google provided your verified identity. Add the academic details CAMS needs to personalise your student portal.</Text>
+        <Heading>{t("Complete Your Profile")}</Heading>
+        <Text style={[typography.body, styles.subtitle, { color: colors.textSecondary }]}>{t("Google provided your verified identity. Add the academic details CAMS needs to personalise your student portal.")}</Text>
       </View>
 
       <Card style={styles.identityCard}>
-        <IdentityRow icon={<UserRound size={18} color={colors.accent} />} label="Full Name" value={onboarding.full_name} />
+        <IdentityRow icon={<UserRound size={18} color={colors.accent} />} label={t("Full Name")} value={onboarding.full_name} />
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        <IdentityRow icon={<Mail size={18} color={colors.accent} />} label="UiTM Email" value={onboarding.email} />
+        <IdentityRow icon={<Mail size={18} color={colors.accent} />} label={t("UiTM Email")} value={onboarding.email} />
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        <IdentityRow icon={<Text style={[styles.hash, { color: colors.accent }]}>#</Text>} label="Student ID" value={onboarding.student_id} />
-        <Text style={[styles.readOnlyNote, { color: colors.muted }]}>Verified from your UiTM Google account and cannot be edited.</Text>
+        <IdentityRow icon={<Text style={[styles.hash, { color: colors.accent }]}>#</Text>} label={t("Student ID")} value={onboarding.student_id} />
+        <Text style={[styles.readOnlyNote, { color: colors.muted }]}>{t("Verified from your UiTM Google account and cannot be edited.")}</Text>
       </Card>
 
       <View style={styles.form}>
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.muted }]}>PROGRAMME</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>{t("PROGRAMME")}</Text>
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ expanded: showProgrammes }}
             onPress={() => setShowProgrammes(value => !value)}
             style={[styles.selector, { backgroundColor: colors.surface, borderColor: showProgrammes ? colors.accent : colors.border }]}
           >
-            <Text numberOfLines={2} style={[styles.selectorText, { color: selectedProgramme ? colors.text : colors.muted }]}>{selectedProgramme ? `${selectedProgramme.code} — ${selectedProgramme.name}` : "Select your programme"}</Text>
+            <Text numberOfLines={2} style={[styles.selectorText, { color: selectedProgramme ? colors.text : colors.muted }]}>{selectedProgramme ? `${selectedProgramme.code} — ${selectedProgramme.name}` : t("Select your programme")}</Text>
             <ChevronDown size={18} color={colors.muted} style={{ transform: [{ rotate: showProgrammes ? "180deg" : "0deg" }] }} />
           </Pressable>
           {showProgrammes && <View style={[styles.options, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -84,11 +86,11 @@ export default function OnboardingScreen() {
               {item.id === programmeId && <Check size={17} color={colors.accent} />}
             </Pressable>)}
           </View>}
-          <Text style={[styles.helper, { color: colors.muted }]}>Your faculty is assigned automatically from your programme.</Text>
+          <Text style={[styles.helper, { color: colors.muted }]}>{t("Your faculty is assigned automatically from your programme.")}</Text>
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.muted }]}>CURRENT SEMESTER</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>{t("CURRENT SEMESTER")}</Text>
           <View style={styles.semesterGrid}>{Array.from({ length: 12 }, (_, index) => index + 1).map(value => <Pressable
             key={value}
             accessibilityRole="radio"
@@ -103,11 +105,11 @@ export default function OnboardingScreen() {
 
         <ErrorBanner message={loadError ?? error} />
         <PrimaryButton onPress={() => void submit()} disabled={actionLoading || !programmeId || semester === null || Boolean(loadError)}>
-          <ButtonText>{actionLoading ? "Saving profile…" : "Continue to CAMS"}</ButtonText>
+          <ButtonText>{actionLoading ? t("Saving profile…") : t("Continue to CAMS")}</ButtonText>
         </PrimaryButton>
         <Pressable onPress={() => void logout()} style={styles.changeAccount} accessibilityRole="button">
           <LogOut size={16} color={colors.muted} />
-          <Text style={[styles.changeAccountText, { color: colors.muted }]}>Use a different Google account</Text>
+          <Text style={[styles.changeAccountText, { color: colors.muted }]}>{t("Use a different Google account")}</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -115,6 +117,7 @@ export default function OnboardingScreen() {
 }
 
 function IdentityRow({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  useLocale();
   const { colors } = useTheme();
   return <View style={styles.identityRow}>
     <View style={[styles.identityIcon, { backgroundColor: colors.primarySoft }]}>{icon}</View>

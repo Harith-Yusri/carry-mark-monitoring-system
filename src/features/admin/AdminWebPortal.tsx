@@ -1,3 +1,4 @@
+import { t, tx, useLocale } from "../../localization/react";
 import { LoadingState } from "../../components/StaffDataState";
 import React, { lazy, Suspense, useMemo, useState } from "react";
 import { Archive, LayoutDashboard, Users, FileText, Settings, ClipboardList } from "lucide-react";
@@ -13,6 +14,7 @@ const SubmissionMonitor = lazy(() => import("./SubmissionMonitor").then((module)
 const SemesterHistory = lazy(() => import("./SessionHistory").then((module) => ({ default: module.SemesterHistory })));
 
 export function AdminWebPortal() {
+  useLocale();
   const C = useColors();
   const { records, context, loading, error, reload } = useAdminRecords();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
@@ -25,22 +27,22 @@ export function AdminWebPortal() {
     <div className="admin-portal portal-typography">
       {/* Admin Sidebar Navigation */}
       <div className="admin-sidebar">
-        <nav aria-label="Faculty administration" className="admin-sidebar-panel">
+        <nav aria-label={t("Faculty administration")} className="admin-sidebar-panel">
           <div style={{ padding: "0 8px 12px", borderBottom: `1px solid ${C.border}`, marginBottom: "10px" }}>
             <div>
-              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text }}>Faculty Administration</div>
-              <div style={{ marginTop: "3px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted, letterSpacing: ".06em" }}>FSKM · Continuous Assessment</div>
+              <div style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))", color: C.text }}>{t("Faculty Administration")}</div>
+              <div style={{ marginTop: "3px", fontSize: "calc(0.6875rem * var(--staff-text-scale))", color: C.textMuted, letterSpacing: ".06em" }}>{t("FSKM · Continuous Assessment")}</div>
             </div>
           </div>
 
           <div className="admin-nav-list">
             {[
-              { key: "overview",   label: "Compliance Overview", icon: <LayoutDashboard size={15} /> },
-              { key: "submissions", label: "Submission Monitor", icon: <ClipboardList size={15} />, pending: context ? pendingSubmissions : undefined },
-              { key: "directory",  label: "Lecturer Directory",  icon: <Users size={15} /> },
-              { key: "compliance", label: "Reports & Exports",    icon: <FileText size={15} /> },
-              { key: "history",    label: "Past Semesters",       icon: <Archive size={15} /> },
-              { key: "settings",   label: "System Settings",     icon: <Settings size={15} /> },
+              { key: "overview",   label: t("Compliance Overview"), icon: <LayoutDashboard size={15} /> },
+              { key: "submissions", label: t("Submission Monitor"), icon: <ClipboardList size={15} />, pending: context ? pendingSubmissions : undefined },
+              { key: "directory",  label: t("Lecturer Directory"),  icon: <Users size={15} /> },
+              { key: "compliance", label: t("Reports & Exports"),    icon: <FileText size={15} /> },
+              { key: "history",    label: t("Past Semesters"),       icon: <Archive size={15} /> },
+              { key: "settings",   label: t("System Settings"),     icon: <Settings size={15} /> },
             ].map(item => (
               <button
                 key={item.key}
@@ -66,7 +68,7 @@ export function AdminWebPortal() {
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {item.pending !== undefined && (
                   <span
-                    aria-label={`${item.pending} pending submissions`}
+                    aria-label={t("{{value0}} pending submissions", { value0: (item.pending) })}
                     style={{
                       minWidth: "23px",
                       height: "23px",
@@ -95,10 +97,10 @@ export function AdminWebPortal() {
       {/* Main Content Pane */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <Suspense fallback={<LoadingState layout={activeTab === "overview" ? "metrics" : "table"} />}>
-          {activeTab === "overview" && <AdminDashboard records={records} context={context} loading={loading} error={error} />}
-          {activeTab === "submissions" && <SubmissionMonitor records={records} context={context} loading={loading} error={error} />}
-          {activeTab === "directory" && <LecturerDirectory records={records} context={context} loading={loading} error={error} />}
-          {activeTab === "compliance" && <ComplianceReports records={records} context={context} loading={loading} error={error} />}
+          {activeTab === "overview" && <AdminDashboard records={records} context={context} loading={loading} error={tx(error)} />}
+          {activeTab === "submissions" && <SubmissionMonitor records={records} context={context} loading={loading} error={tx(error)} />}
+          {activeTab === "directory" && <LecturerDirectory records={records} context={context} loading={loading} error={tx(error)} />}
+          {activeTab === "compliance" && <ComplianceReports records={records} context={context} loading={loading} error={tx(error)} />}
           {activeTab === "history" && <SemesterHistory />}
           {activeTab === "settings" && <AdminSettings onActiveSemesterChanged={reload} />}
         </Suspense>

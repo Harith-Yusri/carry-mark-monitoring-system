@@ -1,3 +1,4 @@
+import { t, tx, useLocale, semesterLabel } from "../../localization/react";
 import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React from "react";
 import { CheckCircle } from "lucide-react";
@@ -6,6 +7,7 @@ import { useReminders } from "../../hooks/useReminders";
 import type { AdminRecordsViewProps } from "../../hooks/useAdminRecords";
 
 export function AdminDashboard({ records, context, loading, error }: AdminRecordsViewProps) {
+  useLocale();
   const C = useColors();
   const CC = useCardColors();
   const { sendReminder, sentReminders, sendingReminders, reminderError } = useReminders();
@@ -21,27 +23,27 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
   const submitted = records.filter(item => item.submissionStatus === "Finalised").length;
   const overdue = records.filter(item => item.submissionStatus === "Overdue").length;
 
-  if (!context) return <InitialDataState title="Academic Operations" label="Loading academic operations…" error={error} layout="metrics" />;
+  if (!context) return <InitialDataState title={t("Academic Operations")} label={t("Loading academic operations…")} error={tx(error)} layout="metrics" />;
 
   return (
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px" }}>
         <div>
-          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>{context?.termLabel ?? "Current Semester"}</div>
-          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5625rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>Academic Operations</h1>
-          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Continuous assessment readiness, submission exceptions and programme follow-up.</p>
+          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>{semesterLabel(context?.termLabel ?? t("Current Semester"))}</div>
+          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5625rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>{t("Academic Operations")}</h1>
+          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>{t("Continuous assessment readiness, submission exceptions and programme follow-up.")}</p>
         </div>
       </div>
 
-      {loading && <RefreshStatus label="Refreshing academic operations…" />}
-      {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
+      {loading && <RefreshStatus label={t("Refreshing academic operations…")} />}
+      {error && <p role="alert" style={{ color: C.red }}>{tx(error)}</p>}
       {reminderError && <p role="alert" style={{ color: C.red }}>{reminderError}</p>}
 
-      <section className="operations-summary admin-metrics" aria-label="Submission summary">
+      <section className="operations-summary admin-metrics" aria-label={t("Submission summary")}>
         {[
-          { value: pendingLecturers.length, label: "Require Attention", note: "Not released", tone: "attention" },
-          { value: overdue, label: "Overdue", note: "Past submission date", tone: "overdue" },
-          { value: submitted, label: "Released", note: `of ${total} lecturer records`, tone: "finalised" },
+          { value: pendingLecturers.length, label: t("Require Attention"), note: t("Not released"), tone: "attention" },
+          { value: overdue, label: t("Overdue"), note: t("Past submission date"), tone: "overdue" },
+          { value: submitted, label: t("Released"), note: t("of {{value0}} lecturer records", { value0: (total) }), tone: "finalised" },
         ].map(item => (
           <div key={item.label} className="admin-metric-card" data-tone={item.tone}>
             <div style={{ color: "var(--metric-ink)", fontSize: "calc(1.5rem * var(--staff-text-scale))", fontWeight: 700, lineHeight: 1 }}>{item.value}</div>
@@ -55,15 +57,15 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
         <section className="staff-content-card admin-attention-panel p-5">
           <div className="admin-panel-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "16px", marginBottom: "11px" }}>
             <div>
-              <h2 style={{ margin: 0, color: "var(--operations-accent)", fontFamily: CC.display, fontSize: "calc(1rem * var(--staff-text-scale))", fontWeight: 700 }}>Attention Queue</h2>
-              <p style={{ margin: "4px 0 0", color: "var(--operations-muted)", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Overdue and incomplete submissions, ordered by urgency.</p>
+              <h2 style={{ margin: 0, color: "var(--operations-accent)", fontFamily: CC.display, fontSize: "calc(1rem * var(--staff-text-scale))", fontWeight: 700 }}>{t("Attention Queue")}</h2>
+              <p style={{ margin: "4px 0 0", color: "var(--operations-muted)", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{t("Overdue and incomplete submissions, ordered by urgency.")}</p>
             </div>
-            <span style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{pendingLecturers.length} Open</span>
+            <span style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{t("{{value0}} Open", { value0: (pendingLecturers.length) })}</span>
           </div>
 
           <div style={{ borderTop: "1px solid var(--operations-divider)" }}>
             {pendingLecturers.length === 0 && (
-              <div style={{ padding: "24px 0", color: CC.green, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{total ? "All lecturer submissions are released." : "No lecturer records for this semester."}</div>
+              <div style={{ padding: "24px 0", color: CC.green, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{total ? t("All lecturer submissions are released.") : t("No lecturer records for this semester.")}</div>
             )}
             {pendingLecturers.map(lecturer => {
               const sent = sentReminders.has(lecturer.id);
@@ -73,13 +75,13 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
                       <span style={{ color: CC.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", fontWeight: 700 }}>{lecturer.name}</span>
-                      <span style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{lecturer.programmeCodes.join(", ") || "No Programme"} · <span className="admin-identifier">{lecturer.id}</span></span>
+                      <span style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{lecturer.programmeCodes.join(", ") || (t("No Programme"))} · <span className="admin-identifier">{lecturer.id}</span></span>
                     </div>
                     <div style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lecturer.subjects.join(", ")} · {lecturer.subjectName}</div>
                   </div>
                   <div>
                     <AdminStatus status={lecturer.submissionStatus} />
-                    <div style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{lecturer.completionRate}% · due {lecturer.deadline}</div>
+                    <div style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{t("{{value0}}% · due {{value1}}", { value0: (lecturer.completionRate), value1: (lecturer.deadline) })}</div>
                   </div>
                   <button
                     className={sent ? "admin-status admin-status-success" : "staff-primary-action admin-table-action"}
@@ -87,7 +89,7 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
                     onClick={() => sendReminder(lecturer.id)}
                   >
                     {sent && <CheckCircle size={12} />}
-                    {sent ? "Email Queued" : isSending ? "Sending…" : "Send Reminder"}
+                    {sent ? t("Email Queued") : isSending ? t("Sending…") : t("Send Reminder")}
                   </button>
                 </div>
               );
@@ -97,8 +99,8 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
 
         <section className="staff-content-card admin-completion-panel p-5">
           <div className="admin-panel-header" style={{ marginBottom: "11px" }}>
-          <h2 style={{ margin: "0 0 4px", color: "var(--operations-accent)", fontFamily: CC.display, fontSize: "calc(1rem * var(--staff-text-scale))", fontWeight: 700 }}>Programme Completion</h2>
-          <p style={{ margin: 0, color: "var(--operations-muted)", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>Release progress by academic programme.</p>
+          <h2 style={{ margin: "0 0 4px", color: "var(--operations-accent)", fontFamily: CC.display, fontSize: "calc(1rem * var(--staff-text-scale))", fontWeight: 700 }}>{t("Programme Completion")}</h2>
+          <p style={{ margin: 0, color: "var(--operations-muted)", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{t("Release progress by academic programme.")}</p>
           </div>
           <div style={{ borderTop: "1px solid var(--operations-divider)" }}>
             {programmes.map(programme => {
@@ -114,7 +116,7 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
                     <span style={{ color: CC.text, fontWeight: 700, fontSize: "calc(0.875rem * var(--staff-text-scale))" }}>{rate}%</span>
                   </div>
                   <div style={{ height: "4px", background: CC.elevated, overflow: "hidden", margin: "11px 0 7px" }}><div style={{ width: `${rate}%`, height: "100%", background: rate === 100 ? CC.green : "var(--operations-accent)" }} /></div>
-                  <div style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{programme.submitted} released · {programme.pending} pending · {programmeTotal} total</div>
+                  <div style={{ color: "var(--operations-muted)", fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{t("{{value0}} released · {{value1}} pending · {{value2}} total", { value0: (programme.submitted), value1: (programme.pending), value2: (programmeTotal) })}</div>
                 </div>
               );
             })}

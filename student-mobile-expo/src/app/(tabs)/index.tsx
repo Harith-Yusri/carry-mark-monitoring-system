@@ -1,4 +1,4 @@
-import { releaseTerminology } from "@/lib/releaseTerminology";
+import { t, tx, useLocale, semesterLabel, notificationText } from "@/localization/react";
 import { router } from "expo-router";
 import { Bell, BellRing, BookOpen, Plus, X } from "lucide-react-native";
 import { useState } from "react";
@@ -11,6 +11,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { fonts } from "@/theme/fonts";
 
 export default function DashboardScreen() {
+  useLocale();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { student, subjects, notifications, loading, actionLoading, error, refresh, joinClass, clearError } = useStudent();
@@ -35,23 +36,23 @@ export default function DashboardScreen() {
       ListHeaderComponent={<View style={styles.listHeader}>
         <View style={styles.heroRow}>
           <View style={{ flex: 1, gap: 4 }}>
-            <Text style={[styles.eyebrow, { color: colors.accent }]}>STUDENT PORTAL</Text>
-            <Heading>My Subjects</Heading>
-            <View style={[styles.semesterChip, { backgroundColor: colors.elevated, borderColor: colors.border }]}><Text numberOfLines={1} style={[styles.semesterText, { color: colors.textSecondary }]}>{student?.semester ?? "Current semester"}</Text></View>
+            <Text style={[styles.eyebrow, { color: colors.accent }]}>{t("STUDENT PORTAL")}</Text>
+            <Heading>{t("My Subjects")}</Heading>
+            <View style={[styles.semesterChip, { backgroundColor: colors.elevated, borderColor: colors.border }]}><Text numberOfLines={1} style={[styles.semesterText, { color: colors.textSecondary }]}>{semesterLabel(student?.semester ?? t("Current semester"))}</Text></View>
           </View>
-          <Pressable onPress={() => setNotificationsOpen(true)} style={({ pressed }) => [styles.bell, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? .75 : 1 }]} accessibilityLabel="Notifications">
+          <Pressable onPress={() => setNotificationsOpen(true)} style={({ pressed }) => [styles.bell, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? .75 : 1 }]} accessibilityLabel={t("Notifications")}>
             <Bell size={22} color={colors.text} />
             {notifications.length > 0 && <View style={[styles.dot, { backgroundColor: colors.warning }]}><Text style={styles.dotText}>{Math.min(notifications.length, 9)}</Text></View>}
           </Pressable>
         </View>
         <View style={styles.actionRow}>
-          <PrimaryButton compact onPress={() => { clearError(); setJoinOpen(true); }}><Plus size={17} color={colors.white} /><ButtonText>Join Class</ButtonText></PrimaryButton>
-          <Text style={[typography.body, styles.subjectCount, { color: colors.muted }]}>{subjects.length} current subject{subjects.length === 1 ? "" : "s"}</Text>
+          <PrimaryButton compact onPress={() => { clearError(); setJoinOpen(true); }}><Plus size={17} color={colors.white} /><ButtonText>{t("Join Class")}</ButtonText></PrimaryButton>
+          <Text style={[typography.body, styles.subjectCount, { color: colors.muted }]}>{t("{{value0}} current subject{{value1}}", { value0: (subjects.length), value1: (subjects.length === 1 ? "" : t("pluralSuffix")) })}</Text>
         </View>
-        <ErrorBanner message={error} />
+        <ErrorBanner message={tx(error)} />
       </View>}
       renderItem={({ item }) => <SubjectCard subject={item} onPress={() => router.push({ pathname: "/subject/[offeringId]", params: { offeringId: item.offering_id } })} />}
-      ListEmptyComponent={<Card style={styles.empty}><View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}><BookOpen size={26} color={colors.accent} /></View><Text style={[styles.emptyTitle, { color: colors.text }]}>Your subjects will appear here</Text><Text style={[typography.body, { color: colors.muted, textAlign: "center" }]}>Use Join Class when your lecturer shares an invitation code for the current semester.</Text></Card>}
+      ListEmptyComponent={<Card style={styles.empty}><View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}><BookOpen size={26} color={colors.accent} /></View><Text style={[styles.emptyTitle, { color: colors.text }]}>{t("Your subjects will appear here")}</Text><Text style={[typography.body, { color: colors.muted, textAlign: "center" }]}>{t("Use Join Class when your lecturer shares an invitation code for the current semester.")}</Text></Card>}
     />
 
     <Modal visible={joinOpen} transparent animationType="slide" onRequestClose={closeJoin}>
@@ -62,12 +63,12 @@ export default function DashboardScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
-          <Pressable style={styles.joinBackdrop} onPress={closeJoin} accessibilityRole="button" accessibilityLabel="Dismiss join class" />
+          <Pressable style={styles.joinBackdrop} onPress={closeJoin} accessibilityRole="button" accessibilityLabel={t("Dismiss join class")} />
           <View style={[styles.modal, { backgroundColor: colors.surface, borderColor: colors.border, paddingBottom: Math.max(30, insets.bottom + 14) }]}>
-            <View style={styles.modalHeader}><View style={{ flex: 1, gap: 4 }}><Heading size={24}>Join a class</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>Enter the invitation code provided by your lecturer.</Text></View><Pressable onPress={closeJoin} accessibilityLabel="Close join class"><X size={22} color={colors.muted} /></Pressable></View>
-            <Field label="Class code" value={code} onChangeText={value => { setCode(value.toUpperCase()); clearError(); }} autoCapitalize="characters" placeholder="ABC123" />
-            <ErrorBanner message={error} />
-            <PrimaryButton onPress={() => void submitJoin()} disabled={!code.trim() || actionLoading}><Plus size={18} color={colors.white} /><ButtonText>{actionLoading ? "Joining…" : "Join Class"}</ButtonText></PrimaryButton>
+            <View style={styles.modalHeader}><View style={{ flex: 1, gap: 4 }}><Heading size={24}>{t("Join a class")}</Heading><Text style={[typography.body, { color: colors.textSecondary }]}>{t("Enter the invitation code provided by your lecturer.")}</Text></View><Pressable onPress={closeJoin} accessibilityLabel={t("Close join class")}><X size={22} color={colors.muted} /></Pressable></View>
+            <Field label={t("Class code")} value={code} onChangeText={value => { setCode(value.toUpperCase()); clearError(); }} autoCapitalize="characters" placeholder={t("ABC123")} />
+            <ErrorBanner message={tx(error)} />
+            <PrimaryButton onPress={() => void submitJoin()} disabled={!code.trim() || actionLoading}><Plus size={18} color={colors.white} /><ButtonText>{actionLoading ? t("Joining…") : t("Join Class")}</ButtonText></PrimaryButton>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -75,8 +76,8 @@ export default function DashboardScreen() {
 
     <Modal visible={notificationsOpen} transparent animationType="slide" onRequestClose={() => setNotificationsOpen(false)}>
       <Pressable style={styles.overlay} onPress={() => setNotificationsOpen(false)}><Pressable style={[styles.modal, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => undefined}>
-        <View style={styles.modalHeader}><View><Heading size={24}>Notifications</Heading><Text style={[typography.body, { color: colors.muted }]}>Latest continuous assessment updates</Text></View><Pressable onPress={() => setNotificationsOpen(false)} accessibilityLabel="Close notifications"><X size={22} color={colors.muted} /></Pressable></View>
-        {notifications.length ? notifications.slice(0, 5).map(item => <View key={item.id} style={[styles.notification, { backgroundColor: colors.elevated }]}><View style={[styles.notificationIcon, { backgroundColor: colors.primarySoft }]}><BellRing size={17} color={colors.accent} /></View><View style={{ flex: 1, gap: 3 }}><Text style={[typography.bodyStrong, { color: colors.text }]}>{releaseTerminology(item.title)}</Text><Text style={[typography.body, { color: colors.muted }]}>{releaseTerminology(item.body)}</Text></View></View>) : <View style={styles.emptyNotification}><Bell size={24} color={colors.muted} /><Text style={[typography.body, { color: colors.muted }]}>You’re all caught up.</Text></View>}
+        <View style={styles.modalHeader}><View><Heading size={24}>{t("Notifications")}</Heading><Text style={[typography.body, { color: colors.muted }]}>{t("Latest continuous assessment updates")}</Text></View><Pressable onPress={() => setNotificationsOpen(false)} accessibilityLabel={t("Close notifications")}><X size={22} color={colors.muted} /></Pressable></View>
+        {notifications.length ? notifications.slice(0, 5).map(item => <View key={item.id} style={[styles.notification, { backgroundColor: colors.elevated }]}><View style={[styles.notificationIcon, { backgroundColor: colors.primarySoft }]}><BellRing size={17} color={colors.accent} /></View><View style={{ flex: 1, gap: 3 }}><Text style={[typography.bodyStrong, { color: colors.text }]}>{notificationText(item.title)}</Text><Text style={[typography.body, { color: colors.muted }]}>{notificationText(item.body)}</Text></View></View>) : <View style={styles.emptyNotification}><Bell size={24} color={colors.muted} /><Text style={[typography.body, { color: colors.muted }]}>{t("You’re all caught up.")}</Text></View>}
       </Pressable></Pressable>
     </Modal>
   </Screen>;

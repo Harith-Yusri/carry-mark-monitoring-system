@@ -1,3 +1,4 @@
+import { localizedFunction, locale } from './helpers/localization.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -7,8 +8,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 async function load(path, imports={}) {
   const {code}=await transform(await readFile(path,'utf8'),{loader:path.endsWith('tsx')?'tsx':'ts',format:'cjs'});
-  return new Function('module','require',code+';return module.exports;')({exports:{}},name=>{
+  return localizedFunction('module','require',code+';return module.exports;')({exports:{}},name=>{
     if(name==='react')return React;
+    if(name.includes('localization/react'))return {t:locale.t,tx:locale.tx,useLocale:()=>locale.locale()};
     if(name in imports)return imports[name];
     throw Error('Unexpected import: '+name);
   });

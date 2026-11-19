@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import { BarChart3 } from "lucide-react-native";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Svg, { G, Line, Rect, Text as SvgText } from "react-native-svg";
@@ -10,11 +11,12 @@ const PLOT_BOTTOM = 188;
 const PLOT_HEIGHT = 140;
 
 export function SubjectBarChart({ subjects }: { subjects: SubjectResult[] }) {
+  useLocale();
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const chartWidth = Math.max(width - 68, subjects.length * 92 + 48);
 
-  if (!subjects.length) return <Card><Text style={[typography.body, { color: colors.muted }]}>No subject progress is available.</Text></Card>;
+  if (!subjects.length) return <Card><Text style={[typography.body, { color: colors.muted }]}>{t("No subject progress is available.")}</Text></Card>;
 
   return <Card style={styles.card}>
     <View style={styles.chartHeader}>
@@ -22,14 +24,14 @@ export function SubjectBarChart({ subjects }: { subjects: SubjectResult[] }) {
         <BarChart3 size={21} color={colors.accent} />
       </View>
       <View style={styles.headerCopy}>
-        <Text style={[styles.title, { color: colors.text }]}>Carry mark by subject</Text>
-        <Text style={[styles.subtitle, { color: colors.muted }]}>Carry achieved (%) · scale 0–100</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t("Carry mark by subject")}</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>{t("Carry achieved (%) · scale 0–100")}</Text>
       </View>
     </View>
 
     <View style={[styles.plot, { backgroundColor: colors.background, borderColor: colors.border }]}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Svg width={chartWidth} height={CHART_HEIGHT} accessibilityLabel="Carry mark percentage by subject">
+        <Svg width={chartWidth} height={CHART_HEIGHT} accessibilityLabel={t("Carry mark percentage by subject")}>
           {[0, 25, 50, 75, 100].map(value => {
             const y = PLOT_BOTTOM - value / 100 * PLOT_HEIGHT;
             return <G key={value}>
@@ -63,10 +65,10 @@ export function SubjectBarChart({ subjects }: { subjects: SubjectResult[] }) {
     </View>
 
     <View style={styles.legend}>
-      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.success }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Eligible</Text></View>
-      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.danger }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Not Eligible</Text></View>
-      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.muted }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>Pending / undetermined</Text></View>
-      <Text style={[styles.zeroNote, { color: colors.muted }]}>0% is shown as a visible baseline</Text>
+      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.success }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>{t("Eligible")}</Text></View>
+      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.danger }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>{t("Not Eligible")}</Text></View>
+      <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.muted }]} /><Text style={[styles.legendText, { color: colors.textSecondary }]}>{t("Pending / undetermined")}</Text></View>
+      <Text style={[styles.zeroNote, { color: colors.muted }]}>{t("0% is shown as a visible baseline")}</Text>
     </View>
   </Card>;
 }

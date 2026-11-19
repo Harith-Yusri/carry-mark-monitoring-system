@@ -1,3 +1,4 @@
+import { t, tx, useLocale } from "../../localization/react";
 import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useState } from "react";
 import { AdminStatus, useCardColors, useColors } from "./adminStyles";
@@ -13,6 +14,7 @@ function groupSubjects(allocations: ClassTeachingAllocation[], programmeId: stri
 }
 
 export function LecturerDirectory({ records, context, loading, error }: AdminRecordsViewProps) {
+  useLocale();
   const C = useColors();
   const CC = useCardColors();
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,39 +27,39 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
     return matchesSearch && matchesProgramme;
   });
 
-  if (!context) return <InitialDataState title="Lecturer Directory" label="Loading lecturers…" error={error} layout="table" />;
+  if (!context) return <InitialDataState title={t("Lecturer Directory")} label={t("Loading lecturers…")} error={tx(error)} layout="table" />;
 
   return (
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "20px", alignItems: "flex-end" }}>
         <div>
-          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>Academic Staff</div>
-          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>Lecturer Directory</h1>
-          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>Teaching allocation, workload and submission activity in one faculty register.</p>
+          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".1em", marginBottom: "7px" }}>{t("Academic Staff")}</div>
+          <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>{t("Lecturer Directory")}</h1>
+          <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>{t("Teaching allocation, workload and submission activity in one faculty register.")}</p>
         </div>
-        <div style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{filtered.length} of {records.length} Records</div>
+        <div style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{t("{{value0}} of {{value1}} Records", { value0: (filtered.length), value1: (records.length) })}</div>
       </div>
 
       <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", flexWrap: "wrap", marginBottom: "18px" }}>
         <label style={{ display: "block", flex: "1 1 320px", maxWidth: "560px" }}>
-          <span style={{ display: "block", color: C.textSub, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>Search Staff or Teaching Allocation</span>
+          <span style={{ display: "block", color: C.textSub, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>{t("Search Staff or Teaching Allocation")}</span>
           <input
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
-            placeholder="Name, staff ID, programme or subject"
+            placeholder={t("Name, staff ID, programme or subject")}
             style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", background: C.input, border: `1px solid ${C.borderMid}`, borderRadius: "4px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none" }}
           />
         </label>
         <label style={{ display: "block", flex: "0 1 300px", minWidth: "220px" }}>
-          <span style={{ display: "block", color: C.textSub, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>Programme</span>
+          <span style={{ display: "block", color: C.textSub, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".06em", marginBottom: "6px" }}>{t("Programme")}</span>
           <select
-            aria-label="Filter lecturers by programme"
+            aria-label={t("Filter lecturers by programme")}
             value={programmeId}
             onChange={event => setProgrammeId(event.target.value)}
             disabled={loading}
             style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", background: C.input, border: `1px solid ${C.borderMid}`, borderRadius: "4px", color: C.text, fontSize: "calc(0.8125rem * var(--staff-text-scale))", outline: "none", cursor: loading ? "default" : "pointer" }}
           >
-            <option value="">All Programmes</option>
+            <option value="">{t("All Programmes")}</option>
             {(context?.programmes ?? []).map(programme => (
               <option key={programme.id} value={programme.id}>{programme.code} — {programme.name}</option>
             ))}
@@ -65,8 +67,8 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
         </label>
       </div>
 
-      {loading && <RefreshStatus label="Refreshing lecturers…" />}
-      {error && <p role="alert" style={{ color: C.red }}>{error}</p>}
+      {loading && <RefreshStatus label={t("Refreshing lecturers…")} />}
+      {error && <p role="alert" style={{ color: C.red }}>{tx(error)}</p>}
 
       <div className="admin-table-panel"><div className="admin-table-scroll">
         <table className="admin-data-table" style={{ width: "100%", minWidth: "850px", borderCollapse: "collapse", fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>
@@ -81,7 +83,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
           <thead>
             <tr>
               {["Lecturer", "Programmes Taught", "Teaching Allocations", "Workload", "Submission", "Last Activity"].map(label => (
-                <th scope="col" key={label}>{label}</th>
+                <th scope="col" key={label}>{t(label)}</th>
               ))}
             </tr>
           </thead>
@@ -95,7 +97,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
                   </td>
                   <td>
                     <div
-                      title={lecturer.programmeAssignments.map(assignment => `${assignment.code} — ${assignment.name}`).join("\n") || "No current teaching allocation"}
+                      title={lecturer.programmeAssignments.map(assignment => `${assignment.code} — ${assignment.name}`).join("\n") || (t("No current teaching allocation"))}
                       style={{ color: CC.code, fontWeight: 700 }}
                     >
                       {lecturer.programmeCodes.join(", ") || "—"}
@@ -112,12 +114,12 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
                           </div>
                         ))}
                       </div>
-                    )) : <span style={{ color: CC.textMuted }}>No current teaching allocation</span>}
+                    )) : <span style={{ color: CC.textMuted }}>{t("No current teaching allocation")}</span>}
                   </td>
-                  <td><span style={{ color: CC.text, fontWeight: 700 }}>{lecturer.studentCount}</span> students</td>
+                  <td><span style={{ color: CC.text, fontWeight: 700 }}>{lecturer.studentCount}</span> {t(" students")}</td>
                   <td>
                     <AdminStatus status={lecturer.submissionStatus} />
-                    <div style={{ color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{lecturer.completionRate}% complete</div>
+                    <div style={{ color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "4px" }}>{t("{{value0}}% complete", { value0: (lecturer.completionRate) })}</div>
                   </td>
                   <td>{lecturer.lastUpdated}</td>
                 </tr>
@@ -125,7 +127,7 @@ export function LecturerDirectory({ records, context, loading, error }: AdminRec
             })}
           </tbody>
         </table>
-        {!loading && !error && filtered.length === 0 && <div style={{ padding: "24px 10px", borderBottom: `1px solid ${CC.borderMid}`, color: CC.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>No lecturer records match the selected search and programme filters.</div>}
+        {!loading && !error && filtered.length === 0 && <div style={{ padding: "24px 10px", borderBottom: `1px solid ${CC.borderMid}`, color: CC.textMuted, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{t("No lecturer records match the selected search and programme filters.")}</div>}
       </div>
       </div>
     </div>

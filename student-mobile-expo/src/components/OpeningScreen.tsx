@@ -1,3 +1,4 @@
+import { t, useLocale } from "@/localization/react";
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Screen } from "@/components/ui";
 import { darkPalette as colors } from "@/theme/colors";
@@ -6,6 +7,7 @@ import { fonts } from "@/theme/fonts";
 // Display-only startup branding. The existing auth state controls its lifetime;
 // no timers, navigation effects, or additional startup requests belong here.
 export function OpeningScreen() {
+  useLocale();
   return <Screen style={styles.screen}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.brand}>
@@ -16,15 +18,15 @@ export function OpeningScreen() {
             source={require("../../assets/cmms-logo-mark.png")}
             resizeMode="contain"
             style={styles.logo}
-            accessibilityLabel="CAMS logo"
+            accessibilityLabel={t("CAMS logo")}
           />
         </View>
         <Text style={styles.title}>CAMS</Text>
         <View style={styles.accent} />
-        <Text style={styles.systemName}>Continuous Assessment{"\n"}Monitoring System</Text>
+        <Text style={styles.systemName}>{t("Continuous Assessment\nMonitoring System")}</Text>
         <View style={styles.progress} accessibilityLiveRegion="polite">
-          <ActivityIndicator size="small" color={colors.accent} accessibilityLabel="Starting CAMS" />
-          <Text style={styles.progressText}>Getting things ready</Text>
+          <ActivityIndicator size="small" color={colors.accent} accessibilityLabel={t("Starting CAMS")} />
+          <Text style={styles.progressText}>{t("Getting things ready")}</Text>
         </View>
       </View>
     </ScrollView>

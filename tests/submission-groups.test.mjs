@@ -1,3 +1,4 @@
+import { localizedFunction } from './helpers/localization.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -5,7 +6,7 @@ import { transform } from 'esbuild';
 import React from 'react';
 
 const { code: groupCode } = await transform(await readFile('src/features/admin/submissionGroups.ts', 'utf8'), { loader: 'ts', format: 'cjs' });
-const { groupSubmissionRows } = new Function('module', groupCode + ';return module.exports;')({ exports: {} });
+const { groupSubmissionRows } = localizedFunction('module', groupCode + ';return module.exports;')({ exports: {} });
 const row = (id, staffId, submissionStatus, programmeCode = 'CS240') => ({
   id, staffId, lecturerName: `Lecturer ${staffId}`, submissionStatus, programmeCode,
   programmeName: 'Programme', subjectCode: 'ITT557', subjectName: 'Mobile Development',
@@ -34,7 +35,7 @@ test('filtered summaries exclude nonmatching classes and lecturers', () => {
 const source = (await readFile('src/features/admin/SubmissionMonitor.tsx', 'utf8')).replace(/^import .*;\n/gm, '').replace('export function SubmissionMonitor', 'function SubmissionMonitor');
 const { code: componentCode } = await transform(source, { loader: 'tsx' });
 const { code: recordsCode } = await transform(await readFile('src/hooks/useAdminRecords.ts', 'utf8'), { loader: 'ts', format: 'cjs' });
-const recordExports = new Function('module','require', recordsCode + ';return module.exports;')({exports:{}}, () => ({}));
+const recordExports = localizedFunction('module','require', recordsCode + ';return module.exports;')({exports:{}}, () => ({}));
 function nodes(tree) {
   if (!tree || typeof tree !== 'object') return [];
   return [tree, ...React.Children.toArray(tree.props?.children).flatMap(nodes)];
@@ -47,7 +48,7 @@ function setup() {
     submissionAllocations:recordExports.submissionAllocations,requiresSubmissionAction:recordExports.requiresSubmissionAction,
     useReminders:()=>({sendReminder:id=>calls.push(id),sentReminders:new Set(),sendingReminders:new Set(),reminderError:''}),
     AdminStatus:()=>null,CheckCircle:()=>null,Clock:()=>null,Send:()=>null,ChevronDown:()=>null};
-  const Component = new Function(...Object.keys(deps), componentCode+';return SubmissionMonitor;')(...Object.values(deps));
+  const Component = localizedFunction(...Object.keys(deps), componentCode+';return SubmissionMonitor;')(...Object.values(deps));
   const records = ['S1','S2','S3'].map(id=>({id,name:`Lecturer ${id}`,classAllocations:rows.filter(r=>r.staffId===id)}));
   const render = () => {cursor=0;return Component({records,context:{programmes:[{code:'CS240',name:'Programme'},{code:'CS255',name:'Other Programme'}]},loading:false,error:''});};
   return {render,calls};
