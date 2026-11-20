@@ -59,7 +59,7 @@ export function WebRegister() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "clamp(34px, 7vh, 72px)" }}>
             <img src="/cmms-favicon-v3.png" alt="CAMS" style={{ width: 46, height: 46, objectFit: "contain" }} />
             <div>
-              <div style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700 }}>UiTM</div>
+              <div style={{ fontFamily: C.display, fontSize: "17px", fontWeight: 700 }}>CAMS</div>
               <div style={{ marginTop: 3, fontSize: 11, letterSpacing: ".08em", opacity: .78 }}>{t("CONTINUOUS ASSESSMENT MONITORING SYSTEM")}</div>
             </div>
           </div>
