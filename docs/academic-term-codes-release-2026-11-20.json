@@ -1,0 +1,235 @@
+{
+  "date": "2026-11-20",
+  "sourceCommit": "b94bd7c7da1c2d3b19aeeb5e8506322dd34209d9",
+  "screensUpdated": [
+    "Lecturer My Subjects, Academic Year/Academic Term filters and teaching history",
+    "Lecturer Subject Hub context and exact issue-notification routing",
+    "Lecturer class export metadata and filenames",
+    "Admin Academic Operations",
+    "Submission Monitor context",
+    "Reports & Exports context, CSV headings/values/filenames",
+    "Past Academic Terms",
+    "System Settings, academic term create/edit/confirmation dialogs",
+    "Student My Subjects and Progress calendar chips",
+    "Student Settings: distinct Academic Term, Academic Year and Programme Semester",
+    "Student onboarding: Programme Semester 1–12",
+    "Student subject availability wording"
+  ],
+  "labels": {
+    "calendar": "Academic Term / Academic Term Code",
+    "programmeStage": "Programme Semester",
+    "exampleDisplay": "Academic Year: 2025/2026; Academic Term: 20262",
+    "locales": [
+      "en",
+      "ms",
+      "zh",
+      "ta"
+    ]
+  },
+  "validation": {
+    "regularPattern": "^[0-9]{4}[24]$",
+    "validExamples": [
+      "20262",
+      "20264",
+      "20272",
+      "20274"
+    ],
+    "invalidExamples": [
+      "20261",
+      "20263",
+      "20265",
+      "20266",
+      "20269"
+    ],
+    "locations": [
+      "HTML form constraint",
+      "shared client/API preflight",
+      "create/update academic-term RPCs",
+      "direct INSERT/code-changing UPDATE trigger"
+    ],
+    "preserved": [
+      "existing year/date/deadline validation",
+      "existing term IDs and stored historical codes",
+      "unchanged legacy code on metadata edits",
+      "programme stages 1–12",
+      "activation/reopening/archival lifecycle",
+      "marks, assessments and eligibility",
+      "RLS and function permissions"
+    ],
+    "sourceOfCodes": "academic_terms.semester_code; never reconstructed from academic_year + semester_no",
+    "legacySchema": "Existing semester_code/semester_no column names and RPC names remain compatible; semester_no is a legacy calendar discriminator, never Programme Semester."
+  },
+  "migration": {
+    "file": "supabase/migrations/202611200001_academic_term_codes.sql",
+    "applied": true,
+    "version": "202611200001",
+    "historyRecorded": true,
+    "sourceVerified": true,
+    "rpcsUpdated": [
+      "create_academic_semester",
+      "update_academic_semester",
+      "get_my_lecturer_subject_dashboard",
+      "open_my_mark_issue_notification",
+      "get_my_mobile_portal"
+    ],
+    "additiveStudentFields": [
+      "programme_semester",
+      "academic_year"
+    ],
+    "legacyStudentField": "semester is retained for compatibility and now contains the stored academic term code",
+    "deploymentMethod": "Only this reviewed migration was applied atomically and recorded. Standard db push dry-run reported the pre-existing remote-only 202611060001 migration; no old history was repaired, replayed or removed."
+  },
+  "integrity": {
+    "preserved": {
+      "terms_hash": true,
+      "marks_count": true,
+      "marks_hash": true,
+      "security_hash": true,
+      "rls_hash": true
+    },
+    "migration": "202611200001"
+  },
+  "dataChecks": {
+    "termRecordsBefore": [
+      {
+        "code": "20262",
+        "current": true,
+        "legacy_discriminator": 2,
+        "status": "active",
+        "year": "2025/2026"
+      },
+      {
+        "code": "20264",
+        "current": false,
+        "legacy_discriminator": 4,
+        "status": "closed",
+        "year": "2026/2027"
+      }
+    ],
+    "marksCount": 123,
+    "beforeAndAfterHashes": {
+      "terms_hash": {
+        "before": "15c61ef02906a6f513e2471707c3252f",
+        "after": "15c61ef02906a6f513e2471707c3252f"
+      },
+      "marks_hash": {
+        "before": "3f5d32115cfa853879c24a72d6283ea3",
+        "after": "3f5d32115cfa853879c24a72d6283ea3"
+      },
+      "security_hash": {
+        "before": "d0f2352a713ec4257fc92e4fa87d7d5f",
+        "after": "d0f2352a713ec4257fc92e4fa87d7d5f"
+      },
+      "rls_hash": {
+        "before": "e0f65fa414d9e4d1aa0cc4595a9ba320",
+        "after": "e0f65fa414d9e4d1aa0cc4595a9ba320"
+      }
+    }
+  },
+  "verification": {
+    "workspaceAndEdgeFunctionTests": {
+      "passed": 133,
+      "failed": 0
+    },
+    "isolatedReleaseNodeTests": {
+      "passed": 90,
+      "failed": 0
+    },
+    "sessionPersistenceTests": {
+      "passed": 9,
+      "failed": 0
+    },
+    "realSqlPGliteRegression": "passed",
+    "webTypeScript": "passed",
+    "mobileTypeScript": "passed",
+    "mobileLint": "passed, no warnings",
+    "webProductionBuild": "passed; normal Vite >500 kB chunk advisory",
+    "androidProductionJsHermesExport": "passed",
+    "iosProductionJsHermesExport": "passed",
+    "localizationBrowserScenarios": 18,
+    "academicTermBrowserSuiteLocalAndLive": "passed",
+    "authenticatedBrowserBackend": "synthetic/intercepted; no live academic writes",
+    "physicalDeviceVerification": false
+  },
+  "deployment": {
+    "staff": {
+      "result": "deployed",
+      "url": "https://unicams.online",
+      "worker": "cams-staff",
+      "version": "568dddcf-4ea7-498b-b450-f95b25c41d5f",
+      "liveAssetVerification": [
+        {
+          "path": "/register",
+          "status": 200,
+          "spaMatchesRelease": true
+        },
+        {
+          "path": "/lecturer/dashboard",
+          "status": 200,
+          "spaMatchesRelease": true
+        },
+        {
+          "path": "/admin/dashboard",
+          "status": 200,
+          "spaMatchesRelease": true
+        },
+        {
+          "path": "/assets/index-B4dsFeQe.js",
+          "status": 200,
+          "sha256": "5fa7658a0cca4e1885e88009cd6789b99efb330f85a82a073834f51c2f103c8f",
+          "bytes": 749016
+        },
+        {
+          "path": "/assets/index-B5cHvT3m.css",
+          "status": 200,
+          "sha256": "15615a00fc1ecd46806a18d835dd9620f41208ecba7b5c0311ada2d0e32f6cf1",
+          "bytes": 135000
+        }
+      ]
+    },
+    "student": {
+      "result": "source and Android/iOS bundles verified; not published",
+      "reason": "Current working-tree mobile metadata from the earlier pending institution-neutral work requires its new native/fingerprint build. No incompatible OTA or signed APK/IPA was published by this task."
+    },
+    "excludedPendingWork": "Unreleased institution-neutral/auth-domain changes and independent UI drafts; the existing Student preview UI was not replaced by an older baseline."
+  },
+  "filesChanged": [
+    "scripts/check-academic-term-ui.cjs",
+    "scripts/check-academic-terms.cjs",
+    "scripts/check-localization.cjs",
+    "scripts/check-staff-loading.cjs",
+    "src/features/admin/AdminDashboard.tsx",
+    "src/features/admin/AdminSettings.tsx",
+    "src/features/admin/AdminWebPortal.tsx",
+    "src/features/admin/ComplianceReports.tsx",
+    "src/features/admin/SessionHistory.tsx",
+    "src/features/admin/SubmissionMonitor.tsx",
+    "src/features/lecturer/ExportTab.tsx",
+    "src/features/lecturer/LecturerDashboard.tsx",
+    "src/features/lecturer/LecturerWebPortal.tsx",
+    "src/features/lecturer/MarkIssuesTab.tsx",
+    "src/hooks/useAdminRecords.ts",
+    "src/localization/react.tsx",
+    "src/services/carryMarkApi.ts",
+    "src/services/lecturerSubjectGroups.ts",
+    "src/utils/errors.ts",
+    "student-mobile-expo/src/academic/terms.ts",
+    "student-mobile-expo/src/app/(tabs)/index.tsx",
+    "student-mobile-expo/src/app/(tabs)/progress.tsx",
+    "student-mobile-expo/src/app/(tabs)/settings.tsx",
+    "student-mobile-expo/src/app/onboarding.tsx",
+    "student-mobile-expo/src/app/subject/[offeringId].tsx",
+    "student-mobile-expo/src/locales/en.json",
+    "student-mobile-expo/src/locales/ms.json",
+    "student-mobile-expo/src/locales/ta.json",
+    "student-mobile-expo/src/locales/zh.json",
+    "student-mobile-expo/src/localization/react.tsx",
+    "student-mobile-expo/src/types/portal.ts",
+    "supabase/migrations/202611200001_academic_term_codes.sql",
+    "supabase/tests/academic_term_codes.sql",
+    "tests/academic-terms.test.mjs",
+    "tests/helpers/localization.mjs",
+    "tests/lecturer-subject-creation.test.mjs",
+    "tests/lecturer-teaching-history.test.mjs"
+  ]
+}
