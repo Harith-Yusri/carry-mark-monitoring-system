@@ -8,7 +8,7 @@ import { downloadText } from "../../utils/download";
 import { escapeCsv } from "../../utils/csv";
 import { useSubjectClassData } from "../../hooks/useSubjectClassData";
 
-export function ExportTab({ cache, offeringId, offeringIds, subjectCode, subjectName, academicYear, programmeSemester }: { cache?: SubjectClassCache; offeringId: string; offeringIds?: string[]; subjectCode: string; subjectName: string; academicYear: string; programmeSemester: number }) {
+export function ExportTab({ cache, offeringId, offeringIds, subjectCode, subjectName, academicYear, academicTermCode, programmeSemester }: { cache?: SubjectClassCache; offeringId: string; offeringIds?: string[]; subjectCode: string; subjectName: string; academicYear: string; academicTermCode: string; programmeSemester: number }) {
   useLocale();
   const { sections, selectedId, setSelectedId, selected, assessments, carryMax, loading, hasLoaded, detailLoading, error, reload } = useSubjectClassData(offeringId, offeringIds, cache);
   const [downloaded, setDownloaded] = useState(false);
@@ -33,11 +33,11 @@ export function ExportTab({ cache, offeringId, offeringIds, subjectCode, subject
   </div>;
 
   const classSlug = selected.label.replace(/\s+/g, "");
-  const termSlug = `Sem${programmeSemester}_${academicYear.replace(/\D/g, "")}`;
+  const termSlug = `AcademicTerm_${academicTermCode}_ProgrammeSemester_${programmeSemester}`;
   const filename = `${subjectCode}_${selected.programmeCode}_${classSlug}_CarryMark_${termSlug}.csv`;
   const assessmentStatus = selected.finalised ? t("{{count}} components · class released", {count: assessments.length}) : t("{{count}} components · pending", {count: assessments.length});
   const detailRows = [
-    ["Subject Code", subjectCode], ["Subject Name", subjectName], ["Programme", `${selected.programmeCode} — ${selected.programmeName}`], ["Class Section", selected.label], ["Programme Semester", programmeSemester], ["Academic Year", academicYear], ["Students", t("{{count}} enrolled (capacity {{capacity}})", {count: selected.students.length, capacity: selected.capacity})], ["Submission Status", assessmentStatus], ["Export Format", "CSV (.csv)"], ["Output Filename", filename],
+    ["Subject Code", subjectCode], ["Subject Name", subjectName], ["Programme", `${selected.programmeCode} — ${selected.programmeName}`], ["Class Section", selected.label], ["Programme Semester", programmeSemester], ["Academic Year", academicYear], ["Academic Term", academicTermCode], ["Students", t("{{count}} enrolled (capacity {{capacity}})", {count: selected.students.length, capacity: selected.capacity})], ["Submission Status", assessmentStatus], ["Export Format", "CSV (.csv)"], ["Output Filename", filename],
   ];
   const exportClass = () => {
     const rows = selected.students.map(student => [student.matrixNo, student.name, ...assessments.map(item => student.scores[item.id]), student.totalCarry].map(escapeCsv).join(","));

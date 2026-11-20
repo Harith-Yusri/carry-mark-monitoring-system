@@ -1,4 +1,4 @@
-import { t, tx, useLocale, semesterLabel } from "../../localization/react";
+import { t, tx, useLocale } from "../../localization/react";
 import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useRef, useState } from "react";
 import { BookOpen, Plus, Users, Clock, ChevronRight, MoreVertical, Trash2, X } from "lucide-react";
@@ -57,7 +57,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const [subjects, setSubjects] = useState<LecturerSubject[]>([]);
   const [archivedSubjects, setArchivedSubjects] = useState<LecturerSubject[]>([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
-  const [selectedSemesterNo, setSelectedSemesterNo] = useState<number | null>(null);
+  const [selectedTermCode, setSelectedTermCode] = useState<string | null>(null);
   const [archivedDetail, setArchivedDetail] = useState<{ subject: LecturerSubject; data: Awaited<ReturnType<typeof loadOfferingData>> } | null>(null);
   const [archiveError, setArchiveError] = useState("");
   const [subjectActionError, setSubjectActionError] = useState("");
@@ -75,7 +75,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const [catalogueLoading, setCatalogueLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const saveInFlight = useRef(false);
-  const [activeTerm, setActiveTerm] = useState<{ academicYear: string; semesterNo: number } | null>(null);
+  const [activeTerm, setActiveTerm] = useState<{ academicYear: string; semesterNo: number; termCode: string } | null>(null);
   const [archiveLoading, setArchiveLoading] = useState(false);
   const existingSubject = catalogue.find(subject => subject.code === code.trim().toUpperCase());
   const validForm = editingSubject
@@ -87,17 +87,14 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
 
   const teachingHistory = [...subjects, ...archivedSubjects];
   const subjectColors = assignSubjectThemes(teachingHistory);
-  const currentTermMatch = creationTerm.match(/^Semester\s+(\d+)\s+·\s+(.+)$/);
-  const currentAcademicYear = activeTerm?.academicYear ?? subjects[0]?.academicYear ?? currentTermMatch?.[2] ?? "";
-  const currentSemesterNo = activeTerm?.semesterNo ?? subjects[0]?.semesterNo ?? (currentTermMatch ? Number(currentTermMatch[1]) : null);
-  // The real active term must remain selectable before its first allocation.
-  // Otherwise the native select can display a historical year while state still
-  // points at the (missing) active option, leaving the semester selector empty.
+  const currentAcademicYear = activeTerm?.academicYear ?? "";
+  const currentTermCode = activeTerm?.termCode ?? null;
+  // Always retain the authoritative active code, even before its first allocation.
   const availableTerms = activeTerm ? [...teachingHistory, activeTerm] : teachingHistory;
   const academicYears = [...new Set(availableTerms.map(term => term.academicYear))].sort().reverse();
-  const semestersForYear = [...new Set(availableTerms.filter(term => term.academicYear === selectedAcademicYear).map(term => term.semesterNo))].sort((a, b) => b - a);
-  const visibleSubjects = teachingHistory.filter(subject => subject.academicYear === selectedAcademicYear && subject.semesterNo === selectedSemesterNo);
-  const isCurrentSelection = selectedAcademicYear === currentAcademicYear && selectedSemesterNo === currentSemesterNo;
+  const termsForYear = [...new Set(availableTerms.filter(term => term.academicYear === selectedAcademicYear).map(term => term.termCode))].filter(Boolean).sort().reverse();
+  const visibleSubjects = teachingHistory.filter(subject => subject.academicYear === selectedAcademicYear && subject.termCode === selectedTermCode);
+  const isCurrentSelection = selectedAcademicYear === currentAcademicYear && selectedTermCode === currentTermCode;
   const progSems = [...new Set(visibleSubjects.map(s => s.progSem))].sort((a, b) => a - b);
   const programmeCount = new Set(visibleSubjects.flatMap(subject => subject.programmeIds)).size;
 
@@ -109,7 +106,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
         setSubjects(items); setArchivedSubjects(archived); setCreationTerm(termLabel);
         setActiveTerm(term);
         setSelectedAcademicYear(term.academicYear);
-        setSelectedSemesterNo(term.semesterNo);
+        setSelectedTermCode(term.termCode);
       })
       .catch(error => { if (active) setLoadError(userError(error, "Unable to load your subjects.")); })
       .finally(() => { if (active) setLoading(false); });
@@ -156,7 +153,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
   const deleteSubject = async (subject: LecturerSubject) => {
     setMenuOfferingId(null);
     setSubjectActionError("");
-    if (!window.confirm(t("Delete {{value0}} from {{value1}}? All classes, assessments, enrolments and draft marks linked to this offering will also be deleted. Released or archived records cannot be deleted.", { value0: (subject.code), value1: (semesterLabel(subject.termLabel)) }))) return;
+    if (!window.confirm(t("Delete {{value0}} from {{value1}}? All classes, assessments, enrolments and draft marks linked to this offering will also be deleted. Released or archived records cannot be deleted.", { value0: (subject.code), value1: (subject.termLabel) }))) return;
     setDeletingOfferingId(subject.offeringId);
     try {
       await deleteLecturerSubject(subject.offeringId);
@@ -198,17 +195,17 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
       <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-50">{t("My Subjects")}</h1>
-          <p className={W.muted}>{t("{{value0}} ({{value1}}) · {{value2}} · {{value3}} assignment{{value4}} across {{value5}} programme{{value6}}{{value7}}", { value0: (user?.name), value1: (user?.id), value2: (semesterLabel(visibleSubjects[0]?.termLabel ?? creationTerm)), value3: (visibleSubjects.length), value4: (visibleSubjects.length === 1 ? "" : t("pluralSuffix")), value5: (programmeCount), value6: (programmeCount === 1 ? "" : t("pluralSuffix")), value7: (!isCurrentSelection && visibleSubjects.length ? t(" · read-only") : "") })}</p>
+          <p className={W.muted}>{t("{{value0}} ({{value1}}) · {{value2}} · {{value3}} assignment{{value4}} across {{value5}} programme{{value6}}{{value7}}", { value0: (user?.name), value1: (user?.id), value2: (visibleSubjects[0]?.termLabel ?? creationTerm), value3: (visibleSubjects.length), value4: (visibleSubjects.length === 1 ? "" : t("pluralSuffix")), value5: (programmeCount), value6: (programmeCount === 1 ? "" : t("pluralSuffix")), value7: (!isCurrentSelection && visibleSubjects.length ? t(" · read-only") : "") })}</p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <label className="min-w-36 flex-1"><span className={W.label}>{t("Academic Year")}</span>
-            <select aria-label={t("Academic year")} value={selectedAcademicYear} onChange={event => { const year = event.target.value; const available = [...new Set(availableTerms.filter(term => term.academicYear === year).map(term => term.semesterNo))].sort((a, b) => b - a); setSelectedAcademicYear(year); setSelectedSemesterNo(year === currentAcademicYear && currentSemesterNo !== null && available.includes(currentSemesterNo) ? currentSemesterNo : available[0] ?? null); setMenuOfferingId(null); }} className={W.field}>
+            <select aria-label={t("Academic year")} value={selectedAcademicYear} onChange={event => { const year = event.target.value; const available = [...new Set(availableTerms.filter(term => term.academicYear === year).map(term => term.termCode))].filter(Boolean).sort().reverse(); setSelectedAcademicYear(year); setSelectedTermCode(year === currentAcademicYear && currentTermCode !== null && available.includes(currentTermCode) ? currentTermCode : available[0] ?? null); setMenuOfferingId(null); }} className={W.field}>
               {academicYears.map(year => <option key={year} value={year}>{year}</option>)}
             </select>
           </label>
-          <label className="min-w-32 flex-1"><span className={W.label}>{t("Semester")}</span>
-            <select aria-label={t("Semester")} value={selectedSemesterNo ?? ""} onChange={event => { setSelectedSemesterNo(Number(event.target.value)); setMenuOfferingId(null); }} className={W.field}>
-              {semestersForYear.map(value => <option key={value} value={value}>{t("Semester {{value0}}", { value0: (value) })}</option>)}
+          <label className="min-w-32 flex-1"><span className={W.label}>{t("Academic Term")}</span>
+            <select aria-label={t("Academic Term")} value={selectedTermCode ?? ""} onChange={event => { setSelectedTermCode(event.target.value); setMenuOfferingId(null); }} className={W.field}>
+              {termsForYear.map(value => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
           {isCurrentSelection && <button onClick={openCreateModal} className={W.primary}><Plus size={16} /> {t(" Create New Subject")}</button>}
@@ -221,7 +218,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
       {archivedDetail && <div role="dialog" aria-modal="true" aria-label={t("Archived subject details")} className={W.overlay}>
         <div className={W.modal + " max-w-2xl"}>
           <div className="mb-6 flex items-start justify-between gap-4">
-            <div><span className={W.code}>{archivedDetail.subject.code} · {semesterLabel(archivedDetail.subject.termLabel)}</span><h2 className={W.title + " mt-3"}>{archivedDetail.subject.name}</h2><span className={W.muted}>{t("Archived record · read-only")}</span></div>
+            <div><span className={W.code}>{archivedDetail.subject.code} · {archivedDetail.subject.termLabel}</span><h2 className={W.title + " mt-3"}>{archivedDetail.subject.name}</h2><span className={W.muted}>{t("Archived record · read-only")}</span></div>
             <button type="button" aria-label={t("Close archived details")} onClick={() => setArchivedDetail(null)} className={W.iconButton}><X size={20} /></button>
           </div>
           <h3 className="mb-3 font-semibold">{t("Classes")}</h3>
@@ -237,8 +234,8 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
       {!loading && !loadError && visibleSubjects.length === 0 && <div role="status" className={W.panel + " py-12 text-center"}>
         <BookOpen size={32} aria-hidden="true" className="mx-auto mb-4 text-purple-800" />
         <h2 className={W.title}>{t("No Teaching Allocations")}</h2>
-        <p className={W.muted + " mx-auto mt-3 max-w-lg"}>{academicYears.length ? t("No subjects are available for the selected semester.") : t("No current or archived teaching allocations were found.")}</p>
-        {isCurrentSelection && <p className={W.muted + " mt-3"}>{t("Select “Create New Subject” to add your first current-semester subject.")}</p>}
+        <p className={W.muted + " mx-auto mt-3 max-w-lg"}>{academicYears.length ? t("No subjects are available for the selected academic term.") : t("No current or archived teaching allocations were found.")}</p>
+        {isCurrentSelection && <p className={W.muted + " mt-3"}>{t("Select “Create New Subject” to add your first subject for the current academic term.")}</p>}
       </div>}
 
       <div className="space-y-8">
@@ -246,7 +243,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
           const psSubs = visibleSubjects.filter(s => s.progSem === ps);
           return <section key={ps}>
             <h2 className="subject-semester-heading">
-              {t("Programme Semester")}{ps}<span className="font-normal text-slate-500 dark:text-slate-300">{t("· {{value0}} subject{{value1}}", { value0: (psSubs.length), value1: (psSubs.length !== 1 ? "s" : "") })}</span>
+              {t("Programme Semester")} {ps}<span className="font-normal text-slate-500 dark:text-slate-300">{t("· {{value0}} subject{{value1}}", { value0: (psSubs.length), value1: (psSubs.length !== 1 ? "s" : "") })}</span>
             </h2>
             <div className="subject-card-grid">
               {psSubs.map(subj => {
@@ -298,7 +295,7 @@ export function LecturerDashboard({ onSelectSubject }: { onSelectSubject: (subj:
         <div className={W.modal}>
           <div className="mb-5 flex items-start justify-between gap-3"><h2 className={W.title}>{editingSubject ? t("Edit Subject") : t("Create New Subject")}</h2><button type="button" aria-label={t("Close")} disabled={saving || catalogueLoading} onClick={closeSubjectModal} className={W.iconButton}><X size={20} /></button></div>
           <form onSubmit={createSubject}>
-            <p className={W.muted + " mb-6"}>{editingSubject ? t("Update your {{value0}} subject details for {{value1}}. Existing classes, assessments and marks will not be changed.", { value0: (editingSubject.code), value1: (semesterLabel(editingSubject.termLabel)) }) : catalogueLoading ? t("Loading subject catalogue…") : creationTerm ? t("Add a subject for {{value0}}. Select an existing code or enter a new one.", { value0: (semesterLabel(creationTerm)) }) : t("Subject creation is unavailable.")}</p>
+            <p className={W.muted + " mb-6"}>{editingSubject ? t("Update your {{value0}} subject details for {{value1}}. Existing classes, assessments and marks will not be changed.", { value0: (editingSubject.code), value1: (editingSubject.termLabel) }) : catalogueLoading ? t("Loading subject catalogue…") : creationTerm ? t("Add a subject for {{value0}}. Select an existing code or enter a new one.", { value0: (creationTerm) }) : t("Subject creation is unavailable.")}</p>
             <div className="space-y-4">
               <div><label htmlFor="lecturer-subject-code" className={W.label}>{t("Subject Code")}</label><input id="lecturer-subject-code" aria-label={t("Subject code")} list="subject-catalogue" required maxLength={30} disabled={Boolean(editingSubject) || saving || catalogueLoading} value={code} onChange={event => { const nextCode = event.target.value.toUpperCase(); setCode(nextCode); setFormError(""); }} placeholder={t("e.g. ITT600")} className={W.field} /></div>
               <datalist id="subject-catalogue">{catalogue.filter(subject => subject.is_active).map(subject => <option key={subject.code} value={subject.code}>{subject.name}</option>)}</datalist>

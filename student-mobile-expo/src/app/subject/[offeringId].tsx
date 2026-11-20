@@ -20,7 +20,7 @@ export default function SubjectDetailScreen() {
   if (initializing) return <LoadingView />;
   if (!student) return <Redirect href="/login" />;
   const subject = subjects.find(item => item.offering_id === offeringId);
-  if (!subject) return <Screen style={styles.center}><Text style={[typography.body, { color: colors.muted }]}>{t("This subject is not available in the current semester.")}</Text><PrimaryButton onPress={() => router.back()}><ButtonText>{t("Go back")}</ButtonText></PrimaryButton></Screen>;
+  if (!subject) return <Screen style={styles.center}><Text style={[typography.body, { color: colors.muted }]}>{t("This subject is not available in the current academic term.")}</Text><PrimaryButton onPress={() => router.back()}><ButtonText>{t("Go back")}</ButtonText></PrimaryButton></Screen>;
   const isIneligible = subject.is_finalised && subject.eligible === false;
 
   const consultLecturer = async () => {

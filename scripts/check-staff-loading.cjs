@@ -15,18 +15,18 @@ const offering = uid(100);
 const assessments = [{ id: uid(1000), name: 'Fixture Quiz', assessment_type: 'Quiz', max_score: 100, carry_weight: 50, position: 1 }];
 const sections = ['A', 'B'].map((label, i) => ({ id: uid(200 + i), offering_id: offering, programme_id: programme.id, label: 'Class ' + label, capacity: 20, join_code: 'FIXTURE-CODE', programmes: programme, enrolments: [{ count: i ? 0 : 1 }], submissions: [] }));
 const enrolments = [{ id: uid(300), section_id: sections[0].id, student_id: uid(400), students: { matrix_no: 'FIXTURE1', full_name: 'Fixture Student' } }];
-const subject = { offering_id: offering, programme_ids: [programme.id], programme_codes: [programme.code], programme_names: [programme.name], subject_code: 'ITT550', subject_name: 'Fixture Subject', programme_semester: 5, student_count: 1, offering_status: 'active', updated_at: '2026-11-01T00:00:00Z', academic_year: term.academic_year, semester_no: term.semester_no };
+const subject = { offering_id: offering, programme_ids: [programme.id], programme_codes: [programme.code], programme_names: [programme.name], subject_code: 'ITT550', subject_name: 'Fixture Subject', semester_code:term.semester_code, programme_semester: 5, student_count: 1, offering_status: 'active', updated_at: '2026-11-01T00:00:00Z', academic_year: term.academic_year, semester_no: term.semester_no };
 const snapshot = { student_name: 'Fixture Student', student_number: 'FIXTURE1', subject_code: 'ITT550', subject_name: 'Fixture Subject', class_label: 'Class A', assessment_name: 'Fixture Quiz', lecturer_name: 'Fixture Lecturer', academic_year: term.academic_year, semester_code: term.semester_code };
 const correction = { id: uid(500), dispute_id: uid(501), status: 'pending', reason: 'Fixture review', original_score: 50, maximum_score: 100, corrected_score: null, requested_at: '2026-11-08T01:00:00Z', decision_note: null, snapshot, events: [], editable: true };
 const issue = { id: uid(501), status: 'reviewing', explanation: 'Please review fixture', response: null, created_at: '2026-11-08T01:00:00Z', student_name: 'Fixture Student', student_number: 'FIXTURE1', assessment_name: 'Fixture Quiz', class_label: 'Class A', current_score: 50, maximum_score: 100, can_correct: true, editable: true, released: true, corrections: [correction] };
 const history = { ...term, id: uid(31), academic_year: '2025/2026', semester_no: 2, semester_code: '20262', status: 'closed', is_current: false, offering_count: 1, class_count: 2, enrolment_count: 1, mark_count: 1, submission_count: 1, finalised_count: 1 };
 const outcomes = [];
 
-async function start(browser, role, mode, dark, held = true) {
+async function start(browser, role, mode, dark, held = true, calendar = term) {
   const context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   const page = await context.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  const control = { held, pending: [], mode, notifications: [{ id: uid(600), title: 'New student mark issue', body: 'Fixture report', read_at: null, created_at: issue.created_at,
+  const control = { calendar, held, pending: [], mode, notifications: [{ id: uid(600), title: 'New student mark issue', body: 'Fixture report', read_at: null, created_at: issue.created_at,
     data: { studentName: 'Fixture Student', subjectCode: 'ITT550', classLabel: 'Class A', assessmentName: 'Fixture Quiz', submittedAt: issue.created_at } }], issue: structuredClone(issue), score: 50, failures: new Set(), calls: [], results: [] };
   control.release = () => { control.held = false; control.pending.splice(0).forEach(resolve => resolve()); };
   // Terminate every test WebSocket locally; fixture JWTs never reach Realtime.
@@ -109,7 +109,7 @@ async function start(browser, role, mode, dark, held = true) {
       else if (name === 'lecturer_contacts') data = [];
       else if (name === 'get_admin_semester_history') data = empty ? [] : [history];
       else if (name === 'get_academic_semester_summaries') data = [{ ...history, ...term, is_current: true, status: 'active' }];
-      else if (name === 'get_my_lecturer_subject_dashboard') data = { term, current: empty ? [] : [subject], archived: [] };
+      else if (name === 'get_my_lecturer_subject_dashboard') data = { term: control.calendar, current: empty ? [] : [{...subject,academic_year:control.calendar.academic_year,semester_no:control.calendar.semester_no,semester_code:control.calendar.semester_code}], archived: [] };
       else if (name === 'get_my_subject_assessment_structure') data = { carryMax: empty ? null : 50, assessments: empty ? [] : assessments.map(a => ({ id: a.id, name: a.name, type: a.assessment_type, maxMarks: a.max_score, weightage: a.carry_weight, position: a.position })) };
       else if (name === 'get_staff_class_detail') {
         const section = sections.find(s => s.id === route.request().postDataJSON().target_section) || sections[0];
@@ -146,14 +146,14 @@ async function loading(page, forbidden) {
 }
 async function adminScenario(browser, mode, dark, held) {
   const s = await start(browser, 'admin', mode, dark, held); const { page, control } = s;
-  const tabs = [['Submission Monitor', 'Submission Monitor'], ['Lecturer Directory', 'Lecturer Directory'], ['Reports & Exports', 'Reports & Exports'], ['Past Semesters', 'Past Semesters'], ['System Settings', 'System Settings']];
+  const tabs = [['Submission Monitor', 'Submission Monitor'], ['Lecturer Directory', 'Lecturer Directory'], ['Reports & Exports', 'Reports & Exports'], ['Past Academic Terms', 'Past Academic Terms'], ['System Settings', 'System Settings']];
   if (held) {
     await loading(page, [/All lecturer submissions are released/, /0 Open/, /0 lecturer records/]);
     await page.screenshot({ path: path.join(out, `admin-${dark ? 'dark' : 'light'}-loading.png`) });
     for (const [nav, heading] of tabs) {
       await page.getByRole('button', { name: new RegExp(nav) }).first().click();
       await page.getByRole('heading', { name: heading, exact: true }).waitFor();
-      await loading(page, [/No submissions match/, /0 of 0 Records/, /No archived semesters/, /No mark correction requests/, /0 lecturers/]);
+      await loading(page, [/No submissions match/, /0 of 0 Records/, /No archived academic terms/, /No mark correction requests/, /0 lecturers/]);
     }
     control.release();
   }
@@ -163,7 +163,7 @@ async function adminScenario(browser, mode, dark, held) {
     await page.locator('.staff-loading').waitFor({ state: 'detached' });
     if (mode === 'failure') {
       await page.getByRole('alert').first().waitFor();
-      assert.doesNotMatch(await body(page), /All lecturer submissions are released|No submissions match|No archived semesters|No mark correction requests/);
+      assert.doesNotMatch(await body(page), /All lecturer submissions are released|No submissions match|No archived academic terms|No mark correction requests/);
     }
   }
   assert.equal(await page.getByRole('button', { name: /Mark Corrections/ }).count(), 0);

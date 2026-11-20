@@ -1,4 +1,4 @@
-import { t, tx, useLocale, semesterLabel, notificationText } from "@/localization/react";
+import { t, tx, useLocale, notificationText } from "@/localization/react";
 import { router } from "expo-router";
 import { Bell, BellRing, BookOpen, Plus, X } from "lucide-react-native";
 import { useState } from "react";
@@ -38,7 +38,7 @@ export default function DashboardScreen() {
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[styles.eyebrow, { color: colors.accent }]}>{t("STUDENT PORTAL")}</Text>
             <Heading>{t("My Subjects")}</Heading>
-            <View style={[styles.semesterChip, { backgroundColor: colors.elevated, borderColor: colors.border }]}><Text numberOfLines={1} style={[styles.semesterText, { color: colors.textSecondary }]}>{semesterLabel(student?.semester ?? t("Current semester"))}</Text></View>
+            <View style={[styles.semesterChip, { backgroundColor: colors.elevated, borderColor: colors.border }]}><Text style={[styles.semesterText, { color: colors.textSecondary }]}>{student?.semester_code ? t("Academic Term {{code}}", { code: student.semester_code }) : t("Academic Term unavailable")}</Text></View>
           </View>
           <Pressable onPress={() => setNotificationsOpen(true)} style={({ pressed }) => [styles.bell, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? .75 : 1 }]} accessibilityLabel={t("Notifications")}>
             <Bell size={22} color={colors.text} />
@@ -52,7 +52,7 @@ export default function DashboardScreen() {
         <ErrorBanner message={tx(error)} />
       </View>}
       renderItem={({ item }) => <SubjectCard subject={item} onPress={() => router.push({ pathname: "/subject/[offeringId]", params: { offeringId: item.offering_id } })} />}
-      ListEmptyComponent={<Card style={styles.empty}><View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}><BookOpen size={26} color={colors.accent} /></View><Text style={[styles.emptyTitle, { color: colors.text }]}>{t("Your subjects will appear here")}</Text><Text style={[typography.body, { color: colors.muted, textAlign: "center" }]}>{t("Use Join Class when your lecturer shares an invitation code for the current semester.")}</Text></Card>}
+      ListEmptyComponent={<Card style={styles.empty}><View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}><BookOpen size={26} color={colors.accent} /></View><Text style={[styles.emptyTitle, { color: colors.text }]}>{t("Your subjects will appear here")}</Text><Text style={[typography.body, { color: colors.muted, textAlign: "center" }]}>{t("Use Join Class when your lecturer shares an invitation code for the current academic term.")}</Text></Card>}
     />
 
     <Modal visible={joinOpen} transparent animationType="slide" onRequestClose={closeJoin}>

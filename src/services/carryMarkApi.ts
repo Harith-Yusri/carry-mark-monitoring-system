@@ -1,11 +1,9 @@
+import { formatAcademicTerm, validateAcademicTermCode } from "../../student-mobile-expo/src/academic/terms";
 import { requireSupabase } from "../lib/supabase";
 import { ProgrammeOption } from "../types";
 import { groupLecturerSubjects } from "./lecturerSubjectGroups";
 
-export function formatAcademicSemester(semesterNo: number, academicYear: string) {
-  return `Semester ${semesterNo} · ${academicYear}`;
-}
-
+export { formatAcademicTerm } from "../../student-mobile-expo/src/academic/terms";
 export interface SubjectSummary {
   offerings?: SubjectSummary[];
   offeringId: string;
@@ -23,7 +21,8 @@ export interface SubjectSummary {
   status: string;
   termLabel: string;
   academicYear: string;
-  semesterNo: number;
+  semesterNo: number; // Legacy calendar discriminator, not a programme stage.
+  termCode: string;
 }
 
 export interface AssessmentRecord {
@@ -81,9 +80,9 @@ export async function loadSubjectClassSummaries(offeringIds: string[]): Promise<
 }
 
 export async function listLecturerSubjects(): Promise<SubjectSummary[]> {
-  const { data, error } = await requireSupabase().rpc("get_my_lecturer_subjects");
+  const { data, error } = await requireSupabase().rpc("get_my_lecturer_subject_dashboard");
   if (error) throw error;
-  return groupLecturerSubjects(data.map(mapSubjectSummary));
+  return groupLecturerSubjects(((data as any)?.current ?? []).map(mapSubjectSummary));
 }
 
 export function mapSubjectSummary(row: any): SubjectSummary {
@@ -103,16 +102,17 @@ export function mapSubjectSummary(row: any): SubjectSummary {
     // Lecturer RPCs derive this display status from all class submissions in
     // the subject/lecturer/term/programme-semester context, not stored offering.status.
     status: row.offering_status === "completed" ? "submitted" : row.offering_status,
-    termLabel: formatAcademicSemester(row.semester_no, row.academic_year),
+    termLabel: formatAcademicTerm(row.semester_code, row.academic_year),
+    termCode: row.semester_code ?? "",
     academicYear: row.academic_year,
     semesterNo: row.semester_no,
   };
 }
 
 export async function listArchivedLecturerSubjects(): Promise<SubjectSummary[]> {
-  const { data, error } = await requireSupabase().rpc("get_my_archived_lecturer_subjects");
+  const { data, error } = await requireSupabase().rpc("get_my_lecturer_subject_dashboard");
   if (error) throw error;
-  return groupLecturerSubjects(data.map(mapSubjectSummary));
+  return groupLecturerSubjects(((data as any)?.archived ?? []).map(mapSubjectSummary));
 }
 
 export async function loadLecturerSubjectDashboard() {
@@ -126,8 +126,9 @@ export async function loadLecturerSubjectDashboard() {
     activeTerm: {
       academicYear: dashboard.term.academic_year as string,
       semesterNo: Number(dashboard.term.semester_no),
+      termCode: String(dashboard.term.semester_code),
     },
-    termLabel: formatAcademicSemester(dashboard.term.semester_no, dashboard.term.academic_year),
+    termLabel: formatAcademicTerm(dashboard.term.semester_code, dashboard.term.academic_year),
   };
 }
 
@@ -315,7 +316,7 @@ export async function listArchivedSemesterSummaries() {
   if (error) throw error;
   return data.map(row => ({
     id: row.id,
-    label: `Semester ${row.semester_no} · ${row.academic_year} · ${row.semester_code}`,
+    label: formatAcademicTerm(row.semester_code, row.academic_year),
     dates: `${row.starts_on} – ${row.ends_on}`,
     offerings: Number(row.offering_count),
     classes: Number(row.class_count),
@@ -325,6 +326,7 @@ export async function listArchivedSemesterSummaries() {
 }
 
 export async function createAcademicSemester(values: { academicYear: string; semesterCode: string; startsOn: string; endsOn: string; defaultDeadline: string }) {
+  validateAcademicTermCode(values.semesterCode, values.academicYear);
   const { data, error } = await requireSupabase().rpc("create_academic_semester", {
     p_academic_year: values.academicYear,
     p_semester_code: values.semesterCode,
@@ -341,7 +343,8 @@ export async function activateAcademicSemester(termId: string) {
   if (error) throw error;
 }
 
-export async function updateAcademicSemester(termId: string, values: { academicYear: string; semesterCode: string; startsOn: string; endsOn: string; defaultDeadline: string }) {
+export async function updateAcademicSemester(termId: string, values: { academicYear: string; semesterCode: string; startsOn: string; endsOn: string; defaultDeadline: string }, storedCode?: string) {
+  validateAcademicTermCode(values.semesterCode, values.academicYear, storedCode);
   const { error } = await requireSupabase().rpc("update_academic_semester", {
     target_term: termId,
     p_academic_year: values.academicYear,
@@ -427,7 +430,7 @@ export async function loadSubjectCreationData() {
   if (catalogue.error) throw catalogue.error;
   if (term.error) throw term.error;
   if (!term.data) throw new Error("There is no active current academic term.");
-  return { catalogue: catalogue.data, termLabel: formatAcademicSemester(term.data.semester_no, term.data.academic_year) };
+  return { catalogue: catalogue.data, termLabel: formatAcademicTerm(term.data.semester_code, term.data.academic_year) };
 }
 
 export async function loadCurrentTermLabel() {
@@ -435,7 +438,7 @@ export async function loadCurrentTermLabel() {
     .select("academic_year,semester_code,semester_no").eq("is_current", true).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("There is no current academic term.");
-  return formatAcademicSemester(data.semester_no, data.academic_year);
+  return formatAcademicTerm(data.semester_code, data.academic_year);
 }
 
 export async function createLecturerSubject(code: string, name: string, semester: number) {

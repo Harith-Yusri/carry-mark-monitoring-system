@@ -3,7 +3,7 @@ import type { SubjectSummary } from "./carryMarkApi";
 export function groupLecturerSubjects(rows: SubjectSummary[]): SubjectSummary[] {
   const groups = new Map<string, SubjectSummary[]>();
   for (const row of rows) {
-    const key = JSON.stringify([row.academicYear, row.semesterNo, row.progSem, row.code]);
+    const key = JSON.stringify([row.academicYear, row.termCode ?? row.semesterNo, row.progSem, row.code]);
     const members = groups.get(key) ?? [];
     if (!members.some(member => member.offeringId === row.offeringId)) members.push(row);
     groups.set(key, members);

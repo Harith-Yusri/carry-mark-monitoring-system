@@ -29,6 +29,8 @@ export type Student = {
   faculty: string;
   semester: string | null;
   semester_code: string | null;
+  academic_year?: string | null;
+  programme_semester?: number | null;
   academic_advisor: string | null;
 };
 

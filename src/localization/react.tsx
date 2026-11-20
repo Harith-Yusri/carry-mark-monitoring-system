@@ -14,5 +14,3 @@ if (typeof window !== "undefined") {
   localization.subscribe(() => { document.documentElement.lang = localization.locale() === "zh" ? "zh-Hans" : localization.locale(); });
   document.documentElement.lang = localization.locale();
 }
-
-export function semesterLabel(text: string) { const m = /^Semester (\d+)(.*)$/.exec(text); return m ? t("Semester {{value0}}", {value0:m[1]}) + m[2] : text; }

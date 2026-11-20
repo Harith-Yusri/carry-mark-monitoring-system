@@ -1,4 +1,4 @@
-import { t, tx, useLocale, semesterLabel } from "../../localization/react";
+import { t, tx, useLocale } from "../../localization/react";
 import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React from "react";
 import { CheckCircle } from "lucide-react";
@@ -29,7 +29,7 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
     <div>
       <div className="responsive-action-header" style={{ marginBottom: "22px" }}>
         <div>
-          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>{semesterLabel(context?.termLabel ?? t("Current Semester"))}</div>
+          <div style={{ color: C.brandText, fontSize: "calc(0.6875rem * var(--staff-text-scale))", fontWeight: 700, letterSpacing: ".11em", marginBottom: "7px" }}>{context ? t("Academic Term {{code}}", {code: context.semesterCode}) + " · " + context.academicYear : t("Current Academic Term")}</div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5625rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>{t("Academic Operations")}</h1>
           <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>{t("Continuous assessment readiness, submission exceptions and programme follow-up.")}</p>
         </div>
@@ -65,7 +65,7 @@ export function AdminDashboard({ records, context, loading, error }: AdminRecord
 
           <div style={{ borderTop: "1px solid var(--operations-divider)" }}>
             {pendingLecturers.length === 0 && (
-              <div style={{ padding: "24px 0", color: CC.green, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{total ? t("All lecturer submissions are released.") : t("No lecturer records for this semester.")}</div>
+              <div style={{ padding: "24px 0", color: CC.green, fontSize: "calc(0.8125rem * var(--staff-text-scale))" }}>{total ? t("All lecturer submissions are released.") : t("No lecturer records for this academic term.")}</div>
             )}
             {pendingLecturers.map(lecturer => {
               const sent = sentReminders.has(lecturer.id);

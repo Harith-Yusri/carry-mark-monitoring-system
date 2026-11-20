@@ -90,7 +90,7 @@ export default function OnboardingScreen() {
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.muted }]}>{t("CURRENT SEMESTER")}</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>{t("Programme Semester")}</Text>
           <View style={styles.semesterGrid}>{Array.from({ length: 12 }, (_, index) => index + 1).map(value => <Pressable
             key={value}
             accessibilityRole="radio"

@@ -15,5 +15,3 @@ export function useLocale() { useSyncExternalStore(localization.subscribe, local
 export const setLanguage = (preference: LanguagePreference) => localization.setPreference(preference, storage);
 void localization.restore(storage);
 AppState.addEventListener("change", state => { if (state === "active") localization.detect(); });
-
-export function semesterLabel(text: string) { const m = /^Semester (\d+)(.*)$/.exec(text); return m ? t("Semester {{value0}}", {value0:m[1]}) + m[2] : text; }

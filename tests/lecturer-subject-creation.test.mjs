@@ -18,12 +18,13 @@ function nodes(tree) {
   return [tree, ...React.Children.toArray(tree.props?.children).flatMap(nodes)];
 }
 function setup({ reject = false, subjects = [] } = {}) {
+  subjects = subjects.map(subject=>({...subject,termCode:subject.termCode??'20262'}));
   const states = []; let cursor = 0; const calls = [];
   states[3] = subjects;
   states[5] = subjects[0]?.academicYear ?? '2025/2026';
-  states[6] = subjects[0]?.semesterNo ?? 2;
+  states[6] = subjects[0]?.termCode ?? '20262';
   states[11] = false;
-  states[24] = { academicYear: states[5], semesterNo: states[6] }; // Successful dashboard bootstrap.
+  states[24] = { academicYear: states[5], semesterNo: subjects[0]?.semesterNo ?? 2, termCode: subjects[0]?.termCode ?? '20262' }; // Successful dashboard bootstrap.
   let serverSubjects = subjects;
   const useState = initial => { const i = cursor++; if (!(i in states)) states[i] = initial; return [states[i], value => { states[i] = typeof value === 'function' ? value(states[i]) : value; }]; };
   const useRef = initial => { const i = cursor++; if (!(i in states)) states[i] = { current: initial }; return states[i]; };

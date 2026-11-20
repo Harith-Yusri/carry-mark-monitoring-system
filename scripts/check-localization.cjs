@@ -30,7 +30,7 @@ const results=[];
   assert(await page.getByRole('button',{name:text(lang,'Reject'),exact:true}).isDisabled());assert(await page.getByRole('button',{name:text(lang,'Correct Mark'),exact:true}).isDisabled());
   assert.deepEqual(s.errors,[]);results.push({role:'lecturer',lang,dark,passed:true});await s.context.close();
   const a=await start(browser,'admin','data',dark,false);await a.page.getByRole('heading',{name:'Academic Operations',exact:true}).waitFor();await a.page.getByTestId('language-select').selectOption(lang);
-  for(const menu of ['Submission Monitor','Lecturer Directory','Reports & Exports','Past Semesters','System Settings','Compliance Overview']){await a.page.getByRole('button',{name:new RegExp('^'+escape(text(lang,menu)))}).first().click();await a.page.waitForTimeout(80);assert(!(await a.page.locator('body').innerText()).includes('[object Object]'))}
+  for(const menu of ['Submission Monitor','Lecturer Directory','Reports & Exports','Past Academic Terms','System Settings','Compliance Overview']){await a.page.getByRole('button',{name:new RegExp('^'+escape(text(lang,menu)))}).first().click();await a.page.waitForTimeout(80);assert(!(await a.page.locator('body').innerText()).includes('[object Object]'))}
   assert.deepEqual(a.errors,[]);if(lang==='ta')await a.page.screenshot({path:`${out}/admin-ta-${dark}.png`});results.push({role:'admin',lang,dark,passed:true});await a.context.close();
  }
  const s=await start(browser,'lecturer','data',false,false),p=s.page;await p.getByRole('heading',{name:'My Subjects',exact:true}).waitFor();

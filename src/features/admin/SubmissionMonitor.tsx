@@ -52,6 +52,7 @@ export function SubmissionMonitor({ records, context, loading, error }: { record
       <div className="responsive-action-header" style={{ alignItems: "flex-end", marginBottom: "20px" }}>
         <div>
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>{t("Submission Monitor")}</h1>
+          <p className="staff-card-muted text-xs">{t("Academic Term")}: {context.semesterCode} · {t("Academic Year")}: {context.academicYear}</p>
           <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted }}>{t("Track continuous assessment submission status for each class allocation and send reminders for incomplete work.")}</p>
         </div>
         <AdminStatus status="Action required">{pendingCount} </AdminStatus>

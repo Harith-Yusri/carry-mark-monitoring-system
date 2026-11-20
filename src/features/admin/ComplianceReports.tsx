@@ -1,4 +1,4 @@
-import { t, tx, useLocale, semesterLabel } from "../../localization/react";
+import { t, tx, useLocale } from "../../localization/react";
 import { InitialDataState, RefreshStatus } from "../../components/StaffDataState";
 import React, { useEffect, useState } from "react";
 import { CheckCircle, Download } from "lucide-react";
@@ -37,7 +37,7 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
   });
   const selectedProgramme = context?.programmes.find(programme => programme.code === selectedProgrammeCode) ?? context?.programmes[0];
   const selectedProgrammeRecords = selectedProgramme ? programmeRecords(selectedProgramme.code) : [];
-  const termSlug = context ? `Semester_${context.semesterCode}` : "CurrentSemester";
+  const termSlug = context ? `AcademicTerm_${context.semesterCode}` : "CurrentAcademicTerm";
 
   useEffect(() => {
     if (!context?.programmes.length) {
@@ -51,12 +51,12 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
     { key: "overall", title: t("Overall Compliance Report"), description: t("Full lecturer submission status across the faculty."), scope: t("Faculty"), meta: t("{{value0}} lecturers", { value0: (records.length) }), filename: `Compliance_AllProgrammes_${termSlug}.csv`, records },
     { key: "programme", title: t("Programme Compliance Report"), description: t("Submission status for the selected academic programme."), scope: selectedProgramme?.code ?? t("Select programme"), meta: t("{{value0}} lecturers", { value0: (selectedProgrammeRecords.length) }), filename: `Compliance_${selectedProgramme?.code ?? "Programme"}_${termSlug}.csv`, records: selectedProgrammeRecords },
     { key: "pending", title: t("Pending Submissions List"), description: t("Lecturers requiring submission follow-up."), scope: t("Exceptions"), meta: t("{{value0}} pending", { value0: (pending.length) }), filename: `PendingList_${termSlug}.csv`, records: pending },
-    { key: "workload", title: t("Lecturer Workload Summary"), description: t("Current-semester subject assignments, enrolment totals and submission progress."), scope: t("Faculty"), meta: t("{{value0}} enrolments", { value0: (studentTotal) }), filename: `LecturerWorkload_${termSlug}.csv`, records },
+    { key: "workload", title: t("Lecturer Workload Summary"), description: t("Current academic term subject assignments, enrolment totals and submission progress."), scope: t("Faculty"), meta: t("{{value0}} enrolments", { value0: (studentTotal) }), filename: `LecturerWorkload_${termSlug}.csv`, records },
   ];
 
   const exportReport = (report: ReportDefinition) => {
-    const header = ["Staff ID", "Lecturer", "Programme", "Subject Code", "Subject Name", "Semester Code", "Academic Semester", "Students", "Deadline", "Submission Status", "Completion Rate"];
-    const rows = report.records.map(item => [item.id, item.name, item.department, item.subjects.join("; "), item.subjectName, context?.semesterCode ?? "", context?.termLabel ?? "", item.studentCount, item.deadline, submissionStatusLabel(item.submissionStatus), `${item.completionRate}%`].map(escapeCsv).join(","));
+    const header = ["Staff ID", "Lecturer", "Programme", "Subject Code", "Subject Name", "Academic Term Code", "Academic Year", "Students", "Deadline", "Submission Status", "Completion Rate"];
+    const rows = report.records.map(item => [item.id, item.name, item.department, item.subjects.join("; "), item.subjectName, context?.semesterCode ?? "", context?.academicYear ?? "", item.studentCount, item.deadline, submissionStatusLabel(item.submissionStatus), `${item.completionRate}%`].map(escapeCsv).join(","));
     downloadText(report.filename, [header.join(","), ...rows].join("\n"));
     setDownloaded(report.key);
     window.setTimeout(() => setDownloaded(null), 2500);
@@ -72,7 +72,7 @@ export function ComplianceReports({ records, context, loading, error }: AdminRec
           <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 4px" }}>{t("Reports & Exports")}</h1>
           <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>{t("Select a report by academic scope and download its current CSV record.")}</p>
         </div>
-        <span style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{semesterLabel(context?.termLabel ?? t("Current Semester"))}</span>
+        <span style={{ color: C.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{context ? t("Academic Term {{code}}", {code: context.semesterCode}) + " · " + context.academicYear : t("Current Academic Term")}</span>
       </div>
 
       {loading && <RefreshStatus label={t("Refreshing report data…")} />}

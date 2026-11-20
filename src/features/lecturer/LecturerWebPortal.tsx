@@ -66,7 +66,7 @@ export function LecturerWebPortal() {
           </div>
           <section className={W.panel + " border-l-4 border-l-purple-900"}>
             <span className={W.code}>{currentSubj.code}</span><h1 className="staff-card-title mb-2 mt-3 text-2xl font-bold tracking-tight">{currentSubj.name}</h1>
-            <p className={W.muted}>{t("{{value0}} · Semester {{value1}} · {{value2}} Registered Students · Lecturer: {{value3}}", { value0: (currentSubj.programmeCode), value1: (currentSubj.progSem), value2: (currentSubj.students), value3: (user?.name) })}</p>
+            <p className={W.muted}>{t("Academic Year")}: {currentSubj.academicYear} · {t("Academic Term")}: {currentSubj.termCode} · {t("{{value0}} · Programme Semester {{value1}} · {{value2}} Registered Students · Lecturer: {{value3}}", { value0: (currentSubj.programmeCode), value1: (currentSubj.progSem), value2: (currentSubj.students), value3: (user?.name) })}</p>
           </section>
           <nav aria-label={t("Subject workspace")} className="flex flex-wrap gap-2 border-b border-slate-200 pb-2 dark:border-slate-700">
             {[
@@ -78,7 +78,7 @@ export function LecturerWebPortal() {
           </nav>
           {activeTab === "assessments" && <AssessmentsTab onChanged={() => classCache.invalidate()} key={currentSubj.offeringId} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} />}
           {activeTab === "marks" && <MarksEntryTab cache={classCache} offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} offeringProgrammeId={currentSubj.programmeId} subjectCode={currentSubj.code} />}
-          {activeTab === "export" && <ExportTab cache={classCache} offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} programmeSemester={currentSubj.progSem} />}
+          {activeTab === "export" && <ExportTab cache={classCache} offeringIds={currentSubj.offerings?.map(item => item.offeringId)} offeringId={currentSubj.offeringId} subjectCode={currentSubj.code} subjectName={currentSubj.name} academicYear={currentSubj.academicYear} academicTermCode={currentSubj.termCode} programmeSemester={currentSubj.progSem} />}
           {activeTab === "issues" && <MarkIssuesTab focusedIssueId={notificationId ? target?.issueId : undefined} onChanged={() => classCache.invalidate()} key={currentSubj.offeringId} offeringId={currentSubj.offeringId} />}
         </div> : null}
       </Suspense>

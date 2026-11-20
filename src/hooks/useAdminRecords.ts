@@ -54,7 +54,7 @@ export function useAdminRecords() {
     const overview = data as any;
     const term = overview?.term;
     const programmes = overview?.programmes ?? [];
-    if (!term) throw new Error("No active academic semester is configured.");
+    if (!term) throw new Error("No active academic academic term is configured.");
     const profiles = (overview?.lecturers ?? []).map((lecturer: any) => ({
       id: lecturer.auth_id,
       staff_no: lecturer.staff_no,
@@ -171,7 +171,7 @@ export function useAdminRecords() {
     setRecords(result);
     setContext({
       termId: term.id,
-      termLabel: `Semester ${term.semester_no} · ${term.academic_year}`,
+      termLabel: `${term.semester_code} · ${term.academic_year}`,
       semesterCode: term.semester_code,
       semesterNo: term.semester_no,
       academicYear: term.academic_year,

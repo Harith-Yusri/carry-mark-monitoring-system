@@ -41,7 +41,7 @@ export function AdminWebPortal() {
               { key: "submissions", label: t("Submission Monitor"), icon: <ClipboardList size={15} />, pending: context ? pendingSubmissions : undefined },
               { key: "directory",  label: t("Lecturer Directory"),  icon: <Users size={15} /> },
               { key: "compliance", label: t("Reports & Exports"),    icon: <FileText size={15} /> },
-              { key: "history",    label: t("Past Semesters"),       icon: <Archive size={15} /> },
+              { key: "history",    label: t("Past Academic Terms"),       icon: <Archive size={15} /> },
               { key: "settings",   label: t("System Settings"),     icon: <Settings size={15} /> },
             ].map(item => (
               <button

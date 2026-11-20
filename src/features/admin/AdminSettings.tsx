@@ -1,11 +1,12 @@
-import { t, tx, useLocale, semesterLabel } from "../../localization/react";
+import { isRegularAcademicTerm, validateAcademicTermCode } from "../../../student-mobile-expo/src/academic/terms";
+import { t, tx, useLocale } from "../../localization/react";
 import { InitialDataState } from "../../components/StaffDataState";
 import React, { useEffect, useState } from "react";
 import { CheckCircle, Save } from "lucide-react";
 import { AdminStatus, useCardColors, useColors } from "./adminStyles";
 import { userError } from "../../utils/errors";
 import { useAuth } from "../../context/AuthContext";
-import { activateAcademicSemester, AcademicSemesterRecord, createAcademicSemester, deleteAcademicSemester, formatAcademicSemester, listAcademicSemesters, loadSystemSettings, saveSystemSettings, SystemSettingsRecord, updateAcademicSemester } from "../../services/carryMarkApi";
+import { activateAcademicSemester, AcademicSemesterRecord, createAcademicSemester, deleteAcademicSemester, formatAcademicTerm, listAcademicSemesters, loadSystemSettings, saveSystemSettings, SystemSettingsRecord, updateAcademicSemester } from "../../services/carryMarkApi";
 
 type SettingsState = SystemSettingsRecord;
 type SettingsTab = "semester" | "deadlines" | "notifications";
@@ -41,7 +42,7 @@ export function AdminSettings({ onActiveSemesterChanged }: { onActiveSemesterCha
   const save = async () => {
     if (!settings) return;
     const current = semesters.find(semester => semester.isCurrent);
-    if (current && current.classCount + current.markCount + current.submissionCount > 0 && !window.confirm(t("Save changes to the active semester? It contains {{value0}} classes, {{value1}} marks and {{value2}} submissions ({{value3}} released). Existing records will be preserved.", { value0: (current.classCount), value1: (current.markCount), value2: (current.submissionCount), value3: (current.finalisedCount) }))) return;
+    if (current && current.classCount + current.markCount + current.submissionCount > 0 && !window.confirm(t("Save changes to the active academic term? It contains {{value0}} classes, {{value1}} marks and {{value2}} submissions ({{value3}} released). Existing records will be preserved.", { value0: (current.classCount), value1: (current.markCount), value2: (current.submissionCount), value3: (current.finalisedCount) }))) return;
     setSaving(true);
     try {
       await saveSystemSettings(settings, user?.authId);
@@ -62,15 +63,16 @@ export function AdminSettings({ onActiveSemesterChanged }: { onActiveSemesterCha
     event.preventDefault(); setSemesterBusy(true); setSemesterError("");
     try {
       const existing = semesters.find(semester => semester.id === editingSemesterId);
+      validateAcademicTermCode(semesterForm.semesterCode, semesterForm.academicYear, existing?.semesterCode);
       if (existing) {
-        if (existing.classCount + existing.markCount + existing.submissionCount > 0 && !window.confirm(t("Edit {{value0}}? It contains {{value1}}. All linked data will be preserved.", { value0: (semesterLabel(formatAcademicSemester(existing.semesterNo, existing.academicYear))), value1: (semesterImpact(existing)) }))) return;
-        await updateAcademicSemester(existing.id, semesterForm);
+        if (existing.classCount + existing.markCount + existing.submissionCount > 0 && !window.confirm(t("Edit {{value0}}? It contains {{value1}}. All linked data will be preserved.", { value0: (formatAcademicTerm(existing.semesterCode, existing.academicYear)), value1: (semesterImpact(existing)) }))) return;
+        await updateAcademicSemester(existing.id, semesterForm, existing.semesterCode);
       } else await createAcademicSemester(semesterForm);
       if (existing?.isCurrent) { await reloadSemesterData(); await onActiveSemesterChanged?.(); }
       else setSemesters(await listAcademicSemesters());
       setSemesterForm({ academicYear: "", semesterCode: "", startsOn: "", endsOn: "", defaultDeadline: "" });
       setEditingSemesterId(null);
-    } catch (reason) { setSemesterError(userError(reason, "Unable to save the semester.")); }
+    } catch (reason) { setSemesterError(userError(reason, "Unable to save the academic term.")); }
     finally { setSemesterBusy(false); }
   };
 
@@ -82,23 +84,23 @@ export function AdminSettings({ onActiveSemesterChanged }: { onActiveSemesterCha
   const activateSemester = async (semester: AcademicSemesterRecord) => {
     const current = semesters.find(candidate => candidate.isCurrent);
     const action = semester.status === "closed" ? "Reopen" : "Activate";
-    const currentWarning = current ? t(" The active semester ({{impact}}) will be archived.", {impact: semesterImpact(current)}) : "";
-    if (!window.confirm(t("{{value0}} {{value1}}? It contains {{value2}}.{{value3}} No data will be deleted.", { value0: (t(action)), value1: (semesterLabel(formatAcademicSemester(semester.semesterNo, semester.academicYear))), value2: (semesterImpact(semester)), value3: (currentWarning) }))) return;
+    const currentWarning = current ? t(" The active academic term ({{impact}}) will be archived.", {impact: semesterImpact(current)}) : "";
+    if (!window.confirm(t("{{value0}} {{value1}}? It contains {{value2}}.{{value3}} No data will be deleted.", { value0: (t(action)), value1: (formatAcademicTerm(semester.semesterCode, semester.academicYear)), value2: (semesterImpact(semester)), value3: (currentWarning) }))) return;
     setSemesterBusy(true); setSemesterError("");
     try { await activateAcademicSemester(semester.id); await reloadSemesterData(); await onActiveSemesterChanged?.(); }
-    catch (reason) { setSemesterError(userError(reason, "Unable to activate the semester.")); }
+    catch (reason) { setSemesterError(userError(reason, "Unable to activate the academic term.")); }
     finally { setSemesterBusy(false); }
   };
 
   const deleteSemester = async (semester: AcademicSemesterRecord) => {
     if (semester.isCurrent || semester.offeringCount > 0) return;
-    if (!window.confirm(t("Permanently delete the empty test semester {{value0}}? This cannot be undone.", { value0: (semesterLabel(formatAcademicSemester(semester.semesterNo, semester.academicYear))) }))) return;
+    if (!window.confirm(t("Permanently delete the empty test academic term {{value0}}? This cannot be undone.", { value0: (formatAcademicTerm(semester.semesterCode, semester.academicYear)) }))) return;
     setSemesterBusy(true); setSemesterError("");
     try {
       await deleteAcademicSemester(semester.id);
       setSemesters(await listAcademicSemesters());
       if (editingSemesterId === semester.id) { setEditingSemesterId(null); setSemesterForm({ academicYear: "", semesterCode: "", startsOn: "", endsOn: "", defaultDeadline: "" }); }
-    } catch (reason) { setSemesterError(userError(reason, "Unable to delete the test semester.")); }
+    } catch (reason) { setSemesterError(userError(reason, "Unable to delete the test academic term.")); }
     finally { setSemesterBusy(false); }
   };
 
@@ -121,8 +123,11 @@ export function AdminSettings({ onActiveSemesterChanged }: { onActiveSemesterCha
   if (loadError && !settings) return <InitialDataState title={t("System Settings")} label={t("Loading settings…")} error={tx(loadError)} layout="table" />;
   if (!settings) return <InitialDataState title={t("System Settings")} label={t("Loading settings…")} layout="table" />;
 
+  const legacyCode = semesters.find(row => row.id === editingSemesterId)?.semesterCode;
+  const preserveLegacyCode = Boolean(legacyCode && !isRegularAcademicTerm(legacyCode));
+
   const tabs: { id: SettingsTab; label: string }[] = [
-    { id: "semester", label: t("Academic Semester") },
+    { id: "semester", label: t("Academic Term") },
     { id: "deadlines", label: t("Programme Deadlines") },
     { id: "notifications", label: t("Notifications") },
   ];
@@ -131,7 +136,7 @@ export function AdminSettings({ onActiveSemesterChanged }: { onActiveSemesterCha
     <div>
       <div style={{ marginBottom: "26px" }}>
         <h1 style={{ fontFamily: C.display, fontWeight: 700, fontSize: "calc(1.5rem * var(--staff-text-scale))", color: C.text, margin: "0 0 5px" }}>{t("System Settings")}</h1>
-        <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>{t("Configure deadlines, notifications, and semester details.")}</p>
+        <p style={{ fontSize: "calc(0.8125rem * var(--staff-text-scale))", color: C.textMuted, margin: 0 }}>{t("Configure deadlines, notifications, and academic term details.")}</p>
       </div>
 
       <div
@@ -159,26 +164,26 @@ export function AdminSettings({ onActiveSemesterChanged }: { onActiveSemesterCha
       </div>
 
       <section id="settings-panel-semester" role="tabpanel" aria-labelledby="settings-tab-semester" hidden={activeTab !== "semester"} className="staff-content-card" style={cardStyle}>
-        <h2 style={{ fontFamily: CC.display, fontSize: "calc(1.0625rem * var(--staff-text-scale))", fontWeight: 700, color: CC.text, margin: "0 0 6px" }}>{t("Academic Semester Lifecycle")}</h2>
-        <p style={{ color: CC.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))", margin: "0 0 16px", lineHeight: 1.6 }}>{t("Create a draft semester, activate it, or reopen an archived semester for testing. Switching preserves all linked data and keeps exactly one semester active.")}</p>
+        <h2 style={{ fontFamily: CC.display, fontSize: "calc(1.0625rem * var(--staff-text-scale))", fontWeight: 700, color: CC.text, margin: "0 0 6px" }}>{t("Academic Term Lifecycle")}</h2>
+        <p style={{ color: CC.textMuted, fontSize: "calc(0.75rem * var(--staff-text-scale))", margin: "0 0 16px", lineHeight: 1.6 }}>{t("Create a draft academic term, activate it, or reopen an archived academic term for testing. Switching preserves all linked data and keeps exactly one academic term active.")}</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
           {semesters.map(semester => (
             <div key={semester.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "14px", padding: "11px 13px", background: CC.elevated, border: `1px solid ${CC.borderMid}`, borderRadius: "7px" }}>
-              <div><strong style={{ color: CC.text }}>{semesterLabel(formatAcademicSemester(semester.semesterNo, semester.academicYear))}</strong><div style={{ color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "3px" }}>{t("Code ")}<span className="admin-identifier">{semester.semesterCode}</span> · {semester.startsOn} – {semester.endsOn} · <AdminStatus status={semester.status} /> · {semesterImpact(semester)}</div></div>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap", justifyContent: "flex-end" }}><button type="button" disabled={semesterBusy} onClick={() => editSemester(semester)} style={{ padding: "7px 9px", border: `1px solid ${CC.borderMid}`, borderRadius: "5px", background: "transparent", color: CC.textSub, fontSize: "calc(0.75rem * var(--staff-text-scale))", cursor: semesterBusy ? "wait" : "pointer" }}>{t("Edit")}</button>{!semester.isCurrent && <button type="button" disabled={semesterBusy || semester.offeringCount > 0} title={semester.offeringCount > 0 ? t("Semesters containing teaching data must remain archived.") : t("Delete this empty test semester")} onClick={() => deleteSemester(semester)} style={{ padding: "7px 9px", border: `1px solid ${CC.red}55`, borderRadius: "5px", background: "transparent", color: CC.red, fontSize: "calc(0.75rem * var(--staff-text-scale))", cursor: semesterBusy || semester.offeringCount > 0 ? "not-allowed" : "pointer", opacity: semester.offeringCount > 0 ? .5 : 1 }}>{t("Delete")}</button>}{!semester.isCurrent ? <button className="staff-primary-action" type="button" disabled={semesterBusy} onClick={() => activateSemester(semester)} style={{ padding: "7px 10px", borderRadius: "5px", fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 700 }}>{semester.status === "closed" ? t("Reopen") : t("Activate")}</button> : null}</div>
+              <div><strong style={{ color: CC.text }}>{formatAcademicTerm(semester.semesterCode, semester.academicYear)}</strong><div style={{ color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))", marginTop: "3px" }}>{t("Code ")}<span className="admin-identifier">{semester.semesterCode}</span> · {semester.startsOn} – {semester.endsOn} · <AdminStatus status={semester.status} /> · {semesterImpact(semester)}</div></div>
+              <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap", justifyContent: "flex-end" }}><button type="button" disabled={semesterBusy} onClick={() => editSemester(semester)} style={{ padding: "7px 9px", border: `1px solid ${CC.borderMid}`, borderRadius: "5px", background: "transparent", color: CC.textSub, fontSize: "calc(0.75rem * var(--staff-text-scale))", cursor: semesterBusy ? "wait" : "pointer" }}>{t("Edit")}</button>{!semester.isCurrent && <button type="button" disabled={semesterBusy || semester.offeringCount > 0} title={semester.offeringCount > 0 ? t("Academic terms containing teaching data must remain archived.") : t("Delete this empty test academic term")} onClick={() => deleteSemester(semester)} style={{ padding: "7px 9px", border: `1px solid ${CC.red}55`, borderRadius: "5px", background: "transparent", color: CC.red, fontSize: "calc(0.75rem * var(--staff-text-scale))", cursor: semesterBusy || semester.offeringCount > 0 ? "not-allowed" : "pointer", opacity: semester.offeringCount > 0 ? .5 : 1 }}>{t("Delete")}</button>}{!semester.isCurrent ? <button className="staff-primary-action" type="button" disabled={semesterBusy} onClick={() => activateSemester(semester)} style={{ padding: "7px 10px", borderRadius: "5px", fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 700 }}>{semester.status === "closed" ? t("Reopen") : t("Activate")}</button> : null}</div>
             </div>
           ))}
         </div>
         <form onSubmit={submitSemester}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px" }}>
-            <div><label style={labelStyle}>{t("Semester Code")}</label><input className="admin-identifier" required inputMode="numeric" pattern="[0-9]{5}" maxLength={5} placeholder="20264" value={semesterForm.semesterCode} onChange={event => setSemesterForm(value => ({ ...value, semesterCode: event.target.value.replace(/\D/g, "").slice(0, 5) }))} style={{ ...fieldStyle, fontFamily: CC.mono }} /><span style={{ display: "block", marginTop: "5px", color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{t("Example: 20264 = Semester 4")}</span></div>
+            <div><label style={labelStyle}>{t("Academic Term Code")}</label><input className="admin-identifier" required inputMode="numeric" pattern={preserveLegacyCode ? "[0-9]{5}" : "[0-9]{4}[24]"} readOnly={preserveLegacyCode} maxLength={5} placeholder={t("YYYY2 or YYYY4")} value={semesterForm.semesterCode} onChange={event => setSemesterForm(value => ({ ...value, semesterCode: event.target.value.replace(/\D/g, "").slice(0, 5) }))} style={{ ...fieldStyle, fontFamily: CC.mono }} /><span style={{ display: "block", marginTop: "5px", color: CC.textMuted, fontSize: "calc(0.6875rem * var(--staff-text-scale))" }}>{preserveLegacyCode ? t("Legacy Academic Term Code is retained unchanged.") : t("Regular Academic Term Codes use YYYY2 or YYYY4. The ending is not a Programme Semester.")}</span></div>
             <div><label style={labelStyle}>{t("Academic Year")}</label><input required pattern="[0-9]{4}/[0-9]{4}" placeholder="2026/2027" value={semesterForm.academicYear} onChange={event => setSemesterForm(value => ({ ...value, academicYear: event.target.value }))} style={fieldStyle} /></div>
             <div><label style={labelStyle}>{t("Start Date")}</label><input required type="date" value={semesterForm.startsOn} onChange={event => setSemesterForm(value => ({ ...value, startsOn: event.target.value }))} style={fieldStyle} /></div>
             <div><label style={labelStyle}>{t("End Date")}</label><input required type="date" value={semesterForm.endsOn} onChange={event => setSemesterForm(value => ({ ...value, endsOn: event.target.value }))} style={fieldStyle} /></div>
             <div><label style={labelStyle}>{t("Default Deadline")}</label><input required type="date" value={semesterForm.defaultDeadline} onChange={event => setSemesterForm(value => ({ ...value, defaultDeadline: event.target.value }))} style={fieldStyle} /></div>
           </div>
-          {semesterError && <p role="alert" style={{ color: CC.red, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{semesterError}</p>}
-          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}><button className="staff-primary-action" type="submit" disabled={semesterBusy} style={{ padding: "8px 12px", borderRadius: "5px", fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 700 }}>{editingSemesterId ? t("Save Semester Details") : t("Create Draft Semester")}</button>{editingSemesterId && <button type="button" onClick={() => { setEditingSemesterId(null); setSemesterForm({ academicYear: "", semesterCode: "", startsOn: "", endsOn: "", defaultDeadline: "" }); }} style={{ padding: "8px 12px", border: `1px solid ${CC.borderMid}`, borderRadius: "5px", background: "transparent", color: CC.textMuted, cursor: "pointer" }}>{t("Cancel")}</button>}</div>
+          {semesterError && <p role="alert" style={{ color: CC.red, fontSize: "calc(0.75rem * var(--staff-text-scale))" }}>{tx(semesterError)}</p>}
+          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}><button className="staff-primary-action" type="submit" disabled={semesterBusy} style={{ padding: "8px 12px", borderRadius: "5px", fontSize: "calc(0.75rem * var(--staff-text-scale))", fontWeight: 700 }}>{editingSemesterId ? t("Save Academic Term Details") : t("Create Draft Academic Term")}</button>{editingSemesterId && <button type="button" onClick={() => { setEditingSemesterId(null); setSemesterForm({ academicYear: "", semesterCode: "", startsOn: "", endsOn: "", defaultDeadline: "" }); }} style={{ padding: "8px 12px", border: `1px solid ${CC.borderMid}`, borderRadius: "5px", background: "transparent", color: CC.textMuted, cursor: "pointer" }}>{t("Cancel")}</button>}</div>
         </form>
       </section>
 

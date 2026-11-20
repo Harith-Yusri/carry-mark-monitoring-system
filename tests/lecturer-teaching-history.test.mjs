@@ -12,7 +12,7 @@ const { workspace: W } = localizedFunction('module', await compile('src/features
 const apiCode = await compile('src/services/carryMarkApi.ts');
 const source = (await readFile('src/features/lecturer/LecturerDashboard.tsx', 'utf8')).replace(/^import .*;\n/gm, '').replace('export function LecturerDashboard','function LecturerDashboard');
 const { code } = await transform(source, { loader: 'tsx' });
-const historicalRow = (id, semester=2) => ({offering_id:id,programme_ids:['p1'],programme_codes:['CS240'],programme_names:['Information Technology'],subject_code:'ITT557',subject_name:'Mobile Application Development',programme_semester:4,student_count:6,updated_at:'2026-10-19T00:00:00Z',offering_status:'completed',academic_year:'2025/2026',semester_no:semester});
+const historicalRow = (id, semester=2) => ({offering_id:id,programme_ids:['p1'],programme_codes:['CS240'],programme_names:['Information Technology'],subject_code:'ITT557',subject_name:'Mobile Application Development',programme_semester:4,student_count:6,updated_at:'2026-10-19T00:00:00Z',offering_status:'completed',academic_year:'2025/2026',semester_no:semester,semester_code:semester===2?'20262':'20261'});
 const payload = {term:{academic_year:'2026/2027',semester_no:1,semester_code:'20271'},current:[],archived:[historicalRow('old-2'),historicalRow('old-1',1)]};
 function nodes(tree) {
   if (!tree || typeof tree !== 'object') return [];
@@ -48,13 +48,13 @@ test('new active term without allocations defaults correctly and historical year
   const ui=setup();await ui.mount();
   assert.deepEqual(ui.rpcCalls,['get_my_lecturer_subject_dashboard']);
   assert.equal(ui.field('Academic year').props.value,'2026/2027');
-  assert.equal(ui.field('Semester').props.value,1);
+  assert.equal(ui.field('Academic Term').props.value,'20271');
   assert.deepEqual(ui.options('Academic year'),['2026/2027','2025/2026']);
-  assert.deepEqual(ui.options('Semester'),[1]);
+  assert.deepEqual(ui.options('Academic Term'),['20271']);
   assert(ui.all().some(n=>n.type==='button'&&text(n).includes('Create New Subject')));
   ui.field('Academic year').props.onChange({target:{value:'2025/2026'}});
-  assert.deepEqual(ui.options('Semester'),[2,1]);
-  ui.field('Semester').props.onChange({target:{value:'2'}});
+  assert.deepEqual(ui.options('Academic Term'),['20262','20261']);
+  ui.field('Academic Term').props.onChange({target:{value:'20262'}});
   const cards=ui.all().filter(n=>n.type==='article');assert.equal(cards.length,1);
   assert(text(cards[0]).includes('Mobile Application Development'));
   assert(text(cards[0]).includes('Read-only'));
@@ -67,17 +67,17 @@ test('new active term without allocations defaults correctly and historical year
   assert.equal(nodes(dialog).filter(n=>n.type==='button').length,1,'Only close control in historical detail');
   assert.deepEqual(ui.writes,[]);
   ui.field('Academic year').props.onChange({target:{value:'2026/2027'}});
-  assert.equal(ui.field('Semester').props.value,1);
+  assert.equal(ui.field('Academic Term').props.value,'20271');
 });
 
 test('current allocations remain editable while history stays separate', async()=>{
-  const ui=setup({...payload,current:[{...historicalRow('current'),academic_year:'2026/2027',semester_no:1,offering_status:'active'}]});
+  const ui=setup({...payload,current:[{...historicalRow('current'),academic_year:'2026/2027',semester_no:1,semester_code:'20271',offering_status:'active'}]});
   await ui.mount();
   const card=ui.all().find(n=>n.type==='article');
   assert(ui.field('Manage ITT557'));
   await card.props.onClick();assert.equal(ui.selected[0].offeringId,'current');
   assert.deepEqual(ui.reads,[]);
-  assert.deepEqual(ui.options('Semester'),[1]);
+  assert.deepEqual(ui.options('Academic Term'),['20271']);
 });
 
 test('opening create with no current allocations does not erase the active semester options',async()=>{
@@ -85,18 +85,18 @@ test('opening create with no current allocations does not erase the active semes
   const button=ui.all().find(n=>n.type==='button'&&text(n).includes('Create New Subject'));
   const pending=button.props.onClick();
   assert.equal(ui.field('Academic year').props.value,'2026/2027');
-  assert.deepEqual(ui.options('Semester'),[1]);
+  assert.deepEqual(ui.options('Academic Term'),['20271']);
   await pending;
-  assert.deepEqual(ui.options('Semester'),[1]);
+  assert.deepEqual(ui.options('Academic Term'),['20271']);
 });
 
 test('active and historical semesters in the same year remain distinct and historical selection is read-only', async()=>{
   const ui=setup({term:{academic_year:'2025/2026',semester_no:2,semester_code:'20262'},current:[],archived:[historicalRow('old-1',1)]});
   await ui.mount();
   assert.equal(ui.field('Academic year').props.value,'2025/2026');
-  assert.equal(ui.field('Semester').props.value,2);
-  assert.deepEqual(ui.options('Semester'),[2,1]);
-  ui.field('Semester').props.onChange({target:{value:'1'}});
+  assert.equal(ui.field('Academic Term').props.value,'20262');
+  assert.deepEqual(ui.options('Academic Term'),['20262','20261']);
+  ui.field('Academic Term').props.onChange({target:{value:'20261'}});
   assert(ui.all().some(n=>n.type==='article'&&text(n).includes('Read-only')));
   assert(!ui.all().some(n=>n.type==='button'&&text(n).includes('Create New Subject')));
   assert(!ui.field('Manage ITT557'));

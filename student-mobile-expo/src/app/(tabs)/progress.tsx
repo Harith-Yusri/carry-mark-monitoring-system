@@ -1,4 +1,4 @@
-import { t, useLocale, semesterLabel } from "@/localization/react";
+import { t, useLocale } from "@/localization/react";
 import { AlertCircle, BarChart3, CheckCircle2, Clock3, LockKeyhole } from "lucide-react-native";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SubjectBarChart } from "@/components/charts";
@@ -21,7 +21,7 @@ export default function ProgressScreen() {
           <Heading>{t("My Progress")}</Heading>
         </View>
         <View style={[styles.semesterChip, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
-          <Text style={[typography.bodyStrong, { color: colors.accent }]} numberOfLines={1}>{semesterLabel(student?.semester ?? t("Current semester"))}</Text>
+          <Text style={[typography.bodyStrong, { color: colors.accent }]} numberOfLines={1}>{student?.semester_code ? t("Academic Term {{code}}", { code: student.semester_code }) : t("Academic Term unavailable")}</Text>
         </View>
       </View>
 

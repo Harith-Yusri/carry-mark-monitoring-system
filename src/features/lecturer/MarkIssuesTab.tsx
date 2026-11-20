@@ -72,7 +72,7 @@ export function MarkIssuesTab({ offeringId, focusedIssueId, onChanged }: { offer
         <p className="staff-card-primary my-3 whitespace-pre-wrap text-sm">{issue.explanation}</p>
         <p className={W.muted}>{t("Reported ")}{new Date(issue.created_at).toLocaleString()}</p>
         {issue.response && <p className={W.muted}>{t("Lecturer response: {{value0}}", { value0: (issue.response) })}</p>}
-        {!issue.editable && <p className={W.muted}>{t("Previous semester · read-only")}</p>}
+        {!issue.editable && <p className={W.muted}>{t("Previous academic term · read-only")}</p>}
         {issue.editable && open && <div className="mt-4 space-y-3">
           <label className={W.label} htmlFor={`issue-note-${issue.id}`}>{draft ? t("Response if rejecting this report") : t("Response / correction reason (required)")}</label>
           <textarea id={`issue-note-${issue.id}`} maxLength={2000} className={W.field} disabled={busy || loading} value={note} onChange={event => setNotes(previous => ({ ...previous, [issue.id]: event.target.value }))} />

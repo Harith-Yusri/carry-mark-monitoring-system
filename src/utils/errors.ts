@@ -1,6 +1,7 @@
 import { releaseTerminology } from "./releaseTerminology";
 
 const safeMessages = [
+  /^Academic Term Code|^Academic year must|^Academic term start|default deadline.*academic term/i,
   /already has an offering/i,
   /already enrolled/i,
   /archived academic session data is read-only/i,

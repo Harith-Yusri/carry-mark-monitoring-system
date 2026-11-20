@@ -1,5 +1,5 @@
 import { LanguageSetting } from "@/localization/LanguageSetting";
-import { t, tx, useLocale, semesterLabel } from "@/localization/react";
+import { t, tx, useLocale } from "@/localization/react";
 import Constants from "expo-constants";
 import { useFocusEffect } from "expo-router";
 import {
@@ -101,8 +101,9 @@ export default function SettingsScreen() {
 
         <View style={styles.profileDetails}>
           <ProfileDetail icon={<Building2 size={18} color={colors.accent} />} label={t("Faculty")} value={student?.faculty ?? t("Not recorded")} />
-          <ProfileDetail icon={<CalendarDays size={18} color={colors.accent} />} label={t("Semester")} value={semesterLabel(student?.semester ?? t("Not recorded"))} />
-          <ProfileDetail icon={<Hash size={18} color={colors.accent} />} label={t("Semester Code")} value={student?.semester_code ?? t("Not recorded")} />
+          <ProfileDetail icon={<CalendarDays size={18} color={colors.accent} />} label={t("Programme Semester")} value={student?.programme_semester == null ? t("Not recorded") : t("Semester {{value0}}", { value0: student.programme_semester })} />
+          <ProfileDetail icon={<Hash size={18} color={colors.accent} />} label={t("Academic Term")} value={student?.semester_code ?? t("Not recorded")} />
+          <ProfileDetail icon={<CalendarDays size={18} color={colors.accent} />} label={t("Academic Year")} value={student?.academic_year ?? t("Not recorded")} />
         </View>
       </Card>
 
